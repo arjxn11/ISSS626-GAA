@@ -1,0 +1,161 @@
+---
+title: "In Class Exercise 2"
+author: "Arjun Singh"
+date: 2024-09-02
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+---
+
+# Introduction
+
+In this exercise, we reinforce our learning and deal with any problems we faced from Hands-On Exercise 2 by further application of the skills gained from it.
+
+# Data and Packages
+
+For this exercise, we will use the following R packages:
+
+-   **sf**, a relatively new R package specially designed to import, manage and process vector-based geospatial data in R.
+
+-   **spatstat**, which has a wide range of useful functions for point pattern analysis. In this hands-on exercise, it will be used to perform 1st- and 2nd-order spatial point patterns analysis and derive kernel density estimation (KDE) layer.
+
+-   **raster**, which reads, writes, manipulates, analyses and model of gridded spatial data (i.e. raster). In this hands-on exercise, it will be used to convert image output generate by spatstat into raster format.
+
+-   **tidyverse** simplifies spatial analysis by offering a consistent and efficient framework that facilitates working with spatial data.
+
+-   **tmap** which provides functions for plotting cartographic quality static point patterns maps or interactive maps by using leaflet API.
+
+We will load in the packages above by implementing the code chunk below.
+
+<details>
+
+<summary>Click to show/hide code</summary>
+
+```{r}
+pacman::p_load(sf, spatstat, raster, tmap, tidyverse)
+set.seed(1234)
+```
+
+</details>
+
+To install the **maptools** package, which is now retired, we will use the code chunk below.
+
+```{r}
+#| eval: false
+install.packages("maptools", repos="https://packagemanager.posit.co/cran/2023-10-13") #Posit is a great source for downloading retired libraries, and even facilitates the development of Shiny apps.
+```
+
+We will now import the *GEOJSON* using the **st_read()** function of the **sf** package.
+
+```{r}
+childcare_sf <- st_read("data/child-care-services-geojson.geojson") %>%
+  st_transform(crs = 3414)
+```
+
+We notice that its projected in the **WGS84** system so we transformed the **EPSG** code to **3414**, to be consistent with the **SVY21** projected coordinate system of Singapore.
+
+We will now import the coastal outline data using the **st_read()** function again.
+
+```{r}
+sg_sf <- st_read(dsn = "data", layer="CostalOutline")
+```
+
+This is projected correctly in the SVY21 system, however we will verify the EPSG code using the **st_crs()** function of the sf package.
+
+```{r}
+st_crs(sg_sf)
+```
+
+We notice that the EPSG code isn't correct, so we transform it to the correct value of 3414 using the **st_transform()** function.
+
+```{r}
+st_transform(sg_sf, 3414)
+```
+
+Now, we import the Master Planning Subzone data using the **st_read()** function
+
+```{r}
+mpsz_sf <- st_read(dsn = "data", 
+                   layer = "MP14_SUBZONE_WEB_PL")
+```
+
+We must now verify the EPSG code for `mpsz_sf` before proceeding to facilitate analysis.
+
+```{r}
+st_crs(mpsz_sf)
+```
+
+Since it has the wrong EPSG code, we will transform it to the correct value of 3414.
+
+```{r}
+st_transform(mpsz_sf, 3414)
+```
+
+Now, we can proceed with the analysis as all the data-frames are projected consistently.
+
+# Creating a coastal outline
+
+Using the **st_union()** function, we can derive the coastal outline of the **sf tibble data-frame**.
+
+```{r}
+sg_sf= mpsz_sf %>% st_union
+```
+
+We will then have the figure below, which will help improve the quality of our analysis.
+
+```{r}
+plot(sg_sf)
+```
+
+# Kernel Density Estimation
+
+We now implement two different methods to convert KDE output into grid object.
+
+We first convert the data into the right format for analysis.
+
+```{r}
+childcare_ppp=as.ppp(childcare_sf)
+childcareSG_ppp.km <- rescale.ppp(childcare_ppp, 1000, "km")
+kde_childcareSG_adaptive <- adaptive.density(childcareSG_ppp.km, method="kernel")
+```
+
+::: panel-tabset
+## maptools method
+
+```{r}
+gridded_kde_childcareSG_ad=maptools::as.SpatialGridDataFrame.im(kde_childcareSG_adaptive)
+plot(gridded_kde_childcareSG_ad)
+
+```
+
+## spatstat.geom method
+
+```{r}
+gridded_kde_childcareSG_ad=as(kde_childcareSG_adaptive, "SpatialGridDataFrame")
+plot(gridded_kde_childcareSG_ad)
+```
+:::
+
+As we can see, both have very similar/same results however we prefer to use spatstat.geom as maptools has been retired..
+
+# Importing the Traffic Accident Data
+
+We will import the data file into our environment.
+
+```{r}
+rdacc_sf=read_csv("data/thai_road_accident_2019_2022.csv")%>%
+  filter(!is.na(longitude) & longitude != "",
+         !is.na(latitude) & latitude !="")%>%
+  st_as_sf(coords=c(
+    "longitude", "latitude"), 
+    crs=4326)%>%
+  st_transform(crs=32647)
+```
+
+::: panel-tabset
+## Visualizing the accident data.
+:::

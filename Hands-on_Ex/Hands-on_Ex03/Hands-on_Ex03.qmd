@@ -1,0 +1,157 @@
+---
+title: "Hands On Exercise 3- Network Constrained Spatial Point Patterns Analysis"
+author: "Arjun Singh"
+date: 2024-09-02
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+---
+
+# 3 Introduction
+
+**Network Constrained Spatial Point Patterns Analysis** (**NetSPAA**) is a specialized suite of methods designed for analyzing spatial point events that occur on or near networks. These events could include locations such as traffic accidents or childcare centers, while the networks themselves might be road or river networks.
+
+In this exercise, we will use the ***spNetwork*** package to perform **Network Kernel Density Estimation (NKDE).** Additionally, we will also conduct network G-function and K-function analyses.
+
+# 3.1 Data and Packages
+
+In this exercise, we study the distribution of childcare services across the Punggol Planning Area. We will use two data-frames, both of which are in ESRI shapefile format.
+
+-   *Punggol_St*, a line features geospatial dataset which stores the road network within Punggol Planning Area.
+
+-   *Punggol_CC*, point feature geospatial data which stores the location of childcare centres within the Punggol Planning Area.
+
+The **packages** that will be used are as follows:
+
+-   `spNetwork` which provides functions to perform Spatial Point Patterns Analysis such as kernel density estimation (KDE) and K-function on network. It also can be used to build spatial matrices (‘listw’ objects like in ‘spdep’ package) to conduct any kind of traditional spatial analysis with spatial weights based on reticular distances.
+
+-   `sf` package provides functions to manage, processing, and manipulate **Simple Features**, a formal geospatial data standard that specifies a storage and access model of spatial geometries such as points, lines, and polygons.
+
+-   `tmap` which provides functions for plotting cartographic quality static point patterns maps or interactive maps by using the leaflet API.
+
+Using the code chunk below, we load these packages into our environment.
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, tidyverse)
+set.seed(1234)
+```
+
+<details>
+
+<summary>Code chunk showcasing creation of the insight box</summary>
+
+```{css}
+.insights-box {
+  background-color: #f0f9f5;
+  border-left: 5px solid #28a745;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 20px 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.insights-box::before {
+  content: "\1F4A1"; /* Light bulb emoji */
+  font-size: 1.5rem;
+  margin-right: 10px;
+  color: #28a745;
+}
+```
+
+</details>
+
+# 3.2 Importing the data
+
+We use the st_read() function of the sf package to import our data-frames.
+
+```{r}
+network <- st_read(dsn="data/geospatial", 
+                   layer="Punggol_St")
+```
+
+We notice that this is a Simple Feature data-frame with 2642 features and 2 fields, projected in the SVY21 coordinate system.
+
+Now, we import our second data-frame.
+
+```{r}
+childcare <- st_read(dsn="data/geospatial",
+                     layer="Punggol_CC")
+```
+
+We notice that this too is a Simple Feature collection. It contains 61 features and 1 field. It is projected in the SVY21 coordinate system.
+
+3.3 Data Preparation.
+
+First, we check the CRS data to verify its consistency.
+
+::: panel-tabset
+## Childcare
+
+```{r}
+st_crs(childcare)
+```
+
+We have verified that the correct EPSG code is in place. We now proceed to have a look at the data.
+
+```{r}
+childcare
+```
+
+## Network
+
+```{r}
+st_crs(network)
+```
+
+We have now verified that the correct EPSG code is in place, so we proceed to have a look at the data.
+
+```{r}
+network
+
+```
+:::
+
+::: insights-box
+You must ensure that CRS data is accurate before using the **spNetwork** package. Without a properly defined CRS, the functions of the spNetwork package may not produce accurate results when conducting spatial analysis as the given coordinates may not actually correspond to real/intended locations. The spNetwork package ***expects*** geospatial data to contain full CRS information.
+:::
+
+# 3.3 Spatial Data Visualization
+
+We will now visualize the spatial data to gain a better overview of the distribution of childcare services across Punggol. We generally use the tmap package for this as shown in the code chunk below.
+
+```{r}
+tmap_mode('view')
+tm_shape(childcare) + 
+  tm_dots() + 
+  tm_shape(network) +
+  tm_lines()
+```
+
+Using the tmap package allows us to generate interactive and highly customizable maps. The map is of high cartographic quality.
+
+<details>
+
+<summary>Setting tmap mode back to plot.</summary>
+
+```{r}
+tmap_mode('plot')
+```
+
+</details>
+
+We can also use the **plot()** function available on R, however the map will not have the same features as the map produced above.
+
+```{r}
+plot(st_geometry(network))
+plot(childcare,add=T,col='red',pch = 19)
+```
+
+# 3.4 Network Kernel Density Estimation (NKDE) Analysis
+
+We now perform NKDE Analysis using functions from the **spNetwork** package.
