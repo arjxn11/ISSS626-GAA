@@ -88,12 +88,17 @@ pacman::p_load(sf, spatstat, raster, tmap, tidyverse)
 ```
 
 </details>
+
 <details>
+
 <summary>Setting seed</summary>
+
 ```{r}
 set.seed(1234)
 ```
+
 </details>
+
 # 2.8 Spatial Data Wrangling
 
 ## 2.8.1 Importing the Spatial Data
@@ -486,6 +491,7 @@ When using the **envelope()** test like above, we generally reject the null hypo
 
 ::: insights-box
 For reference, this is how we can perform the Clark-Evans test to obtain the test statistics, namely the R value, to draw insights. Closer to zero means more cluster. If the index is equal to 1, the pattern is random, and if its more than 1, the trend is towards dispersion or competition.
+
 ```{r}
 # Perform the Clark-Evans test
 clark_evans_result <- clarkevans(childcare_jw_ppp, correction = "none")
@@ -532,7 +538,7 @@ We can now plot the above obtained simulation in order to draw insights regardin
 plot(F_PG.csr)
 ```
 
-We see a significantly higher portion of the black line outside the shaded region, it seems as if there is more clustering of childcare services in this region than there would be in a randomly distributed region. We have sufficient evidence to reject the null hypothesis and can conclude that the distribution of childcare services in Punggol is not random.
+We see a significantly higher portion of the black line outside the shaded region, but below the lower bound. it seems as if there is a lack of clustering of childcare services in this region. We do not have sufficient evidence to reject the null hypothesis.
 
 ## Bukit Batok
 
@@ -558,7 +564,6 @@ The null hypothesis will be rejected if p-value is smaller than alpha value of 0
 ```{r}
 F_BBK.csr <- envelope(childcare_bbk_ppp, Fest, nsim = 999)
 ```
-
 
 We plot it to be able to draw insights.
 
