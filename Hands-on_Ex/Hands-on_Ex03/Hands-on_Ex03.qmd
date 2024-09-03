@@ -297,7 +297,7 @@ tmap_mode('plot')
 
 The interactive map above effectively reveals road segments with relatively higher density of childcare centres than road segments with relatively lower density of childcare centres with the help of shading. The roads with darker shades have a relatively higher density.
 
-# 3.5 **Network Constrained G- and K-Function Analysis**
+# 3.5 Network Constrained G- and K-Function Analysis
 
 We will now conduct a test for Complete Spatial Randomness by using the **kfunctions()** function of the **spNetwork** package.
 
