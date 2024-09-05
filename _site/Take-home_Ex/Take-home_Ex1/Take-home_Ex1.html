@@ -206,8 +206,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#importing-the-data" id="toc-importing-the-data" class="nav-link" data-scroll-target="#importing-the-data">1.3 Importing the data</a>
   <ul class="collapse">
   <li><a href="#aspatial-data" id="toc-aspatial-data" class="nav-link" data-scroll-target="#aspatial-data">1.3.1 Aspatial Data</a></li>
-  <li><a href="#features-of-the-dataset" id="toc-features-of-the-dataset" class="nav-link" data-scroll-target="#features-of-the-dataset">Features of the dataset</a></li>
-  <li><a href="#checking-for-duplicates" id="toc-checking-for-duplicates" class="nav-link" data-scroll-target="#checking-for-duplicates">Checking for duplicates</a></li>
+  <li><a href="#geospatial-data" id="toc-geospatial-data" class="nav-link" data-scroll-target="#geospatial-data">1.3.2 Geospatial Data</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -298,7 +297,11 @@ Click to show/hide code chunk
 <h1>1.3 Importing the data</h1>
 <section id="aspatial-data" class="level2">
 <h2 class="anchored" data-anchor-id="aspatial-data">1.3.1 Aspatial Data</h2>
-<p>We will first import the road accident data into our environment and prepare it to suit our analysis. ::: panel-tabset ## Importing the aspatial data</p>
+<p>We will first import the road accident data into our environment and prepare it to suit our analysis.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Importing the aspatial data</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Features of the dataset</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Checking for duplicates</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rdacc_sf<span class="ot">=</span><span class="fu">read_csv</span>(<span class="st">"data/thai_road_accident_2019_2022.csv"</span>)<span class="sc">%&gt;%</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(longitude) <span class="sc">&amp;</span> longitude <span class="sc">!=</span> <span class="st">""</span>,</span>
@@ -308,9 +311,8 @@ Click to show/hide code chunk
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">crs=</span><span class="dv">4326</span>)<span class="sc">%&gt;%</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">32647</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
-<section id="features-of-the-dataset" class="level2">
-<h2 class="anchored" data-anchor-id="features-of-the-dataset">Features of the dataset</h2>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <p>We now use the glimpse() function to have an overview of the features of the dataset.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(rdacc_sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -336,9 +338,8 @@ $ slope_description           &lt;chr&gt; "no slope", "no slope", "slope area", 
 $ geometry                    &lt;POINT [m]&gt; POINT (701480.8 1654653), POINT (113…</code></pre>
 </div>
 </div>
-</section>
-<section id="checking-for-duplicates" class="level2">
-<h2 class="anchored" data-anchor-id="checking-for-duplicates">Checking for duplicates</h2>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
 <p>We now check for duplicates using the group_by_all() function.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>duplicate <span class="ot">&lt;-</span> rdacc_sf <span class="sc">%&gt;%</span> </span>
@@ -360,12 +361,18 @@ Projected CRS: WGS 84 / UTM zone 47N
 #   slope_description &lt;chr&gt;, geometry &lt;GEOMETRY [m]&gt;</code></pre>
 </div>
 </div>
-<p>We can confirm that there are zero duplicate rows across the data-frame. ::: ## 1.3.2 Geospatial Data</p>
+<p>We can confirm that there are zero duplicate rows across the data-frame.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="geospatial-data" class="level2">
+<h2 class="anchored" data-anchor-id="geospatial-data">1.3.2 Geospatial Data</h2>
 <p>We will now import the Geospatial shapefiles into our environment using the <strong>st_read()</strong> function of the <strong>sf</strong> package.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Thailand Roads (Open Street Map Export)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Thailand Subnational Administrative Boundaries</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Thailand Roads (Open Street Map Export)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Thailand Subnational Administrative Boundaries</a></li></ul>
 <div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <p>We first import the Open Street Map export of the roads.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>road_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data"</span>, <span class="at">layer=</span><span class="st">"hotosm_tha_roads_lines_shp"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -385,7 +392,7 @@ CRS:           NA</code></pre>
 </div>
 <p>Given our area of focus is the Bangkok metropolitan we must narrow the data down to it.</p>
 </div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <p>We implement the st_read() function of the sf package to import the Administrative Boundaries into our environment.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>map_sf <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data"</span>, <span class="at">layer=</span><span class="st">"tha_admbnda_adm1_rtsd_20220121"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

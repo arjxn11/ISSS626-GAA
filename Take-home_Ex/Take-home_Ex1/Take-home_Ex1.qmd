@@ -76,8 +76,9 @@ pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork)
 
 ## 1.3.1 Aspatial Data
 
-We will first import the road accident data into our environment and prepare it to suit our analysis. 
-::: panel-tabset 
+We will first import the road accident data into our environment and prepare it to suit our analysis.
+
+::: panel-tabset
 ## Importing the aspatial data
 
 ```{r}
@@ -111,7 +112,10 @@ duplicate <- rdacc_sf %>%
 duplicate
 ```
 
-We can confirm that there are zero duplicate rows across the data-frame. ::: \## 1.3.2 Geospatial Data
+We can confirm that there are zero duplicate rows across the data-frame.
+:::
+
+## 1.3.2 Geospatial Data
 
 We will now import the Geospatial shapefiles into our environment using the **st_read()** function of the **sf** package.
 
