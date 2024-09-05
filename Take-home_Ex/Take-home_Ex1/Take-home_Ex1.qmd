@@ -73,8 +73,11 @@ pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork)
 </details>
 
 # 1.3 Importing the data
+## 1.3.1 Aspatial Data
 
 We will first import the road accident data into our environment and prepare it to suit our analysis.
+::: panel-tabset
+## Importing the aspatial data
 
 ```{r}
 rdacc_sf=read_csv("data/thai_road_accident_2019_2022.csv")%>%
@@ -85,11 +88,32 @@ rdacc_sf=read_csv("data/thai_road_accident_2019_2022.csv")%>%
     crs=4326)%>%
   st_transform(crs=32647)
 ```
+## Features of the dataset
+We now use the glimpse() function to have an overview of the features of the dataset.
+```{r}
+glimpse(rdacc_sf)
+```
+## Checking for duplicates
+We now check for duplicates using the group_by_all() function.
+
+```{r}
+duplicate <- rdacc_sf %>% 
+  group_by_all() %>% 
+  filter(n()>1) %>% 
+  ungroup()
+  
+duplicate
+```
+We can confirm that there are zero duplicate rows across the data-frame.
+:::
+## 1.3.2 Geospatial Data
+
+We will now import the Geospatial shapefiles into our environment using the **st_read()** function of the **sf** package.
 
 ::: panel-tabset
 ## Thailand Roads (Open Street Map Export)
 
-We will now import the Shape-file using the **st_read()** function of the **sf** package.
+We first import the Open Street Map export of the roads.
 
 ```{r}
 road_sf <- st_read(dsn = "data", layer="hotosm_tha_roads_lines_shp")
@@ -101,11 +125,11 @@ We notice that the CRS information is unavailable so we proceed to set the CRS u
 road_sf=st_set_crs(road_sf,32647)
 ```
 
-Given our area of focus is the Bangkok metropolitan
+Given our area of focus is the Bangkok metropolitan we must narrow the data down to it.
 
 ## Thailand Subnational Administrative Boundaries
 
-We implement the st_read() function of the sf package to load to import the data-frame.
+We implement the st_read() function of the sf package to import the Administrative Boundaries into our environment.
 
 ```{r}
 map_sf <- st_read(dsn = "data", layer="tha_admbnda_adm1_rtsd_20220121")
@@ -113,3 +137,4 @@ map_sf <- st_read(dsn = "data", layer="tha_admbnda_adm1_rtsd_20220121")
 :::
 
 Given our area of interest is the Bangkok Metropolitan Region, we further narrow down our data-frame `road_sf` for our study.
+
