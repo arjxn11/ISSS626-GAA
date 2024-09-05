@@ -1,0 +1,12 @@
+---
+title: "Hands On Exercise 4- Spatial Weights and Applications"
+author: "Arjun Singh"
+date: 2024-09-04
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+---

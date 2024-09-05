@@ -142,6 +142,16 @@ plot(gridded_kde_childcareSG_ad)
 
 As we can see, both have very similar/same results however we prefer to use spatstat.geom as maptools has been retired..
 
+# Part 2- The data
+
+For the purpose of this exercise, three basic data sets are needed, they are:
+
+-   Thailand Road Accident (2019-2022) on Kaggle
+
+-   Thailand Roads (OpenStreetMap Export) on HDX.
+
+-   Thailand- Subnational Administrative Boundaries on HDX.
+
 # Importing the Traffic Accident Data
 
 We will import the data file into our environment.
@@ -156,6 +166,4 @@ rdacc_sf=read_csv("data/thai_road_accident_2019_2022.csv")%>%
   st_transform(crs=32647)
 ```
 
-::: panel-tabset
-## Visualizing the accident data.
-:::
+# Visualizing the data

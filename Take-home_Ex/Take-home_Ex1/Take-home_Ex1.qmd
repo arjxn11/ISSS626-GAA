@@ -9,12 +9,107 @@ execute:
   message: false
   freeze: true
   warning: false
+format:
+  html:
+    css: styles.css  
 ---
 
 # 1 Introduction
 
-Thailand highest death rate amongst ASEAN countries. Give more facts about road accidents from WHO.
+According to the World Health Organisation (WHO), road traffic accidents cause approximately 1.19 million deaths annually and result in between 20 and 50 million people with being down with non-fatal injuries. Over half of all road traffic deaths occur among vulnerable road users, such as pedestrians, cyclists and motorcyclists.
 
-Study area will be Bangkok Metropolitan Region.
+Road traffic injuries are the leading cause of death for children and young adults aged 5–29 while two-thirds of road traffic fatalities occur among people of working age (18–59 years). 9 in 10 fatalities on the roads occur in low and middle-income countries, even though these countries have only around 60% of the world’s vehicles.
 
-Projected coordinate system of Thailand is WGS84, UTM ZONE 47N and EPSG CODE IS 32647
+In addition to the human suffering caused by road traffic injuries, they also inflict a heavy economic burden on victims and their families, both through treatment costs for the injured and through loss of productivity of those killed or disabled. More broadly, road traffic injuries have a serious impact on national economies, costing countries 3% of their annual GDP.
+
+Thailand’s roads are the deadliest in Southeast Asia and among the worst in the world, according to the World Health Organisation. About 20,000 people die in road accidents each year, or about 56 deaths a day (WHO).
+
+Between 2014 and 2021, Thailand experienced a notable increase in accidents. Specifically, 19% of all accidents in Thailand occurred on the national highways, which constituted the primary public thoroughfares connecting various regions, provinces, districts, and significant locations within a comprehensive network.
+
+Within the broader context of accidents across the country, there existed a considerable 66% likelihood of encountering accident-prone zones, often termed ‘**black spots**,’ distributed as follows: 66% on straight road segments, 13% at curves, 6% at median points of cross-shaped intersections, 5% at T-shaped intersections and Y-shaped intersections, 3% at cross-shaped intersections, 2% on bridges, and 2% on steep slopes, respectively.
+
+# 1.1 Objectives
+
+For the most part, road accidents can be attributed to two key factors- behavioral factors. such as driving skill, and environmental factors, such as heavy rain.
+
+For this exercise, we will implement Spatial and Spatio-Temporal Point Pattern Analysis methods to discover the underlying factors behind the accidents in the Bangkok Metropolitan Region.
+
+# 1.2 Data and Packages
+
+For the purpose of this study, we will use the following three data-frames.
+
+-   [Thailand Road Accidents \[2019-2022\]](https://www.kaggle.com/datasets/thaweewatboy/thailand-road-accident-2019-2022), sourced from Kaggle.
+
+-   [Thailand Roads Open Street Map Export](https://data.humdata.org/dataset/hotosm_tha_roads), sourced from Humanitarian Data Exchange.
+
+-   [Thailand Subnational Administrative Boundaries](https://data.humdata.org/dataset/cod-ab-tha?) sourced from Humanitarian Data Exchange.
+
+You can click the link embedded on each of these data-frames to learn more.
+
+We will use the following R packages for our analysis:
+
+-   `sf`, a relatively new R package specially designed to import, manage and process vector-based geospatial data in R.
+
+-   `spatstat`, which has a wide range of useful functions for point pattern analysis. In this hands-on exercise, it will be used to perform 1st- and 2nd-order spatial point patterns analysis and derive kernel density estimation (KDE) layer.
+
+-   `raster`, which reads, writes, manipulates, analyses and model of gridded spatial data (i.e. raster). In this hands-on exercise, it will be used to convert image output generate by spatstat into raster format.
+
+-   `tidyverse` simplifies spatial analysis by offering a consistent and efficient framework that facilitates working with spatial data.
+
+-   `tmap` which provides functions for plotting cartographic quality static point patterns maps or interactive maps by using leaflet API.
+
+-   `spNetwork` which provides functions to perform Spatial Point Patterns Analysis such as kernel density estimation (KDE) and K-function on network. It also can be used to build spatial matrices (‘listw’ objects like in ‘spdep’ package) to conduct any kind of traditional spatial analysis with spatial weights based on reticular distances.
+
+We import them into our environment using the code chunk below.
+
+<details>
+
+<summary>Click to show/hide code chunk</summary>
+
+```{r}
+pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork)
+```
+
+</details>
+
+# 1.3 Importing the data
+
+We will first import the road accident data into our environment and prepare it to suit our analysis.
+
+```{r}
+rdacc_sf=read_csv("data/thai_road_accident_2019_2022.csv")%>%
+  filter(!is.na(longitude) & longitude != "",
+         !is.na(latitude) & latitude !="")%>%
+  st_as_sf(coords=c(
+    "longitude", "latitude"), 
+    crs=4326)%>%
+  st_transform(crs=32647)
+```
+
+::: panel-tabset
+## Thailand Roads (Open Street Map Export)
+
+We will now import the Shape-file using the **st_read()** function of the **sf** package.
+
+```{r}
+road_sf <- st_read(dsn = "data", layer="hotosm_tha_roads_lines_shp")
+```
+
+We notice that the CRS information is unavailable so we proceed to set the CRS using the **st_set_crs()** function of the **sf** package.
+
+```{r}
+road_sf=st_set_crs(road_sf,32647)
+```
+
+Given our area of focus is the Bangkok metropolitan
+
+## Thailand Subnational Administrative Boundaries
+
+We implement the st_read() function of the sf package to load to import the data-frame.
+
+```{r}
+map_sf <- st_read(dsn = "data", layer="tha_admbnda_adm1_rtsd_20220121")
+```
+:::
+
+Given our area of interest is the Bangkok Metropolitan Region, we further narrow down our data-frame `road_sf` for our study.
