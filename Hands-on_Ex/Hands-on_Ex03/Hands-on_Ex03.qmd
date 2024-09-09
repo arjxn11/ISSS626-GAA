@@ -164,7 +164,7 @@ Before we can proceed with computing NKDE, we must first cut the SpatialLines ob
 **Lixels** (short for "line pixels") are small, evenly spaced segments or units derived from a larger line or polyline. In geospatial analysis, lixelization refers to the process of breaking down a line into these smaller, discrete segments. Each lixel represents a portion of the original line, typically at a consistent length, allowing for more detailed spatial analysis
 :::
 
-This can be done using the **lixelize_lines()** functions of the **spNetwork** package. In the code chunk below, we set the **length of the lixel** (*lx_length*) to **700**, while the **minimum length of the lixel** (*mindist*) is set to **350**.
+This can be done using the **lixelize_lines()** functions of the **spNetwork** package. In the code chunk below, we set the **length of the lixel** (*lx_length*) to **700**, while the **minimum length of the lixel** (*mindist*) is set to **375**.
 
 ```{r}
 lixels <- lixelize_lines(network, 

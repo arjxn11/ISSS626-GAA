@@ -88,7 +88,11 @@ rdacc_sf=read_csv("data/rawdata/thai_road_accident_2019_2022.csv")%>%
   st_as_sf(coords=c(
     "longitude", "latitude"), 
     crs=4326)%>%
-  st_transform(crs=32647)
+  st_transform(crs=32647)%>%
+  mutate(Month=month(incident_datetime))%>%
+  mutate(Month_fac=month(incident_datetime,
+                     label=TRUE, abbr=TRUE))%>%
+  mutate(dayofmonth= day(incident_datetime))
 ```
 
 ## Features of the dataset
@@ -287,9 +291,9 @@ tm_shape(bmr)+
   tm_shape(bmr_acc)+
   tm_dots(col='darkblue', size=0.1)+ #Accident layer
   tm_layout(frame=FALSE)
+tmap_mode('plot')
 ```
 
-```{r}
-bmr_bbox <- st_bbox(bmr_boundary)
-print(bmr_bbox)
-```
+Use st_bbox to get min/max longitude.
+
+Create subset point events based on attribute info... ex: driver behaviour (close to bar=drunk etc.)

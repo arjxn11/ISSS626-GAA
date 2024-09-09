@@ -155,7 +155,9 @@ plot(childcare,add=T,col='red',pch = 19)
 ```
 
 ::: insights-box
-Beyond just tm_dots(), we can also use tm_squares(), tm_bubbles().
+-   Beyond just tm_dots(), we can also use tm_squares(), tm_bubbles().
+
+-   Using tmap_mode('view'), we can view the map in OpenStreetMap version as well.
 :::
 
 ::: insights-box
@@ -181,18 +183,22 @@ Before we can proceed with computing NKDE, we must first cut the SpatialLines ob
 **Lixels** (short for "line pixels") are small, evenly spaced segments or units derived from a larger line or polyline. In geospatial analysis, lixelization refers to the process of breaking down a line into these smaller, discrete segments. Each lixel represents a portion of the original line, typically at a consistent length, allowing for more detailed spatial analysis
 :::
 
-This can be done using the **lixelize_lines()** functions of the **spNetwork** package. In the code chunk below, we set the **length of the lixel** (*lx_length*) to **700**, while the **minimum length of the lixel** (*mindist*) is set to **350**.
+This can be done using the **lixelize_lines()** functions of the **spNetwork** package. In the code chunk below, we set the **length of the lixel** (*lx_length*) to **700**, while the **minimum length of the lixel** (*mindist*) is set to **375**.
 
 ```{r}
 lixels <- lixelize_lines(network, 
-                         700, 
-                         mindist = 375)
+                         700, #lixel length
+                         mindist = 375) #Play around with the mindist value. In this case it denotes distance to be walked ('walkability').
 ```
 
 ::: insights-box
 There is another function, **lixelize_lines.mc()** that provides multicore support and is typically used in spatial analysis or geospatial data processing, specifically in contexts where large datasets of lines (such as roads, paths, or boundaries) need to be broken down into smaller, equally spaced segments or "lixels" (line pixels). This process is known as "lixelization."
 
 The main purpose of the lixelize_lines.mc() function is to improve the efficiency of the lixelization process by utilizing multiple CPU cores simultaneously. This is particularly beneficial when dealing with large datasets, as processing each line sequentially can be time-consuming.
+:::
+
+::: insights-box
+Test different distances and check nearest neighbors to determine best values to use with regards to lixels. It shouldn't pick up too many points at once otherwise intensity would be rather inaccurate. Trial and error is key.
 :::
 
 After a cut, if the length of the final lixel is shorter than the specified minimum distance, then it is added to the previous lixel. If it is null, then `mindist`=`maxdist`/10.
@@ -213,6 +219,15 @@ The points are located at the centre of the line based on the length of the line
 The function **lines_center()** from the **spNetwork** package in R is used to generate a **SpatialPointsDataFrame** where each point corresponds to the center of a line segment (or lixel) based on its length.
 :::
 
+```{r}
+tmap_mode('view')
+tm_shape(lixels)+
+  tm_lines()+
+  tm_shape(samples)+
+  tm_dots(size=0.01)
+tmap_mode('plot')
+```
+
 ## 3.4.3 Performing NKDE
 
 Now, we come to the main topic of this exercise- performing Network Kernel Density Estimation.
@@ -226,7 +241,14 @@ densities <- nkde(network,
                   samples = samples,
                   kernel_name = "quartic",
                   bw = 300, 
-                  method = "simple")
+                  method = "simple",
+                  digits = 1, 
+                  tol = 1,
+                  grid_shape = c(1,1), 
+                  max_depth = 8,
+                  agg = 5, 
+                  sparse = TRUE,
+                  verbose = FALSE)
 
 
 ```
@@ -333,7 +355,7 @@ kfun_childcare <- kfunctions(network,
                              end = 1000, 
                              step = 50, 
                              width = 50, 
-                             nsim = 50, 
+                             nsim = 49, #nsim=49 means 50 simulations as n starts from 0 and not 1. 
                              resolution = 50,
                              verbose = FALSE, 
                              conf_int = 0.05)
