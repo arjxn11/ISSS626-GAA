@@ -1,0 +1,507 @@
+---
+title: "In Class Exercise 3"
+author: "Arjun Singh"
+date: 2024-09-09
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+---
+
+
+
+# 3 Introduction
+
+For this in-class exercise, we will work on tackling the issues faced completing Hands-On Exercise 3.
+
+**Network Constrained Spatial Point Patterns Analysis** (**NetSPAA**) is a specialized suite of methods designed for analyzing spatial point events that occur on or near networks. These events could include locations such as traffic accidents or childcare centers, while the networks themselves might be road or river networks.
+
+In this exercise, we will use the ***spNetwork*** package to perform **Network Kernel Density Estimation (NKDE).** Additionally, we will also conduct network G-function and K-function analyses.
+
+# 3.1 Data and Packages
+
+In this exercise, we study the distribution of childcare services across the Punggol Planning Area. We will use two data-frames, both of which are in ESRI shapefile format.
+
+-   *Punggol_St*, a line features geospatial dataset which stores the road network within Punggol Planning Area.
+
+-   *Punggol_CC*, point feature geospatial data which stores the location of childcare centres within the Punggol Planning Area.
+
+The **packages** that will be used are as follows:
+
+-   `spNetwork` which provides functions to perform Spatial Point Patterns Analysis such as kernel density estimation (KDE) and K-function on network. It also can be used to build spatial matrices (‘listw’ objects like in ‘spdep’ package) to conduct any kind of traditional spatial analysis with spatial weights based on reticular distances.
+
+-   `sf` package provides functions to manage, processing, and manipulate **Simple Features**, a formal geospatial data standard that specifies a storage and access model of spatial geometries such as points, lines, and polygons.
+
+-   `tmap` which provides functions for plotting cartographic quality static point patterns maps or interactive maps by using the leaflet API.
+
+Using the code chunk below, we load these packages into our environment.
+
+
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, tidyverse)
+set.seed(1234)
+```
+
+
+
+<details>
+
+<summary>Code chunk showcasing creation of the insight box</summary>
+
+
+
+```{css}
+.insights-box {
+  background-color: #f0f9f5;
+  border-left: 5px solid #28a745;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 20px 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.insights-box::before {
+  content: "\1F4A1"; /* Light bulb emoji */
+  font-size: 1.5rem;
+  margin-right: 10px;
+  color: #28a745;
+}
+```
+
+
+
+</details>
+
+# 3.2 Importing the data
+
+We use the st_read() function of the sf package to import our data-frames.
+
+
+
+```{r}
+network <- st_read(dsn="data/geospatial", 
+                   layer="Punggol_St")
+```
+
+
+
+We notice that this is a Simple Feature data-frame with 2642 features and 2 fields, projected in the SVY21 coordinate system.
+
+Now, we import our second data-frame. We also implement the **st_zm()** function to drop ZM.
+
+
+
+```{r}
+childcare <- st_read(dsn="data/geospatial",
+                     layer="Punggol_CC") %>% st_zm(drop = TRUE, what = "ZM") #to remove z value from 'point z'.
+```
+
+
+
+We notice that this too is a Simple Feature collection. It contains 61 features and 1 field. It is projected in the SVY21 coordinate system.
+
+3.3 Data Preparation.
+
+First, we check the CRS data to verify its consistency.
+
+::: panel-tabset
+## Childcare
+
+
+
+```{r}
+st_crs(childcare)
+```
+
+
+
+We have verified that the correct EPSG code is in place. We now proceed to have a look at the data.
+
+
+
+```{r}
+childcare
+```
+
+
+
+## Network
+
+
+
+```{r}
+st_crs(network)
+```
+
+
+
+We have now verified that the correct EPSG code is in place, so we proceed to have a look at the data.
+
+
+
+```{r}
+network
+
+```
+
+
+:::
+
+::: insights-box
+You must ensure that CRS data is accurate before using the **spNetwork** package. Without a properly defined CRS, the functions of the spNetwork package may not produce accurate results when conducting spatial analysis as the given coordinates may not actually correspond to real/intended locations. The spNetwork package ***expects*** geospatial data to contain full CRS information.
+:::
+
+# 3.3 Spatial Data Visualization
+
+We will now visualize the spatial data to gain a better overview of the distribution of childcare services across Punggol. We generally use the tmap package for this as shown in the code chunk below.
+
+
+
+```{r}
+tmap_mode('view')
+tm_shape(childcare) + 
+  tm_dots(col='red') + 
+  tm_shape(network) +
+  tm_lines()
+```
+
+
+
+Using the tmap package allows us to generate interactive and highly customizable maps. The map is of high cartographic quality.
+
+<details>
+
+<summary>Setting tmap mode back to plot.</summary>
+
+
+
+```{r}
+tmap_mode('plot')
+```
+
+
+
+</details>
+
+We can also use the **plot()** function available on R, however the map will not have the same features as the map produced above.
+
+
+
+```{r}
+plot(st_geometry(network))
+plot(childcare,add=T,col='red',pch = 19)
+```
+
+
+
+::: insights-box
+-   Beyond just tm_dots(), we can also use tm_squares(), tm_bubbles().
+
+-   Using tmap_mode('view'), we can view the map in OpenStreetMap version as well.
+:::
+
+::: insights-box
+Why we use st_geometry() above.
+
+
+
+```{r}
+plot((network))
+plot(childcare,add=T,col='red',pch = 19)
+```
+
+
+
+We get two plots, LINK_ID and ST_NAME. It pulls out individual columns from network and generates a plot for each of them. ST_NAME maps the unique street names and LINK_ID plots based on the link_id. We want to plot the road network without rest of the individual attribute information.
+:::
+
+# 3.4 Network Kernel Density Estimation (NKDE) Analysis
+
+We now perform NKDE Analysis using functions from the **spNetwork** package.
+
+## 3.4.1 Preparing the Lixel Objects
+
+Before we can proceed with computing NKDE, we must first cut the SpatialLines object into Lixels with a specified minimal distance.
+
+::: insights-box
+**Lixels** (short for "line pixels") are small, evenly spaced segments or units derived from a larger line or polyline. In geospatial analysis, lixelization refers to the process of breaking down a line into these smaller, discrete segments. Each lixel represents a portion of the original line, typically at a consistent length, allowing for more detailed spatial analysis
+:::
+
+This can be done using the **lixelize_lines()** functions of the **spNetwork** package. In the code chunk below, we set the **length of the lixel** (*lx_length*) to **700**, while the **minimum length of the lixel** (*mindist*) is set to **375**.
+
+
+
+```{r}
+lixels <- lixelize_lines(network, 
+                         700, #lixel length
+                         mindist = 375) #Play around with the mindist value. In this case it denotes distance to be walked ('walkability').
+```
+
+
+
+::: insights-box
+There is another function, **lixelize_lines.mc()** that provides multicore support and is typically used in spatial analysis or geospatial data processing, specifically in contexts where large datasets of lines (such as roads, paths, or boundaries) need to be broken down into smaller, equally spaced segments or "lixels" (line pixels). This process is known as "lixelization."
+
+The main purpose of the lixelize_lines.mc() function is to improve the efficiency of the lixelization process by utilizing multiple CPU cores simultaneously. This is particularly beneficial when dealing with large datasets, as processing each line sequentially can be time-consuming.
+:::
+
+::: insights-box
+Test different distances and check nearest neighbors to determine best values to use with regards to lixels. It shouldn't pick up too many points at once otherwise intensity would be rather inaccurate. Trial and error is key.
+:::
+
+After a cut, if the length of the final lixel is shorter than the specified minimum distance, then it is added to the previous lixel. If it is null, then `mindist`=`maxdist`/10.
+
+Note that the segments that are shorter than the minimum distance are not modified.
+
+## 3.4.2 Generating Line Centre Points
+
+We will now generate a **SpatialPointsDataFrame with line centre points** using the **lines_center()** function of **spNetwork**.
+
+
+
+```{r}
+samples <- lines_center(lixels) 
+```
+
+
+
+The points are located at the centre of the line based on the length of the line.
+
+::: insights-box
+The function **lines_center()** from the **spNetwork** package in R is used to generate a **SpatialPointsDataFrame** where each point corresponds to the center of a line segment (or lixel) based on its length.
+:::
+
+
+
+```{r}
+tmap_mode('view')
+tm_shape(lixels)+
+  tm_lines()+
+  tm_shape(samples)+
+  tm_dots(size=0.01)
+tmap_mode('plot')
+```
+
+
+
+## 3.4.3 Performing NKDE
+
+Now, we come to the main topic of this exercise- performing Network Kernel Density Estimation.
+
+We use the **nkde()** function to carry it out. The code chunk below shows the implementation.
+
+
+
+```{r}
+densities <- nkde(network, 
+                  events = childcare,
+                  w = rep(1, nrow(childcare)),
+                  samples = samples,
+                  kernel_name = "quartic",
+                  bw = 300, 
+                  method = "simple",
+                  digits = 1, 
+                  tol = 1,
+                  grid_shape = c(1,1), 
+                  max_depth = 8,
+                  agg = 5, 
+                  sparse = TRUE,
+                  verbose = FALSE)
+
+
+```
+
+
+
+::: insights-box
+-   The `kernel_name` argument specifies the type of kernel function used.
+
+-   Possible kernel methods supported by `spNetwork` include:
+
+    -   Quartic
+
+    -   Triangle
+
+    -   Gaussian
+
+    -   Scaled Gaussian
+
+    -   Tricube
+
+    -   Cosine
+
+    -   Triweight
+
+    -   Epanechnikov
+
+    -   Uniform
+
+-   The `method` argument indicates the method used to calculate Network Kernel Density Estimation (NKDE).
+
+-   `spNetwork` supports three popular methods:
+
+    1.  **Simple (`method = "simple"`)**:
+
+        -   Introduced by Xie et al. (2008).
+
+        -   Distances between events and sampling points are replaced by network distances.
+
+        -   The kernel formula is adapted to calculate density over a linear unit instead of an areal unit.
+
+    2.  **Discontinuous (`method = "discontinuous"`)**:
+
+        -   Proposed by Okabe et al. (2008).
+
+        -   Divides the mass density of an event at intersections of lixels.
+
+        -   Results in a discontinuous kernel function.
+
+    3.  **Continuous (`method = "continuous"`)**:
+
+        -   Also proposed by Okabe et al. (2008).
+
+        -   Adjusts the density before intersections to create a continuous kernel function.
+
+        -   Still divides the mass of the density at intersections but with a continuous adjustment.
+:::
+
+### 3.4.3.1 Visualizing NKDE
+
+We must first insert the computed density values (i.e: densities) into samples and lixels objects as the ***density*** field.
+
+
+
+```{r}
+samples$density <- densities
+lixels$density <- densities
+```
+
+
+
+We now convert the scale from number of events per meter (as data is projected using the SVY21 coordinate system) to number of events per kilometer, as the computed density values are very small if the unit is event per meter.
+
+
+
+```{r}
+samples$density <- samples$density*1000
+lixels$density <- lixels$density*1000
+```
+
+
+
+We can now plot the map as the data is now prepared.
+
+We will use the tmap package to produce a highly cartographic and interactive map.
+
+
+
+```{r}
+tmap_mode('view')
+tm_shape(lixels)+
+  tm_lines(col="density")+
+tm_shape(childcare)+
+  tm_dots()
+tmap_mode('plot')
+```
+
+
+
+The interactive map above effectively reveals road segments with relatively higher density of childcare centres than road segments with relatively lower density of childcare centres with the help of shading. The roads with darker shades have a relatively higher density.
+
+# 3.5 Network Constrained G- and K-Function Analysis
+
+We will now conduct a test for Complete Spatial Randomness by using the **kfunctions()** function of the **spNetwork** package.
+
+The hypotheses are as follows:
+
+-   Ho: The observed spatial point events (i.e distribution of childcare centres) are uniformly distributed over a street network in Punggol.
+
+-   H1: The observed spatial point events (i.e: distribution of childcare centres) are not uniformly distributed over a street network in Punggol.
+
+The CSR test is based on the assumption of the binomial point process which implies the hypothesis that the childcare centres are randomly and independently distributed over the street network. If the null hypothesis is rejected, we may infer that the distribution of childcare centres are spatially interacting and are dependent on each other; as a result, they may form nonrandom patterns.
+
+
+
+```{r}
+kfun_childcare <- kfunctions(network, 
+                             childcare,
+                             start = 0, 
+                             end = 1000, 
+                             step = 50, 
+                             width = 50, 
+                             nsim = 49, #nsim=49 means 50 simulations as n starts from 0 and not 1. 
+                             resolution = 50,
+                             verbose = FALSE, 
+                             conf_int = 0.05)
+```
+
+
+
+::: insights-box
+Below are the arguments of the function above:
+
+-   **lines**: A `SpatialLinesDataFrame` containing the sampling points. The geometries must be valid; using invalid geometries may cause the process to crash.
+
+-   **points**: A `SpatialPointsDataFrame` representing the points on the network. These points will be snapped to the network for analysis.
+
+-   **start**: A numeric value indicating the starting point for evaluating the k and g functions.
+
+-   **end**: A numeric value specifying the endpoint for evaluating the k and g functions.
+
+-   **step**: A numeric value that determines the interval between evaluations of the k and g functions.
+
+-   **width**: The width of each "donut" or ring used in calculating the g-function.
+
+-   **nsim**: An integer representing the number of Monte Carlo simulations to perform. In the example above, 50 simulations were conducted; however, more simulations are often necessary for accurate inference.
+
+-   **resolution**: Specifies the resolution when simulating random points on the network. A higher resolution can significantly reduce calculation time. If set to `NULL`, random points can occur anywhere on the network. If a value is provided, the network’s edges are divided according to this resolution, and random points are selected from the vertices of the newly segmented network.
+
+-   **conf_int**: A numeric value indicating the confidence interval width, with the default set to 0.05.
+:::
+
+The k-function will output the following:
+
+-   *plotk,* a ggplot2 object representing the values of the k-function.
+
+-   *plotg*, a ggplot2 object representing the values of the g-function.
+
+-   *values*, a DataFrame with the values used to build the plots.
+
+Below, we visualize the plots generated.
+
+::: panel-tabset
+## plot k
+
+
+
+```{r}
+kfun_childcare$plotk
+```
+
+
+
+The blue line represents the empirical network K-function for the childcare centers in the Punggol planning area. The gray envelope shows the results of 50 simulations, reflecting the 2.5% to 97.5% confidence interval. Since the blue line falls below the gray envelope in the 250m-400m distance range, we can infer that the distribution of childcare centers in Punggol follows a regular pattern within this distance.
+
+## plot g
+
+
+
+```{r}
+kfun_childcare$plotg
+```
+
+
+
+Based on the plot above, we infer that there are certain distances (eg: between 200-225m, 495-505m) are outside the envelope however we do not have enough evidence to reject the null hypothesis and conclude that the distribution of childcare centers in Punggol follows a regular pattern within this distance.
+:::
+
+::: insights-box
+Save large data files into a rawdata subfolder and then save the filtered data files into 'rdf' subfolders. This facilitates quicker analysis.
+:::
+

@@ -88,7 +88,7 @@ From the above, we can infer that Changsha has the highest GDP per capita, betwe
 
 Many regions, especially in the Central, South-West and North-West region of Hunan seem to have a lower GDP per capita.
 
-# 4.4 Computing Contiguity Spatial Weights 
+# 4.4 Computing Contiguity Spatial Weights
 
 We now implement the **poly2nb()** function of the **spdep** package to compute contiguity weight matrices for the study area selected.
 
