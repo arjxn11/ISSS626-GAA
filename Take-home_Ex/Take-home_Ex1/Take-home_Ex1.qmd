@@ -68,6 +68,7 @@ We import them into our environment using the code chunk below.
 
 ```{r}
 pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork)
+set.seed(123)
 ```
 
 </details>
@@ -129,13 +130,13 @@ We will now import the Geospatial shapefiles into our environment using the **st
 We first import the Open Street Map export of the roads.
 
 ```{r}
-#road_sf <- st_read(dsn = "data/rawdata", layer="hotosm_tha_roads_lines_shp")
+road_sf <- st_read(dsn = "data/rawdata", layer="hotosm_tha_roads_lines_shp")
 ```
 
 We notice that the CRS information is unavailable so we proceed to set the CRS using the **st_set_crs()** function of the **sf** package.
 
 ```{r}
-#road_sf=st_set_crs(road_sf,32647)
+road_sf=st_set_crs(road_sf,32647)
 ```
 
 Given our area of focus is the Bangkok metropolitan we must narrow the data down to it.
@@ -184,7 +185,7 @@ st_crs(map_sf)
 Now, we proceed to check the CRS data for `road_sf`, the OpenStreetMap export.
 
 ```{r}
-#st_crs(road_sf)
+st_crs(road_sf)
 ```
 
 The CRS information is accurate for `road_sf`.
@@ -284,16 +285,35 @@ Bangkok has the most accidents of any province in the Metropolitan Region, follo
 
 We want to confirm this so we plot a highly cartographic, interactive map using the **tmap** package.
 
+::: panel-tabset
+## Determining count
+
+To identify the region with the most accidents, we will first count the number of accidents in each region using the st_join() and group_by() function as shown in the code chunk below.
+
 ```{r}
-tmap_mode("view")
-tm_shape(bmr)+
-  tm_polygons(col= 'lightblue', border.col='black')+ #Boundary Layer
-  tm_shape(bmr_acc)+
-  tm_dots(col='darkblue', size=0.1)+ #Accident layer
-  tm_layout(frame=FALSE)
-tmap_mode('plot')
+# Spatial join: count number of accidents in each boundary polygon
+bmr_with_accidents <- bmr_boundary %>%
+  st_join(bmr_accsf) %>%
+  group_by(region_id = province_en) %>%  # Replace with the column name of the region identifier
+  summarise(accident_count = n()) 
 ```
 
-Use st_bbox to get min/max longitude.
+## Creating the map
 
-Create subset point events based on attribute info... ex: driver behaviour (close to bar=drunk etc.)
+Now that we have determined the count of accidents in each province, we will use the tmap package to produce a highly cartographic map for the same.
+
+```{r}
+tmap_mode("view")
+
+# Create the choropleth map
+tm_shape(bmr_with_accidents) +
+  tm_polygons(col = "accident_count", palette = "Reds", border.col = "black", title = "Accidents") +
+  tm_layout(frame = FALSE, legend.outside = TRUE)  # Adjust layout as needed
+
+# Switch back to static plot mode
+tmap_mode('plot')
+
+```
+:::
+
+Based on the map above, our initial findings are confirmed. Bangkok has the most accidents of any province in the metropolitan region.

@@ -16,3 +16,16 @@
     margin-right: 10px;
     color: #28a745;
   }
+
+  .note-box {
+    border: 2px solid purple;
+    padding: 10px;
+    background-color: #f9f9ff;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .note-box h3 {
+    margin-top: 0;
+    color: purple;
+  }
