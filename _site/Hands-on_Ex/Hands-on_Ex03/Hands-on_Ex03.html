@@ -594,7 +594,7 @@ Setting tmap mode back to plot.
 <div class="insights-box">
 <p><strong>Lixels</strong> (short for “line pixels”) are small, evenly spaced segments or units derived from a larger line or polyline. In geospatial analysis, lixelization refers to the process of breaking down a line into these smaller, discrete segments. Each lixel represents a portion of the original line, typically at a consistent length, allowing for more detailed spatial analysis</p>
 </div>
-<p>This can be done using the <strong>lixelize_lines()</strong> functions of the <strong>spNetwork</strong> package. In the code chunk below, we set the <strong>length of the lixel</strong> (<em>lx_length</em>) to <strong>700</strong>, while the <strong>minimum length of the lixel</strong> (<em>mindist</em>) is set to <strong>350</strong>.</p>
+<p>This can be done using the <strong>lixelize_lines()</strong> functions of the <strong>spNetwork</strong> package. In the code chunk below, we set the <strong>length of the lixel</strong> (<em>lx_length</em>) to <strong>700</strong>, while the <strong>minimum length of the lixel</strong> (<em>mindist</em>) is set to <strong>375</strong>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>lixels <span class="ot">&lt;-</span> <span class="fu">lixelize_lines</span>(network, </span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">700</span>, </span>
