@@ -216,7 +216,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#data-and-packages" id="toc-data-and-packages" class="nav-link" data-scroll-target="#data-and-packages">Data and Packages</a></li>
   <li><a href="#creating-a-coastal-outline" id="toc-creating-a-coastal-outline" class="nav-link" data-scroll-target="#creating-a-coastal-outline">Creating a coastal outline</a></li>
   <li><a href="#kernel-density-estimation" id="toc-kernel-density-estimation" class="nav-link" data-scroll-target="#kernel-density-estimation">Kernel Density Estimation</a></li>
+  <li><a href="#part-2--the-data" id="toc-part-2--the-data" class="nav-link" data-scroll-target="#part-2--the-data">Part 2- The data</a></li>
   <li><a href="#importing-the-traffic-accident-data" id="toc-importing-the-traffic-accident-data" class="nav-link" data-scroll-target="#importing-the-traffic-accident-data">Importing the Traffic Accident Data</a></li>
+  <li><a href="#visualizing-the-data" id="toc-visualizing-the-data" class="nav-link" data-scroll-target="#visualizing-the-data">Visualizing the data</a></li>
   </ul>
 </nav>
     </div>
@@ -550,6 +552,15 @@ First 10 features:
 </div>
 <p>As we can see, both have very similar/same results however we prefer to use spatstat.geom as maptools has been retired..</p>
 </section>
+<section id="part-2--the-data" class="level1">
+<h1>Part 2- The data</h1>
+<p>For the purpose of this exercise, three basic data sets are needed, they are:</p>
+<ul>
+<li><p>Thailand Road Accident (2019-2022) on Kaggle</p></li>
+<li><p>Thailand Roads (OpenStreetMap Export) on HDX.</p></li>
+<li><p>Thailand- Subnational Administrative Boundaries on HDX.</p></li>
+</ul>
+</section>
 <section id="importing-the-traffic-accident-data" class="level1">
 <h1>Importing the Traffic Accident Data</h1>
 <p>We will import the data file into our environment.</p>
@@ -562,14 +573,9 @@ First 10 features:
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">crs=</span><span class="dv">4326</span>)<span class="sc">%&gt;%</span></span>
 <span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">32647</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Visualizing the accident data.</a></li></ul>
-<div class="tab-content">
-<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-
-</div>
-</div>
-</div>
+</section>
+<section id="visualizing-the-data" class="level1">
+<h1>Visualizing the data</h1>
 
 
 </section>
