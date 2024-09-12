@@ -324,4 +324,56 @@ summary(bperm$res[1:999])
 hist(bperm$res, freq=TRUE, breaks=20, xlab="Simulated Geary c")
 abline(v=1, col="red") 
 ```
+
+From the plot, we infer that out of the 1000 simulations the value of the statistic is distributed approximately normally, however generally values are close to 1 indicating a lack of spatial autocorrelation.
+:::
+
+# 5.8 Spatial Correlogram
+
+Spatial correlograms are a powerful tool for analyzing patterns of spatial autocorrelation in your data or model residuals. They illustrate how the correlation between pairs of spatial observations changes as the distance (or lag) between them increases. Essentially, they plot an index of autocorrelation, such as Moran’s I or Geary’s C, against distance.
+
+While correlograms are not as central to geostatistics as variograms—an essential concept in that field—they offer valuable insights as an exploratory and descriptive tool. In fact, for examining spatial autocorrelation, correlograms often provide more detailed information than variograms, making them particularly useful for initial spatial data analysis.
+
+::: panel-tabset
+## Computing Moran's I correlogram
+
+We implement the sp.correlogram() function of the spdep package to compute a 6-lag spatial correlogram of GDP Per Capita. The global spatial autocorrelation used in Moran’s I.
+
+The **plot()** of base Graph is then used to plot the output.
+
+```{r}
+MI_corr <- sp.correlogram(wm_q, 
+                          hunan$GDPPC, 
+                          order=6, 
+                          method="I", 
+                          style="W")
+plot(MI_corr)
+```
+
+The plot above may not allow us to provide complete interpretation. This is because not all autocorrelation values are statistically significant. Hence, it is important for us to examine the full analysis report by printing out the analysis results as in the code chunk below.
+
+```{r}
+print(MI_corr)
+```
+
+From the output above, we infer that a majority of the time, there is indeed spatial autocorrelation in Hunan.
+
+## Compute Geary's C Correlogram and Plot
+
+We implement the `sp.correlogram()` of **spdep** package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Geary’s C. The **plot()** of base Graph is then used to plot the output.
+
+```{r}
+GC_corr <- sp.correlogram(wm_q, 
+                          hunan$GDPPC, 
+                          order=6, 
+                          method="C", 
+                          style="W")
+plot(GC_corr)
+```
+
+Similar to the previous step, we will print out the analysis report by using the code chunk below.
+
+```{r}
+print(GC_corr)
+```
 :::
