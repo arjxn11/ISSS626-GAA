@@ -1,0 +1,327 @@
+---
+title: "Hands On Exercise 5- Global Measures of Spatial Autocorrelation"
+author: "Arjun Singh"
+date: 2024-09-09
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css  
+---
+
+# 5 Introduction
+
+We now focus on Global Measures of Spatial Autocorrelation (GMSA) with the help of the **spdep** package. Through this exercise we:
+
+-   compute Global Spatial Autocorrelation (GSA) statistics by using appropriate functions of **spdep** package,
+
+    -   plot Moran scatterplot,
+
+    -   compute and plot spatial correlogram using appropriate function of **spdep** package.
+
+-   provide statistically correct interpretation of GSA statistics.
+
+# 5.1 Objective
+
+In spatial policy, a key objective for local governments and urban planners is to promote balanced development across the province. In this study, our goal is to apply appropriate spatial statistical methods to assess whether development is evenly distributed geographically in Hunan Province, People's Republic of China, using GDP per capita as a development indicator.
+
+If we find that development is not evenly distributed, our next step will be to investigate whether there are signs of spatial clustering. Should clustering be present, we will then identify the locations of these clusters. Through this exercise, we aim to uncover the spatial patterns of development in the province.
+
+# 5.2 Data and Packages
+
+For this exercise, we have the following two datasets:
+
+-   Hunan province administrative boundary layer at county level. This is a geospatial data set in ESRI shapefile format.
+
+-   Hunan_2012.csv: This csv file contains selected Hunan’s local development indicators in 2012.
+
+The packages used are as follows:
+
+-   **`sf`**: Provides simple features support for handling and analyzing spatial vector data in R.
+-   **`spdep`**: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.
+-   **`tmap`**: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.
+-   **`tidyverse`**: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.
+
+We import these packages into our environment using the code chunk below.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse)
+set.seed(1234)
+```
+
+# 5.3 Importing the Data
+
+::: panel-tabset
+## Geospatial Data
+
+We will use the st_read() function of the sf package to import the Hunan Shapefile into our environment.
+
+```{r}
+hunan <- st_read(dsn = "data/geospatial", 
+                 layer = "Hunan")
+```
+
+## Aspatial Data
+
+We will use the read_csv() function of the readr package to import the Hunan_2012 data file.
+
+```{r}
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+
+```
+:::
+
+## 5.3.1 Performing relational join
+
+We will update the attribute table of `Hunan`'s SpatialPolygonsDataFrame with the attribute fields of the `hunan2012` data-frame. We can do this by using the left_join() function of the dplyr package.
+
+```{r}
+hunan <- left_join(hunan,hunan2012) %>%
+  select(1:4, 7, 15)
+```
+
+# 5.4 Visualizing Regional Development Indicator
+
+We are now going to prepare a basemap and a choropleth map to visualize the distribution of GDPPC 2012 by using the qtm() function of the tmap package.
+
+```{r}
+equal <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal interval classification")
+
+quantile <- tm_shape(hunan) +
+  tm_fill("GDPPC",
+          n = 5,
+          style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "Equal quantile classification")
+
+tmap_arrange(equal, 
+             quantile, 
+             asp=1, 
+             ncol=2)
+
+```
+
+# 5.5 Global Measures of Spatial Autocorrelation
+
+We now focus on computing Global Spatial Autocorrelation Statistics and conducting tests for Complete Spatial Randomness for Global Spatial Autocorrelation.
+
+Spatial autocorrelation is an important concept in spatial statistics because it highlights the degree to which geographic proximity influences the distribution of a variable across a region. Moran’s I and Geary’s C are commonly used to measure spatial autocorrelation.
+
+## 5.5.1 Computing Contiguity Spatial Weights
+
+Before computing the global spatial autocorrelation statistics, we need to construct a spatial weights of the study area, the spatial weights are used to define the neighbourhood relationships between the geographical units (i.e. county) in the study area.
+
+We now implement the **poly2nb()** function of the **spdep** package to compute contiguity weight matrices for the study area selected.
+
+Using this function, we are able to build a 'neighbors list' based on regions with contiguous boundaries.
+
+In this function, we will pass an argument, 'queen', that can be set as either TRUE (default) or FALSE. If the 'queen' argument is not explicitly set to FALSE, the function returns a list of first order neighbors using the Queen criteria.
+
+[You may refer to the `spdep` package documentation here](https://cran.r-project.org/web/packages/spdep/spdep.pdf) to learn more about its functions and arguments.
+
+```{r}
+wm_q <- poly2nb(hunan, 
+                queen=TRUE)
+summary(wm_q)
+```
+
+From the output above, we can infer that there are 88 area units in total in Hunan. The *most connected* area unit has 11 neighbors. There are two area units with just 1 neighbor, while 24 area units have 5 neighbors.
+
+## 5.5.2 Row-Standardized Weights Matrix
+
+We now need to assign weights to each neighboring polygon. We use equal weights (style=“W”), where each neighboring polygon is assigned a weight of 1 divided by the number of neighbors.
+
+This means each neighboring county’s weight is calculated as 1/(# of neighbors), and these weights are then used to sum the weighted income values.
+
+While this method is intuitive for summarizing neighbors’ values, it has a drawback: polygons at the edges of the study area may rely on fewer neighbors, potentially skewing the spatial autocorrelation results.
+
+```{r}
+rswm_q <- nb2listw(wm_q, 
+                   style="W", 
+                   zero.policy = TRUE)
+rswm_q
+```
+
+::: insights-box
+The `nb2listw()` function requires an input of class `nb`, representing a neighborhood object. The function's two key arguments are `style` and `zero.policy`.
+
+-   The `style` argument defines how the weights are calculated. It can take several values:
+
+    -   `"B"`: Binary coding, where weights are either 0 or 1.
+
+    -   `"W"`: Row-standardized, where the sum of weights across all neighbors equals 1.
+
+    -   `"C"`: Globally standardized, where the sum of weights across all neighbors equals the total number of neighbors.
+
+    -   `"U"`: A variation of `"C"`, where weights are normalized by the number of neighbors.
+
+    -   `"S"`: A variance-stabilizing scheme proposed by Tiefelsdorf et al. (1999), which adjusts weights based on the number of neighbors.
+
+-   The `zero.policy` argument, when set to `TRUE`, handles regions with no neighbors by assigning them a weight vector of zero length. This results in a spatial lag value of zero for regions without neighbors, which may or may not be a suitable assumption depending on the context. For such regions, the spatially lagged value is computed as the sum of the products of a zero vector with any numerical vector `x`, effectively setting the lagged value to zero for those regions.
+:::
+
+# 5.6 **Global Measures of Spatial Autocorrelation: Moran’s I**
+
+We now conduct Moran's I statistics testing by using the **moran.test()** function of the **spdep** package.
+
+::: note-box
+Statistical tests are conducted at a 5% significance level.
+:::
+
+## 5.6.1 Maron's I test
+
+The hypotheses for the test are as follows:
+
+-   H0: Regions with similar GDP Per Capita are randomly distributed.
+
+-   H1: Regions with similar GDP Per Capita are not randomly distributed and exhibit spatial clustering.
+
+```{r}
+moran.test(hunan$GDPPC, 
+           listw=rswm_q, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+From the output above, we can infer the following:
+
+-   The p-value (1.095e-06)\<0.05, indicating that the observed spatial autocorrelation is statistically significant.
+
+-   Moran's I statistic: The observed value of 0.3007 indicates **positive spatial autocorrelation**, meaning that regions with similar GDP Per Capita are more likely to be located near each other.
+
+Since Moran's I Statistic is significantly greater than what we would expect in a randomly distributed region. There is significant evidence to reject H0 and conclude that there is indeed spatial clustering with regards to GDP Per Capita in Hunan.
+
+## 5.6.2 Computing Monte Carlo Moran's I
+
+We now implement the moran.mc() function of the spdep package. In this scenario, we will run 1000 simulations.
+
+```{r}
+bperm= moran.mc(hunan$GDPPC, 
+                listw=rswm_q, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+
+Based on the above output, p-value (0.001)\<0.05, thus we can reject the null hypothesis at a 5% significance level and conclude that there is indeed spatial clustering.
+
+## 5.6.3 Visualizing Monte Carlo Moran's I
+
+We can visualize the test statistics obtained from the simulation above by implementing the hist() and abline() functions of R graphics.
+
+::: panel-tabset
+## Summary Statistics
+
+We first calculate the mean and variance, and obtain the summary statistics.
+
+```{r}
+mean(bperm$res[1:999])
+```
+
+```{r}
+var(bperm$res[1:999])
+```
+
+```{r}
+summary(bperm$res[1:999])
+```
+
+## The Plot
+
+```{r}
+hist(bperm$res, 
+     freq=TRUE, 
+     breaks=20, 
+     xlab="Simulated Moran's I")
+abline(v=0, 
+       col="red") 
+```
+
+From the above, we can infer that over half of all simulations indicate a negative value for Moran's I statistic. Generally, a negative value indicates that **dissimilar** regions are located next to each other. (i.e: regions with dissimilar GDP Per Capita are located next to each other)
+
+## ggplot2 method
+
+We can also use ggplot2 package to plot the above.
+
+```{r}
+data <- data.frame(simulated_moran = bperm$res)
+
+ggplot(data, aes(x = simulated_moran)) +
+  geom_histogram(binwidth = (max(data$simulated_moran) - min(data$simulated_moran)) / 20, 
+                 fill = "lightblue", color = "black") +
+  geom_vline(xintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Simulated Moran's I", 
+       y = "Frequency",
+       title = "Histogram of Simulated Moran's I") +
+  theme_minimal()
+```
+:::
+
+::: insights-box
+If Morans I Statistic is = 0, there is Random Spatial Distribution.
+:::
+
+# 5.7 **Global Measures of Spatial Autocorrelation: Geary’s C**
+
+We will implement the Geary's C test for spatial autocorrelation by using the **geary.test()** function of the **spdep** package.
+
+```{r}
+geary.test(hunan$GDPPC, listw=rswm_q)
+```
+
+For Geary;s C test:
+
+-   Values less than 1 indicate positive spatial autocorrelation.
+
+-   Values greater than 1 indicate negative spatial autocorrelation.
+
+-   Values that are close or equal to 1 indicates no spatial autocorrelation.
+
+## 5.7.1 Computing Monte Carlo Geary's C
+
+We implement the the geary.mc() function of the spdep package to conduct 1000 simulations.
+
+```{r}
+bperm=geary.mc(hunan$GDPPC, 
+               listw=rswm_q, 
+               nsim=999)
+bperm
+```
+
+We can infer that there is sufficient evidence to reject the null hypothesis (as p-value (0.001)\<0.05) and conclude that there is indeed Positive Spatial Autocorrelation (as statistic= 0.691.)
+
+## 5.7.2 Visualizing Monte Carlo Geary's C
+
+::: panel-tabset
+## Summary Statistics
+
+```{r}
+mean(bperm$res[1:999])
+```
+
+```{r}
+var(bperm$res[1:999])
+```
+
+```{r}
+summary(bperm$res[1:999])
+```
+
+## The plot
+
+```{r}
+hist(bperm$res, freq=TRUE, breaks=20, xlab="Simulated Geary c")
+abline(v=1, col="red") 
+```
+:::
