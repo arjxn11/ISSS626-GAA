@@ -18,9 +18,9 @@ format:
 
 In this exercise, we focus on reinforcing our learning from Hands-on Exercise 4.
 
-Additionally, we also implement the GWModels package in this exercise.
+Additionally, we also implement the `GWModel` package in this exercise.
 
-The **`GWModels`** package in R is designed for performing geographically weighted (GW) models, which account for spatial heterogeneity by allowing local rather than global parameter estimates. This is particularly useful when the relationship between your dependent and independent variables might vary across space, such as in spatial regression analysis.
+The **`GWModel`** package in R is designed for performing geographically weighted (GW) models, which account for spatial heterogeneity by allowing local rather than global parameter estimates. This is particularly useful when the relationship between your dependent and independent variables might vary across space, such as in spatial regression analysis.
 
 # Data and Packages
 
@@ -33,14 +33,226 @@ For this exercise, we will be focusing on Hunan. The following data sets will be
 The following packages are used:
 
 -   **`sf`**: Provides simple features support for handling and analyzing spatial vector data in R.
+
 -   **`spdep`**: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.
+
 -   **`tmap`**: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.
+
 -   **`tidyverse`**: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.
+
 -   **`knitr`**: A dynamic report generation tool in R, allowing for the integration of code, results, and narrative in reproducible documents.
 
-Below, we import these packages into our environment.
+-   `GWmodel` has been discussed above, above this section.
+
+-   `ggstatsplot` is a power visualization package. It enhances `ggplot2` by including the results of hypothesis tests, effect sizes and confidence intervals on the plots.
+
+    We import these packages into our environment.
 
 ```{r}
-pacman::p_load(sf, spdep, tmap, tidyverse, knitr, GWmodel)
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr, GWmodel, ggstatsplot)
 set.seed(123)
 ```
+
+# 4.2 Importing the data
+
+We start of by importing the Hunan shapefile into R using the st_read() function of the sf package.
+
+```{r}
+hunan <- st_read(dsn = "data/geospatial", 
+                 layer = "Hunan")
+```
+
+We see that it is a simple feature data-frame with 88 features and 7 fields, projected in the WGS84 coordinate system.
+
+We now import the csv file using the read_csv() function of the readr package.
+
+```{r}
+hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
+```
+
+This is a simple R data-frame.
+
+## 4.2.1 Performing relational joins
+
+We will proceed to join this to the simple feature data-frame, `hunan`, obtained above using a relational join technique.
+
+The left_join() function of the dplyr package is used as shown in the code chunk below.
+
+```{r}
+hunan <- left_join(hunan,hunan2012)%>%
+  dplyr::select(1:3, 7, 15, 16, 31, 32) # This facilitates efficiency... dropping unnecessary columns is important.
+```
+
+# 4.9 In-class Exercise: GWmodel Package
+
+We specifically focus on the **gwss** function of the GWmodel package.
+
+::: insights-box
+The `gwss()` function in the **`GWModels`** R package stands for **Geographically Weighted Summary Statistics**. It allows you to calculate local summary statistics for a set of variables, such as mean, standard deviation, skewness, and more, at different spatial locations. This is useful for understanding spatial variability in your data.
+:::
+
+In order to use a GWmodel, we must use the as_Spatial() function of the sf package in order to convert our simple feature data-frame into a spatial object.
+
+```{r}
+hunan_sp=hunan%>%
+  as_Spatial()
+```
+
+## 4.9.1 Geographically Weighted Summary Statistics with adaptive bandwidth
+
+### 4.9.1.1 Determine Adaptive Bandwidth
+
+```{r}
+bw_CV=bw.gwr(GDPPC ~ 1, #arbitrary number
+             data= hunan_sp,
+             approach = 'CV',
+             adaptive = TRUE,
+             kernel = 'bisquare',
+             longlat = T)
+```
+
+```{r}
+bw_CV
+```
+
+::: note-box
+Note: We can also use the AIC method.
+
+```{r}
+bw_AIC=bw.gwr(GDPPC ~ 1, #arbitrary number
+             data= hunan_sp,
+             approach = 'AIC',
+             adaptive = TRUE,
+             kernel = 'bisquare',
+             longlat = T) #Converts everything into Kilometers.
+```
+
+```{r}
+bw_AIC
+```
+:::
+
+### 4.9.1.2 Determining Fixed Bandwidth
+
+In this case, the code generally remains the same except one key difference. We set the adaptive argument to FALSE.
+
+::: panel-tabset
+## CV
+
+```{r}
+bw_fixed_CV=bw.gwr(GDPPC ~ 1, #arbitrary number
+             data= hunan_sp,
+             approach = 'CV',
+             adaptive = FALSE,
+             kernel = 'bisquare',
+             longlat = T)
+```
+
+## AIC
+
+```{r}
+bw_fixed_AIC=bw.gwr(GDPPC ~ 1, #arbitrary number
+             data= hunan_sp,
+             approach = 'AIC',
+             adaptive = FALSE,
+             kernel = 'bisquare',
+             longlat = T)
+```
+:::
+
+We notice a very significant difference between fixed and adaptive bandwidth approaches.
+
+## 4.9.2 Computing Geographically Weighted Summary Statistics
+
+We will now implement the gwss() function to compute the summary statistics.
+
+```{r}
+gwstat=gwss( data = hunan_sp,
+             vars='GDPPC',
+             bw=bw_AIC,
+             kernel = "bisquare",
+             adaptive=TRUE,
+             longlat = T)
+gwstat
+```
+
+::: note-box
+Note: the Kernel and Adaptive must be consistent for computation of bandwidth as well as the Summary Statistics.
+:::
+
+## 4.9.3 Preparing the output data
+
+We implement the code chunk below to extract the SDF data table from the gwss object output fro gwss(). It is converted into a data-frame by applying the as.data.frame() function.
+
+```{r}
+gwstat_df=as.data.frame(gwstat$SDF)
+
+```
+
+After this, we can implement cbind() to append the newly derived data-frame onto the `hunan` sf data frame.
+
+```{r}
+hunan_gstat=cbind(hunan, gwstat_df)
+```
+
+## 4.9.4 Visualization
+
+We will now plot the above obtained data-frame in order to facilitate visualization.
+
+```{r}
+tm_shape(hunan_gstat)+
+  tm_fill('GDPPC_LM',
+          n=5,
+          style='quantile')+
+  tm_borders(alpha = 0.5)+
+  tm_layout(main.title = "Distribution of geographically weighted mean",
+            main.title.position = "center",
+            main.title.size = 2.0,
+            legend.text.size = 1.2,
+            legend.height = 1.5,
+            legend.width = 1.5,
+            frame = TRUE)
+```
+
+## 4.9.5 Geographically weighted correlation with adaptive bandwidth
+
+### 4.9.5.1 Computing Correlation
+
+```{r}
+bw=bw.gwr(GDPPC ~ GIO, #arbitrary number
+             data= hunan_sp,
+             approach = 'AIC',
+             adaptive = TRUE,
+             kernel = 'bisquare',
+             longlat = T)
+```
+
+```{r}
+gwstats=gwss(hunan_sp,
+             vars=c('GDPPC', 'GIO'),
+             bw=bw,
+             kernel='bisquare',
+             adaptive = TRUE,
+             longlat=T)
+             
+```
+
+We will now plot the scatterplot with the best fit line as well as required summary statistics to further our understanding of the data.
+
+```{r}
+
+```
+
+::: panel-tabset
+## Local Correlation Coefficient
+
+```{r}
+
+```
+
+## Local Spearman Coefficient
+
+```{r}
+
+```
+:::
