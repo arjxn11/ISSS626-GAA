@@ -17,7 +17,6 @@ format:
 
 
 
-
 # 1 Introduction
 
 According to the World Health Organisation (WHO), road traffic accidents cause approximately 1.19 million deaths annually and result in between 20 and 50 million people with being down with non-fatal injuries. Over half of all road traffic deaths occur among vulnerable road users, such as pedestrians, cyclists and motorcyclists.
@@ -73,7 +72,6 @@ We import them into our environment using the code chunk below.
 
 
 
-
 ```{r}
 pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork, spdep) 
 set.seed(123)
@@ -83,9 +81,7 @@ set.seed(123)
 
 
 
-
 </details>
-
 
 
 
@@ -106,7 +102,12 @@ map_sf <- st_read(dsn = "data/rawdata", layer="tha_admbnda_adm1_rtsd_20220121")
 ```
 
 ```{r}
+map2_sf <- st_read(dsn = "data/rawdata", layer="tha_admbnda_adm2_rtsd_20220121")
+```
+
+```{r}
 map_sf=st_transform(map_sf,crs = 32647)
+map2_sf=st_transform(map2_sf,crs = 32647)
 ```
 
 ```{r}
@@ -390,9 +391,7 @@ plot(kde_bmracc_bw_raster)
 
 
 
-
 From the above, we infer that the south-east region of Bangkok Metropolitan Region, Samut Prakan Province, specifically has a few hotspots, we want to further analyze the cause of this, so we filter down our data.
-
 
 
 
@@ -403,6 +402,7 @@ qtm(smt_prk_bndry)
 ```
 
 ```{r}
+#| eval: false
 # Switch to interactive mode (optional)
 tmap_mode("view")
 
@@ -465,11 +465,9 @@ ggplot(accidents_by_road_type, aes(x = vehicle_type, y = accident_count, fill = 
 
 
 
-
 ### Second-Order Spatial Point Pattern Analysis.
 
 We now focus on Second Order Spatial Point Patterns Analysis
-
 
 
 
@@ -507,10 +505,8 @@ acc_smt_skn_ppp= bmr_ppp_jit[smt_skn_owin]
 
 
 
-
 ::: panel-tabset
 ## Bangkok
-
 
 
 
@@ -523,9 +519,7 @@ plot(G_bkk, xlim=c(0,500))
 
 
 
-
 We now carry out the monte carlo simulation test for complete spatial randomness.
-
 
 
 
@@ -542,9 +536,39 @@ plot(G_bkk.csr)
 
 
 
-
 It is clear that that there is clustering exhibited in this scenario as the black line, observed values, is far above the envelope. We have sufficient evidence to reject the null hypothesis.
 
 ## Samut Prakhan
+
+
+
+
+```{r}
+G_smt_pkn = Gest(acc_smt_pkn_ppp, correction = "border")
+plot(G_smt_pkn, xlim=c(0,500))
+```
+
+
+
+
+We now implement a monte carlo simulation test for Complete Spatial Random in Samut Prakan.
+
+
+
+
+```{r}
+G_smt_pkn.csr <- envelope(acc_smt_pkn_ppp, Gest, nsim = 199)
+```
+
+```{r}
+plot(G_smt_pkn.csr)
+```
+
+
+
+
+We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Samut Prakan do indeed exhibit clustering, more so than is expected in a region that is randomly distributed.
+
+## Nonthaburi
 :::
 
