@@ -1,0 +1,15 @@
+{
+  "hash": "f7c3bf8a1e1b2da014c9c9debc01d797",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"In Class Exercise 4\"\nauthor: \"Arjun Singh\"\ndate: 2024-09-16\ndate-modified: \"last-modified\"\nexecute: \n  eval: true\n  echo: true\n  message: false\n  freeze: true\n  warning: false\nformat:\n  html:\n    css: styles.css\n---\n\n\n\n\n\n# Introduction\n\nIn this exercise, we focus on reinforcing our learning from Hands-on Exercise 4.\n\nAdditionally, we also implement the GWModels package in this exercise.\n\nThe **`GWModels`** package in R is designed for performing geographically weighted (GW) models, which account for spatial heterogeneity by allowing local rather than global parameter estimates. This is particularly useful when the relationship between your dependent and independent variables might vary across space, such as in spatial regression analysis.\n\n# Data and Packages\n\nFor this exercise, we will be focusing on Hunan. The following data sets will be used:\n\n-   Hunan county boundary layer. This is a geospatial data set in ESRI shapefile format.\n\n-   Hunan_2012.csv: This csv file contains selected Hunan’s local development indicators in 2012.\n\nThe following packages are used:\n\n-   **`sf`**: Provides simple features support for handling and analyzing spatial vector data in R.\n-   **`spdep`**: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.\n-   **`tmap`**: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.\n-   **`tidyverse`**: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.\n-   **`knitr`**: A dynamic report generation tool in R, allowing for the integration of code, results, and narrative in reproducible documents.\n\nBelow, we import these packages into our environment.\n\n\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\npacman::p_load(sf, spdep, tmap, tidyverse, knitr, GWmodel)\nset.seed(123)\n```\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

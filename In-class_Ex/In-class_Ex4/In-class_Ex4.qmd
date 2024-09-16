@@ -1,0 +1,46 @@
+---
+title: "In Class Exercise 4"
+author: "Arjun Singh"
+date: 2024-09-16
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css
+---
+
+# Introduction
+
+In this exercise, we focus on reinforcing our learning from Hands-on Exercise 4.
+
+Additionally, we also implement the GWModels package in this exercise.
+
+The **`GWModels`** package in R is designed for performing geographically weighted (GW) models, which account for spatial heterogeneity by allowing local rather than global parameter estimates. This is particularly useful when the relationship between your dependent and independent variables might vary across space, such as in spatial regression analysis.
+
+# Data and Packages
+
+For this exercise, we will be focusing on Hunan. The following data sets will be used:
+
+-   Hunan county boundary layer. This is a geospatial data set in ESRI shapefile format.
+
+-   Hunan_2012.csv: This csv file contains selected Hunan’s local development indicators in 2012.
+
+The following packages are used:
+
+-   **`sf`**: Provides simple features support for handling and analyzing spatial vector data in R.
+-   **`spdep`**: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.
+-   **`tmap`**: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.
+-   **`tidyverse`**: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.
+-   **`knitr`**: A dynamic report generation tool in R, allowing for the integration of code, results, and narrative in reproducible documents.
+
+Below, we import these packages into our environment.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr, GWmodel)
+set.seed(123)
+```

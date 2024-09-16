@@ -1,0 +1,550 @@
+---
+title: "Take Home Exercise 1"
+author: "Arjun Singh"
+date: 2024-09-02
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css  
+---
+
+
+
+
+
+# 1 Introduction
+
+According to the World Health Organisation (WHO), road traffic accidents cause approximately 1.19 million deaths annually and result in between 20 and 50 million people with being down with non-fatal injuries. Over half of all road traffic deaths occur among vulnerable road users, such as pedestrians, cyclists and motorcyclists.
+
+Road traffic injuries are the leading cause of death for children and young adults aged 5–29 while two-thirds of road traffic fatalities occur among people of working age (18–59 years). 9 in 10 fatalities on the roads occur in low and middle-income countries, even though these countries have only around 60% of the world’s vehicles.
+
+In addition to the human suffering caused by road traffic injuries, they also inflict a heavy economic burden on victims and their families, both through treatment costs for the injured and through loss of productivity of those killed or disabled. More broadly, road traffic injuries have a serious impact on national economies, costing countries 3% of their annual GDP.
+
+Thailand’s roads are the deadliest in Southeast Asia and among the worst in the world, according to the World Health Organisation. About 20,000 people die in road accidents each year, or about 56 deaths a day (WHO).
+
+Between 2014 and 2021, Thailand experienced a notable increase in accidents. Specifically, 19% of all accidents in Thailand occurred on the national highways, which constituted the primary public thoroughfares connecting various regions, provinces, districts, and significant locations within a comprehensive network.
+
+Within the broader context of accidents across the country, there existed a considerable 66% likelihood of encountering accident-prone zones, often termed ‘**black spots**,’ distributed as follows: 66% on straight road segments, 13% at curves, 6% at median points of cross-shaped intersections, 5% at T-shaped intersections and Y-shaped intersections, 3% at cross-shaped intersections, 2% on bridges, and 2% on steep slopes, respectively.
+
+# 1.1 Objectives
+
+For the most part, road accidents can be attributed to two key factors- behavioral factors. such as driving skill, and environmental factors, such as heavy rain.
+
+For this exercise, we will implement Spatial and Spatio-Temporal Point Pattern Analysis methods to discover the underlying factors behind the accidents in the Bangkok Metropolitan Region.
+
+# 1.2 Data and Packages
+
+For the purpose of this study, we will use the following three data-frames.
+
+-   [Thailand Road Accidents \[2019-2022\]](https://www.kaggle.com/datasets/thaweewatboy/thailand-road-accident-2019-2022), sourced from Kaggle.
+
+-   [Thailand Roads Open Street Map Export](https://data.humdata.org/dataset/hotosm_tha_roads), sourced from Humanitarian Data Exchange.
+
+-   [Thailand Subnational Administrative Boundaries](https://data.humdata.org/dataset/cod-ab-tha?) sourced from Humanitarian Data Exchange.
+
+You can click the link embedded on each of these data-frames to learn more.
+
+We will use the following R packages for our analysis:
+
+-   `sf`, a relatively new R package specially designed to import, manage and process vector-based geospatial data in R.
+
+-   `spatstat`, which has a wide range of useful functions for point pattern analysis. In this hands-on exercise, it will be used to perform 1st- and 2nd-order spatial point patterns analysis and derive kernel density estimation (KDE) layer.
+
+-   `raster`, which reads, writes, manipulates, analyses and model of gridded spatial data (i.e. raster). In this hands-on exercise, it will be used to convert image output generate by spatstat into raster format.
+
+-   `tidyverse` simplifies spatial analysis by offering a consistent and efficient framework that facilitates working with spatial data.
+
+-   `tmap` which provides functions for plotting cartographic quality static point patterns maps or interactive maps by using leaflet API.
+
+-   `spNetwork` which provides functions to perform Spatial Point Patterns Analysis such as kernel density estimation (KDE) and K-function on network. It also can be used to build spatial matrices (‘listw’ objects like in ‘spdep’ package) to conduct any kind of traditional spatial analysis with spatial weights based on reticular distances.
+
+We import them into our environment using the code chunk below.
+
+<details>
+
+<summary>Click to show/hide code chunk</summary>
+
+
+
+
+
+```{r}
+pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork, spdep) 
+set.seed(123)
+
+```
+
+
+
+
+
+</details>
+
+
+
+
+
+```{r}
+rdacc_sf=read_rds("data/rds/acc_sf")%>% 
+  mutate(hourofday= hour(incident_datetime))
+st_crs(rdacc_sf)
+```
+
+```{r}
+road_sf <- st_read(dsn = "data/rawdata", layer="hotosm_tha_roads_lines_shp")
+
+```
+
+```{r}
+map_sf <- st_read(dsn = "data/rawdata", layer="tha_admbnda_adm1_rtsd_20220121")
+```
+
+```{r}
+map_sf=st_transform(map_sf,crs = 32647)
+```
+
+```{r}
+road_sf=st_set_crs(road_sf, 4326)
+```
+
+```{r}
+st_crs(map_sf)
+```
+
+```{r}
+bmr_province=c("Bangkok", "Samut Prakan", "Samut Sakhon", "Nonthaburi", "Nakhon Pathom", "Pathum Thani")
+```
+
+```{r}
+bmr_boundary=map_sf %>% 
+  filter(ADM1_EN %in% bmr_province)
+```
+
+```{r}
+st_bbox(bmr_boundary)
+```
+
+```{r}
+st_crs(road_sf)        # This is likely EPSG:4326 (WGS84, latitude/longitude)
+st_crs(bmr_boundary)   # This is likely EPSG:32647 (UTM Zone 47N)
+
+```
+
+```{r}
+# If road_sf was originally in EPSG:4326, reproject it properly
+road_sf <- st_transform(road_sf, crs = 32647)
+
+```
+
+```{r}
+#bmr_roads=st_intersection(bmr_boundary, road_sf)
+```
+
+```{r}
+#write_rds(bmr_roads, "data/rds/bmrroads")
+```
+
+```{r}
+bmr_roads=read_rds("data/rds/bmrroads")
+```
+
+```{r}
+#Implementing the filter() function with  the help of the list above.
+bmr_accsf=rdacc_sf %>% 
+  filter(province_en %in% bmr_province)
+
+# Step 1: Summarize the number of hospitalizations per province
+accident_summary <- bmr_accsf %>%
+  group_by(province_en) %>%
+  summarize(total_accidents = n())
+
+# Step 2: Visualize using ggplot2
+ggplot(accident_summary, aes(x = reorder(province_en, total_accidents), y = total_accidents)) +
+  geom_bar(stat = "identity", fill = "darkred") +
+  coord_flip() +  # Flip coordinates for better readability if many provinces
+  labs(title = "Total Accidents by Province",
+       x = "Province",
+       y = "Number of Accidents") +
+  theme_minimal()
+
+```
+
+```{r}
+cause_count <- bmr_accsf %>%
+  group_by(presumed_cause) %>%
+  summarise(count = n()) 
+```
+
+```{r}
+# Filter the top 5 causes
+top_5_causes <- cause_count %>%
+  top_n(5, count)
+
+# Create the bar chart showing only the top 5 presumed causes
+ggplot(top_5_causes, aes(x = reorder(presumed_cause, -count), y = count)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  geom_text(aes(label = count), vjust = -0.5) +  # Add labels to show the count on top of the bars
+  theme_minimal() +
+  labs(title = "Top 5 Presumed Causes of Accidents", 
+       x = "Presumed Cause", 
+       y = "Accident Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+# Set tmap to interactive view mode (optional for exploration)
+tmap_mode("view")
+
+# Create the map with boundaries and accident points
+tm_shape(bmr_boundary) +
+  tm_borders(col = "black") +  # Show the boundaries
+  tm_shape(bmr_accsf) +
+  tm_dots(col = "red", size = 0.01) +  # Show accident points as red dots
+  tm_layout(frame = FALSE, legend.outside = TRUE)
+
+# Switch back to static mode after rendering (if needed)
+tmap_mode("plot")
+```
+
+```{r}
+#| eval: false
+# Create the map with your existing OSM data, BMR boundaries, and accident points
+tm_shape(bmr_roads) +  # Use your preloaded OSM data
+  tm_lines(col='gray', lwd = 1) + 
+  tm_shape(bmr_boundary) +
+  tm_borders(col = "black", lwd = 1) +  # Plot BMR boundary with black borders
+  tm_shape(bmr_accsf) +
+  tm_dots(col = "red", size = 0.01) +  # Show accident points as red dots
+  tm_layout(frame = FALSE, legend.outside = TRUE)
+```
+
+```{r}
+
+bmr_acc <- as_Spatial(bmr_accsf)
+bmr <- as_Spatial(bmr_boundary)
+osm_data=as_Spatial(bmr_roads)
+
+```
+
+```{r}
+
+bmracc_sp <- as(bmr_acc, "SpatialPoints")
+boundary_sp <- as(bmr, "SpatialPolygons")
+```
+
+```{r}
+# Load necessary libraries
+library(sf)
+
+# Create a square grid that covers the BMR boundary
+grid_size <- 5000  # Size of the grid cells in meters (adjust as necessary)
+bmr_grid <- st_make_grid(bmr_boundary, cellsize = grid_size, square = TRUE)
+
+# Convert the grid into an sf object
+bmr_grid_sf <- st_sf(geometry = bmr_grid)
+
+# Clip the grid to the BMR boundary (to remove grid cells outside the boundary)
+bmr_grid_sf <- st_intersection(bmr_grid_sf, bmr_boundary)
+
+```
+
+```{r}
+# Create a hexagonal grid covering the BMR boundary
+bmr_hex_grid <- st_make_grid(bmr_boundary, cellsize = grid_size, square = FALSE)
+
+# Convert to an sf object and clip to the BMR boundary
+bmr_hex_grid_sf <- st_sf(geometry = bmr_hex_grid)
+bmr_hex_grid_sf <- st_intersection(bmr_hex_grid_sf, bmr_boundary)
+
+```
+
+```{r}
+# Perform a spatial join to count the number of accidents within each grid cell
+accidents_by_grid <- st_join(bmr_grid_sf, bmr_accsf) %>%
+  group_by(geometry) %>%
+  summarise(accident_count = n())  # Count accidents in each grid cell
+
+
+# Perform a spatial join to associate accidents with polygons
+# This assumes you already have polygons in `bmr_grid_sf` and accidents in `bmr_accsf`
+
+accidents_by_polygon_and_cause <- st_join(bmr_grid_sf, bmr_accsf) %>%
+  group_by(geometry, presumed_cause) %>%
+  summarise(cause_count = n())  # Count the number of accidents by presumed cause in each polygon
+
+# Optionally, aggregate presumed causes for each polygon into a summary
+polygon_cause_summary <- accidents_by_polygon_and_cause %>%
+  group_by(geometry) %>%
+  summarise(total_accidents = sum(cause_count),
+            presumed_cause_summary = paste(presumed_cause, ":", cause_count, collapse = "; "))
+
+
+```
+
+```{r}
+
+# Switch to interactive mode to enable tooltips
+tmap_mode("view")
+
+# Create the choropleth map with hover tooltips
+tm_shape(polygon_cause_summary) +
+  tm_polygons(col = "total_accidents", palette = "Reds", style = "quantile", 
+              title = "Accident Count", border.col = "black",
+              id = "presumed_cause_summary") +  # Tooltip will show presumed causes
+  tm_layout(frame = FALSE, legend.outside = TRUE)
+tmap_mode('plot')
+
+```
+
+```{r}
+
+# Step 3: Define the window (bounding box) from the boundary
+boundary_bbox <- bbox(boundary_sp)  # Get bounding box of boundary
+window <- owin(xrange = boundary_bbox[1, ], yrange = boundary_bbox[2, ])  # Define window
+
+# Step 4: Extract the coordinates from the SpatialPoints object
+coordinates <- coordinates(bmracc_sp)
+
+# Step 5: Convert the SpatialPoints into a ppp object using the window
+bmracc_ppp <- ppp(x = coordinates[,1], y = coordinates[,2], window = window)
+
+# Step 6: Check the structure of the resulting point pattern object
+summary(bmracc_ppp)
+
+# You can now use the ppp object for spatial analysis with spatstat
+```
+
+```{r}
+any(duplicated(bmracc_ppp))
+```
+
+```{r}
+multiplicity(bmracc_ppp)
+```
+
+```{r}
+sum(multiplicity(bmracc_ppp)>1)
+```
+
+```{r}
+bmr_ppp_jit <- rjitter(bmracc_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+```
+
+```{r}
+bmr_owin <- as.owin(bmr_boundary)
+```
+
+```{r}
+plot(bmr_owin)
+```
+
+```{r}
+kde_bmracc_bw <- density(bmr_ppp_jit,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian") 
+```
+
+```{r}
+plot(kde_bmracc_bw)
+```
+
+```{r}
+bmracc_ppp.km <- rescale.ppp(bmr_ppp_jit, 1000, "km")
+```
+
+```{r}
+kde_bmracc.bw <- density(bmracc_ppp.km, sigma=bw.diggle, edge=TRUE, kernel="gaussian")
+plot(kde_bmracc.bw)
+```
+
+```{r}
+kde_bmracc_adaptive <- adaptive.density(bmracc_ppp.km, method="kernel")
+plot(kde_bmracc_adaptive)
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(kde_bmracc.bw, main = "Fixed bandwidth")
+plot(kde_bmracc_adaptive, main = "Adaptive bandwidth")
+```
+
+```{r}
+kde_bmracc_bw_raster <- raster(kde_bmracc.bw)
+```
+
+```{r}
+projection(kde_bmracc_bw_raster) <- CRS("+init=EPSG:32647")
+plot(kde_bmracc_bw_raster)
+```
+
+
+
+
+
+From the above, we infer that the south-east region of Bangkok Metropolitan Region, Samut Prakan Province, specifically has a few hotspots, we want to further analyze the cause of this, so we filter down our data.
+
+
+
+
+
+```{r}
+smt_prk_bndry=bmr_boundary%>%filter(ADM1_EN=='Samut Prakan')
+qtm(smt_prk_bndry)
+```
+
+```{r}
+# Switch to interactive mode (optional)
+tmap_mode("view")
+
+tm_shape(kde_bmracc_bw_raster) +
+  tm_raster(palette = "-RdYlGn", style = "cont", title = "Accident Density", midpoint = NA, 
+            colorNA = NULL) +  # colorNA = NULL will make NAs transparent
+  tm_shape(bmr_roads) +
+  tm_lines(col = "black", lwd = 1) +  # Overlay the roads
+  tm_layout(legend.outside = TRUE)
+
+
+
+```
+
+```{r}
+bmr_speedingacc=bmr_accsf%>%filter(presumed_cause=='speeding')
+```
+
+```{r}
+# Set tmap to interactive view mode (optional for exploration)
+tmap_mode("view")
+
+# Create the map with boundaries and accident points
+tm_shape(bmr_boundary) +
+  tm_borders(col = "black") +  # Show the boundaries
+  tm_shape(bmr_speedingacc) +
+  tm_dots(col = "red", size = 0.01) +  # Show accident points as red dots
+  tm_layout(frame = FALSE, legend.outside = TRUE)
+
+# Switch back to static mode after rendering (if needed)
+tmap_mode("plot")
+```
+
+```{r}
+# Assuming roads have a column for road type, such as 'road_type'
+accidents_on_roads <- st_join(bmr_accsf, bmr_roads, join = st_intersects)
+
+# View the result
+head(accidents_on_roads)
+
+```
+
+```{r}
+# Count accidents by road type
+accidents_by_road_type <- accidents_on_roads %>%
+  group_by(vehicle_type) %>%
+  summarise(accident_count = n())%>%
+  arrange(desc(accident_count))%>%
+  slice_head(n=5)
+
+# Bar plot showing the number of accidents by road type
+ggplot(accidents_by_road_type, aes(x = vehicle_type, y = accident_count, fill = vehicle_type)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Number of Accidents by Road Type", x = "Vehicle Type", y = "Accident Count") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+
+
+
+
+### Second-Order Spatial Point Pattern Analysis.
+
+We now focus on Second Order Spatial Point Patterns Analysis
+
+
+
+
+
+```{r}
+bkk <- bmr_boundary %>%
+  filter(ADM1_EN == "Bangkok")
+smt_pkn <- bmr_boundary %>%
+  filter(ADM1_EN == "Samut Prakan")
+ntbr <- bmr_boundary %>%
+  filter(ADM1_EN == "Nonthaburi")
+nkn_ptn<- bmr_boundary %>%
+  filter(ADM1_EN == "Nakhon Pathom")
+smt_skn<- bmr_boundary %>%
+  filter(ADM1_EN == "Samut Sakhon")
+bkk_owin = as.owin(bkk)
+smt_pkn_owin = as.owin(smt_pkn)
+ntbr_owin = as.owin(ntbr)
+nkn_ptn_owin = as.owin(nkn_ptn)
+smt_skn_owin = as.owin(smt_skn)
+
+#childcare_ppp_jit <- rjitter(childcare_ppp, 
+                          #retry=TRUE, 
+                           #nsim=1, 
+                            #drop=TRUE)
+
+acc_bkk_ppp = bmr_ppp_jit[bkk_owin]
+acc_smt_pkn_ppp = bmr_ppp_jit[smt_pkn_owin]
+acc_ntbr_ppp = bmr_ppp_jit[ntbr_owin]
+acc_nkn_ptn_ppp = bmr_ppp_jit[nkn_ptn_owin]
+acc_smt_skn_ppp= bmr_ppp_jit[smt_skn_owin]
+
+```
+
+
+
+
+
+::: panel-tabset
+## Bangkok
+
+
+
+
+
+```{r}
+G_bkk = Gest(acc_bkk_ppp, correction = "border")
+plot(G_bkk, xlim=c(0,500))
+```
+
+
+
+
+
+We now carry out the monte carlo simulation test for complete spatial randomness.
+
+
+
+
+
+```{r}
+G_bkk.csr <- envelope(acc_bkk_ppp, Gest, nsim = 99)
+
+```
+
+```{r}
+plot(G_bkk.csr)
+```
+
+
+
+
+
+It is clear that that there is clustering exhibited in this scenario as the black line, observed values, is far above the envelope. We have sufficient evidence to reject the null hypothesis.
+
+## Samut Prakhan
+:::
+

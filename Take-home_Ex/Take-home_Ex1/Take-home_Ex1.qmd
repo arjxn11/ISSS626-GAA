@@ -67,7 +67,7 @@ We import them into our environment using the code chunk below.
 <summary>Click to show/hide code chunk</summary>
 
 ```{r}
-pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork)
+pacman::p_load(sf, spatstat, raster, tidyverse, tmap, spNetwork, spdep)
 set.seed(123)
 ```
 
@@ -94,6 +94,17 @@ rdacc_sf=read_csv("data/rawdata/thai_road_accident_2019_2022.csv")%>%
   mutate(Month_fac=month(incident_datetime,
                      label=TRUE, abbr=TRUE))%>%
   mutate(dayofmonth= day(incident_datetime))
+```
+
+In the interest of computational efficiency, we will save this as an rds data file.
+
+```{r}
+write_rds(rdacc_sf, "data/rds/acc_sf")
+```
+
+```{r}
+rdacc_sf=read_rds("data/rds/acc_sf")%>% 
+  mutate(hourofday= hour(incident_datetime))
 ```
 
 ## Features of the dataset
@@ -247,7 +258,47 @@ The above confirms that the filter() function has worked as expected. We can now
 We will now filter the OpenStreetMap data to only include data points that fall within this boundary by using the **st_intersects()** function of the sf package.
 
 ```{r}
-#### FILL LATER
+if (st_crs(road_sf) != st_crs(bmr_boundary)) {
+  osm_data <- st_transform(road_sf, st_crs(bmr_boundary))
+}
+
+```
+
+```{r}
+# Filter OSM data to the boundary
+filtered_osm_data <- st_intersection(road_sf, bmr_boundary)
+
+```
+
+```{r}
+# Randomly sample 100,000 rows for faster plotting
+sample_data <- road_sf[sample(nrow(road_sf), 100000), ]
+
+# Plot the downsampled data
+ggplot() +
+  geom_sf(data = sample_data, color = "blue", size = 0.1) +
+  theme_minimal()
+
+
+
+```
+
+```{r}
+
+# Perform a spatial join
+joined_data <- st_join(road_sf, bmr_boundary, join = st_within)  # or st_intersects depending on your use case
+
+# View the first few rows of the joined data
+head(joined_data)
+
+```
+
+```{r}
+# Check column names after the join
+colnames(joined_data)
+
+# Look at specific columns of interest
+joined_data %>% select(name, ADM1_EN, highway, geometry) %>% head()
 ```
 :::
 
@@ -303,6 +354,23 @@ bmr_with_accidents <- bmr_boundary %>%
 Now that we have determined the count of accidents in each province, we will use the tmap package to produce a highly cartographic map for the same.
 
 ```{r}
+# Set tmap to interactive view mode (optional for exploration)
+tmap_mode("view")
+
+# Create the map with boundaries and accident points
+tm_shape(bmr_boundary) +
+  tm_borders(col = "black") +  # Show the boundaries
+  tm_shape(bmr_accsf) +
+  tm_dots(col = "red", size = 0.01) +  # Show accident points as red dots
+  tm_layout(frame = FALSE, legend.outside = TRUE)
+
+# Switch back to static mode after rendering (if needed)
+tmap_mode("plot")
+```
+
+## Choropleth Map
+
+```{r}
 tmap_mode("view")
 
 # Create the choropleth map
@@ -316,4 +384,191 @@ tmap_mode('plot')
 ```
 :::
 
-Based on the map above, our initial findings are confirmed. Bangkok has the most accidents of any province in the metropolitan region.
+Based on the maps above, our initial findings are confirmed. Bangkok has the most accidents of any province in the metropolitan region.
+
+## 1.5.1 Region by Region EDA
+
+```{r}
+# Set tmap to interactive view mode (optional for exploration)
+tmap_mode("view")
+
+# Create the map with boundaries and accident points
+tm_shape(bmr_boundary%>%filter(ADM1_EN=='Bangkok')) +
+  tm_borders(col = "black") +  # Show the boundaries
+  tm_shape(bmr_accsf%>%filter(province_en=='Bangkok')) +
+  tm_dots(col = "red", size = 0.01) +  # Show accident points as red dots
+  tm_layout(frame = FALSE, legend.outside = TRUE)
+
+# Switch back to static mode after rendering (if needed)
+tmap_mode("plot")
+```
+
+## 1.4.4 Converting the Spatial Class into generic sp format
+
+```{r}
+
+bmracc_sp <- as(bmr_acc, "SpatialPoints")
+boundary_sp <- as(bmr, "SpatialPolygons")
+```
+
+```{r}
+bmracc_sp <- as(bmr_acc, "SpatialPoints")
+
+# Step 2: Ensure that bmr is a SpatialPolygons object
+# Convert bmr to SpatialPolygons if necessary
+boundary_sp <- as(bmr, "SpatialPolygons")
+
+# Step 3: Define the window (bounding box) from the boundary
+boundary_bbox <- bbox(boundary_sp)  # Get bounding box of boundary
+window <- owin(xrange = boundary_bbox[1, ], yrange = boundary_bbox[2, ])  # Define window
+
+# Step 4: Extract the coordinates from the SpatialPoints object
+coordinates <- coordinates(bmracc_sp)
+
+# Step 5: Convert the SpatialPoints into a ppp object using the window
+bmracc_ppp <- ppp(x = coordinates[,1], y = coordinates[,2], window = window)
+
+# Step 6: Check the structure of the resulting point pattern object
+summary(bmracc_ppp)
+
+# You can now use the ppp object for spatial analysis with spatstat
+```
+
+```{r}
+any(duplicated(bmracc_ppp))
+```
+
+```{r}
+multiplicity(bmracc_ppp)
+```
+
+```{r}
+sum(multiplicity(bmracc_ppp)>1)
+```
+
+```{r}
+bmr_ppp_jit <- rjitter(bmracc_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+```
+
+```{r}
+bmr_owin <- as.owin(bmr_boundary)
+```
+
+```{r}
+plot(bmr_owin)
+```
+
+```{r}
+kde_bmracc_bw <- density(bmr_ppp_jit,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian") 
+```
+
+```{r}
+plot(kde_bmracc_bw)
+```
+
+```{r}
+bmracc_ppp.km <- rescale.ppp(bmr_ppp_jit, 1000, "km")
+```
+
+```{r}
+kde_bmracc.bw <- density(bmracc_ppp.km, sigma=bw.diggle, edge=TRUE, kernel="gaussian")
+plot(kde_bmracc.bw)
+```
+
+```{r}
+kde_bmracc_adaptive <- adaptive.density(bmracc_ppp.km, method="kernel")
+plot(kde_bmracc_adaptive)
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(kde_bmracc.bw, main = "Fixed bandwidth")
+plot(kde_bmracc_adaptive, main = "Adaptive bandwidth")
+```
+
+```{r}
+kde_bmracc_bw_raster <- raster(kde_bmracc.bw)
+```
+
+```{r}
+projection(kde_bmracc_bw_raster) <- CRS("+init=EPSG:32647")
+plot(kde_bmracc_bw_raster)
+```
+
+we can further narrow it down to analyze it by Province.
+
+::: panel-tabset
+## Bangkok
+
+```{r}
+bkk_owin <- as.owin(bmr_boundary%>%filter(ADM1_EN== "Bangkok"))
+plot(bkk_owin)
+```
+
+We now proceed to carry out the same steps as above.
+
+<Details>
+
+<summary>Creating PPP object</summary>
+
+```{r}
+bkk_acc=bmr_accsf%>%filter(province_en=="Bangkok")
+bkk=as_Spatial(bkk_acc)
+
+
+# Step 3: Define the window (bounding box) from the boundary
+boundary_bbox <- bbox(boundary_sp)  # Get bounding box of boundary
+window <- owin(xrange = boundary_bbox[1, ], yrange = boundary_bbox[2, ])  # Define window
+
+# Step 4: Extract the coordinates from the SpatialPoints object
+coordinates <- coordinates(bkk)
+
+# Step 5: Convert the SpatialPoints into a ppp object using the window
+bkkacc_ppp <- ppp(x = coordinates[,1], y = coordinates[,2], window = window)
+
+# Step 6: Check the structure of the resulting point pattern object
+summary(bkkacc_ppp)
+
+bkk_ppp_jit <- rjitter(bkkacc_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+bkkacc_ppp.km <- rescale.ppp(bkk_ppp_jit, 1000, "km")
+```
+
+</Details>
+
+```{r}
+kde_bkkacc.bw <- density(bkkacc_ppp,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian") 
+plot(kde_bkkacc.bw)
+```
+
+```{r}
+kde_bkkacc_bw_raster <- raster(kde_bkkacc.bw)
+projection(kde_bkkacc_bw_raster) <- CRS("+init=EPSG:32647")
+plot(kde_bkkacc_bw_raster)
+```
+:::
+
+```{r}
+bmr_joined=st_join(bmr_boundary, bmr_accsf)
+wm_q <- poly2nb(bmr_boundary, 
+                queen=TRUE)
+summary(wm_q)
+```
+
+```{r}
+rswm_q <- nb2listw(wm_q, 
+                   style="W", 
+                   zero.policy = TRUE)
+rswm_q
+```
