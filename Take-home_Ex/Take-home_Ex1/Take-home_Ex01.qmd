@@ -12,7 +12,6 @@ execute:
 format:
   html:
     css: styles.css  
-    code-fold: true
 ---
 
 # 1 Introduction
@@ -226,12 +225,10 @@ Below, we use the tmap package to plot a highly cartographic map to verify the a
 This interactive map allows us to click on a point and identify the reason for the accident, the time, the month amongst other factors.
 
 ```{r}
-#| eval: false
 # Set tmap to interactive view mode (optional for exploration)
-tmap_mode("view")
+tmap_mode("plot")
 
 # Create the map with boundaries and accident points
-tm_basemap("OpenStreetMap")+
 tm_shape(bmr_boundary2) +
   tm_borders(col = "black") +  # Show the boundaries
   tm_shape(bmr_accsf) +
@@ -420,6 +417,66 @@ The best way to deal with this would be the installation of more speed cameras a
 
 Currently, fines for speeding can be up to 4000B. Increasing this fine would be prudent and help reduce the amount of speeding accidents on motorways and across the region in general.
 
+Now we analyze the accident types based on weather and time of day see if there are any changes based on changes in either factor. We will use the ggplot2 package for this.
+
+::: panel-tabset
+## Time
+
+```{r}
+# Step 1: Create time intervals for hour of day
+accidents <- bmr_accsf %>%
+  mutate(time_interval = case_when(
+    hourofday >= 0 & hourofday < 6  ~ "0-6",
+    hourofday >= 6 & hourofday < 12 ~ "6-12",
+    hourofday >= 12 & hourofday < 18 ~ "12-18",
+    hourofday >= 18 & hourofday <= 24 ~ "18-24"
+  ))
+
+# Group and count the causes of accidents by time interval
+top_5_time <- accidents %>%
+  group_by(time_interval, presumed_cause) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  group_by(time_interval) %>%
+  top_n(5, wt = count)  # Get top 5 causes for each time interval
+
+# Plot for time intervals
+ggplot(top_5_time, aes(x = reorder(presumed_cause, count), y = count, fill = presumed_cause)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +  # Flip the coordinates for better readability
+  facet_wrap(~ time_interval, scales = "free_y") +
+  labs(title = "Top 5 Causes of Accidents by Time Interval",
+       x = "Cause of Accident", y = "Count") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+There doesn't seem to be a significant difference based on the different time periods of the day.
+
+## Weather
+
+```{r}
+# Group and count the causes of accidents by weather
+top_5_weather <- bmr_accsf %>%
+  group_by(weather_condition, presumed_cause) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  ungroup() %>%
+  top_n(5, wt = count)  # Get the top 5 causes overall (not grouped by weather)
+
+# Plot for all weather conditions
+ggplot(top_5_weather, aes(x = weather_condition, y = count, fill = presumed_cause)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 5 Causes of Accidents Across All Weather Conditions",
+       x = "Weather Condition", y = "Count") +
+  theme_minimal() +
+  theme(legend.position = "bottom")  # Place legend at the bottom
+```
+
+Speeding, unsurprisingly, is the primary reason for road accidents. However, we see far more instances of accidents in clear conditions.
+:::
+
 # Kernel Density Estimation (KDE)
 
 KDE will allow us to better estimate the distribution of accidents acrosss the Bangkok Metropolitan Region. Using this, we can make more informed decisions on where to focus resources on to reduce the rate of accidents across the region.
@@ -557,25 +614,7 @@ smt_prk_bndry=bmr_boundary%>%filter(ADM1_EN=='Samut Prakan')
 qtm(smt_prk_bndry)
 ```
 
-# further eda
-
-```{r}
-#| eval: false
-# Switch to interactive mode (optional)
-tmap_mode("plot")
-
-tm_shape(kde_bmracc_bw_raster) +
-  tm_raster(palette = "-RdYlGn", style = "cont", title = "Accident Density", midpoint = NA, 
-            colorNA = NULL)  # colorNA = NULL will make NAs transparent
-
-
-```
-
-```{r}
-bmr_speedingacc=bmr_accsf%>%filter(presumed_cause=='speeding')
-```
-
-### Second-Order Spatial Point Pattern Analysis.
+# Second-Order Spatial Point Pattern Analysis.
 
 We now focus on Second Order Spatial Point Patterns Analysis.
 
@@ -607,7 +646,7 @@ acc_smt_skn_ppp= bmr_ppp_jit[smt_skn_owin]
 
 ```
 
-### **Calculating G-function estimates and testing for Complete Spatial Randomness**
+## **Calculating G-function estimates and testing for Complete Spatial Randomness**
 
 We now focus on computing G-function estimates.
 
@@ -1324,7 +1363,7 @@ The output of the `localG()` function is a vector containing G or G\* values, wi
 
 The Gi statistic is represented as a Z-score, where larger values signify stronger clustering. The sign of the value indicates the type of cluster: positive values point to high-value clusters (hotspots), while negative values indicate low-value clusters (cold spots).
 
-To merge the Gi values with their corresponding geographic data in the Hunan spatial dataframe, use the following code to join the results to the `boundary_with_accident_count` sf object. This allows for the spatial visualization of clusters within the geographic data.
+To merge the Gi values with their corresponding geographic data in the BMR spatial dataframe, use the following code to join the results to the `boundary_with_accident_count` sf object. This allows for the spatial visualization of clusters within the geographic data.
 
 ```{r}
 bmr.gi <- cbind(boundary_with_accident_count, as.matrix(gi.fixed)) %>%
