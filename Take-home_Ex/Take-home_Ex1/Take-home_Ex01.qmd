@@ -9,9 +9,11 @@ execute:
   message: false
   freeze: true
   warning: false
+  cache: true
 format:
   html:
     css: styles.css  
+    code-fold: true
 ---
 
 # 1 Introduction
@@ -418,48 +420,6 @@ The best way to deal with this would be the installation of more speed cameras a
 
 Currently, fines for speeding can be up to 4000B. Increasing this fine would be prudent and help reduce the amount of speeding accidents on motorways and across the region in general.
 
-## Interactive map to visualize Presumed Cause
-
-To further reinforce our expectations, we will produce a map that allows us to hover over all regions and visualize the causes of accidents in each polygon.
-
-We first perform a spatial join using the st_join function and then count the number of accidents based on the `presumed_cause`.
-
-```{r}
-# Perform a spatial join to count the number of accidents within each grid cell
-accidents_by_grid <- st_join(bmr_grid_sf, bmr_accsf) %>%
-  group_by(geometry) %>%
-  summarise(accident_count = n())  # Count accidents in each grid cell
-
-
-# Perform a spatial join to associate accidents with polygons
-# This assumes you already have polygons in `bmr_grid_sf` and accidents in `bmr_accsf`
-
-accidents_by_polygon_and_cause <- st_join(bmr_grid_sf, bmr_accsf) %>%
-  group_by(geometry, presumed_cause) %>%
-  summarise(cause_count = n())  # Count the number of accidents by presumed cause in each polygon
-
-# Optionally, aggregate presumed causes for each polygon into a summary
-polygon_cause_summary <- accidents_by_polygon_and_cause %>%
-  group_by(geometry) %>%
-  summarise(total_accidents = sum(cause_count),
-            presumed_cause_summary = paste(presumed_cause, ":", cause_count, collapse = "; "))
-
-
-```
-
-```{r}
-tmap_mode("plot")
-
-# Create the choropleth map with hover tooltips
-tm_shape(polygon_cause_summary) +
-  tm_polygons(col = "total_accidents", palette = "Reds", style = "equal", 
-              title = "Accident Count", border.col = "black",
-              id = "presumed_cause_summary") +  # Tooltip will show presumed causes
-  tm_layout(frame = FALSE, legend.outside = TRUE)
-tmap_mode('plot')
-
-```
-
 # Kernel Density Estimation (KDE)
 
 KDE will allow us to better estimate the distribution of accidents acrosss the Bangkok Metropolitan Region. Using this, we can make more informed decisions on where to focus resources on to reduce the rate of accidents across the region.
@@ -494,11 +454,7 @@ After creating the above PPP object, we check for duplicates by implementing the
 any(duplicated(bmracc_ppp))
 ```
 
-The multiplicity() function helps give us a better insight into the duplicates that are present in the ppp object.
-
-```{r}
-multiplicity(bmracc_ppp)
-```
+We check the number of duplicates in our data-frame using the code chunk below. The multiplicity() function creates a list of all duplicates after which the sum() function counts the total.
 
 ```{r}
 sum(multiplicity(bmracc_ppp)>1)
