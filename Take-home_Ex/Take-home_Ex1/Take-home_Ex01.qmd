@@ -9,7 +9,6 @@ execute:
   message: false
   freeze: true
   warning: false
-  cache: true
 format:
   html:
     css: styles.css  
