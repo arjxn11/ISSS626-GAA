@@ -227,6 +227,7 @@ Below, we use the tmap package to plot a highly cartographic map to verify the a
 This interactive map allows us to click on a point and identify the reason for the accident, the time, the month amongst other factors.
 
 ```{r}
+#| eval: false
 # Set tmap to interactive view mode (optional for exploration)
 tmap_mode("view")
 
