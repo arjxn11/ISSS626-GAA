@@ -299,7 +299,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">September 21, 2024</p>
+      <p class="date-modified">September 22, 2024</p>
     </div>
   </div>
     
@@ -355,6 +355,7 @@ Click to show/hide code chunk
 <p>We will now import the data-frames mentioned above into our environment. We save them as RDS files in the interest of computational efficiency.</p>
 <section id="aspatial-data" class="level2">
 <h2 class="anchored" data-anchor-id="aspatial-data">1.2.1 Aspatial Data</h2>
+<p>We first import in the data-frame contained data of all accidents in the Bangkok Metropolitan Region. For this, we implement the read_rds() function as shown in the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rdacc_sf<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/acc_sf"</span>)<span class="sc">%&gt;%</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">hourofday=</span> <span class="fu">hour</span>(incident_datetime))<span class="sc">%&gt;%</span></span>
@@ -3201,12 +3202,15 @@ attr(,"class")
 </div>
 </div>
 <p>From the above plot, we can infer that ‘hot spots’ tend to be neighboring regions and likewise for the cold spots too.&nbsp;We see more high value (hot) clusters in the South East region of the Bangkok Metropolitan Region- Near Samut Prakan. The Central Area, near Bangkok and Nonthaburi showcase more ‘cold spots’.</p>
+<p>Districts Bang Phli, Bang Sao Thong, Bang Bo, Sinakharin, and Suwinthawong seem to be highly linked to each other based on accidents, all in the South-East region of the Bangkok Metropolitan Region.</p>
 </section>
 </section>
 </section>
 <section id="conclusion" class="level1">
 <h1>1.5 Conclusion</h1>
 <p>From all our analysis, we determine that the South East region of Bangkok Metropolitan Region seems to be a hotspot for accidents and needs to be further examined in order to reduce the rate of accidents in the region.</p>
+<p>Speeding fines and laws need to be tightened in order to reduce the number of speeding incidents in the region. It is responsible for over 80% of all road accidents in the region.</p>
+<p>Highways in the South-East Region specifically see incidents of drivers going off the road in curvy areas and this is another thing that must be looked at. Barriers and signage must be strengthened in the area.</p>
 
 
 </section>
