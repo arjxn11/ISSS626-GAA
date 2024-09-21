@@ -1134,7 +1134,7 @@ tmap_arrange(equal,
              ncol=2)
 ```
 
-# 1.4.4 Spatial Autocorrelation: Morans I test.
+## 1.4.4 Spatial Autocorrelation: Morans I test.
 
 The hypotheses for the test are as follows:
 
