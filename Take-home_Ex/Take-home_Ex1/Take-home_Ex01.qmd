@@ -60,7 +60,7 @@ We will use the following R packages for our analysis:
 
 -   `spNetwork` which provides functions to perform Spatial Point Patterns Analysis such as kernel density estimation (KDE) and K-function on network. It also can be used to build spatial matrices (‘listw’ objects like in ‘spdep’ package) to conduct any kind of traditional spatial analysis with spatial weights based on reticular distances.
 
-We import them into our environment using the code chunk below.
+We import them into our environment using the code chunk below. The **p_load**() function of the **pacman** package is used for this.
 
 <details>
 
@@ -92,6 +92,8 @@ st_crs(rdacc_sf)
 
 ## 1.2.2 Geospatial Data
 
+We import the OpenStreetMap export of Thailand into our environment using the st_read() function.
+
 ```{r}
 #| eval: false
 road_sf <- st_read(dsn = "data/rawdata", layer="hotosm_tha_roads_lines_shp")
@@ -99,6 +101,12 @@ road_sf <- st_read(dsn = "data/rawdata", layer="hotosm_tha_roads_lines_shp")
 
 
 ```
+
+::: note-box
+It is important to note the details shown in the output above. Most important takeaway from the above output is that there is no CRS information. This information is crucial as it informs our data preparation steps. We must ensure that the right CRS information is set in order to carry out analysis.
+:::
+
+Below, we import the boundary data. `map_sf` is the boundary data at the province level (ADM1), while `map2_sf` is the boundary data at the district level (ADM2). We will be using both over the course of our analysis.
 
 ```{r}
 map_sf <- st_read(dsn = "data/rawdata", layer="tha_admbnda_adm1_rtsd_20220121")
@@ -198,7 +206,7 @@ write_rds("data/rds/bmr_districts_roads")
 bmr_districts=read_rds("data/rds/bmr_districts_roads")
 ```
 
-# EDA
+# 1.3 Exploratory Data Analysis
 
 To start of our analysis, we will first create a simple bar plot using the ggplot2 package to visualize the number of accidents per province.
 
@@ -216,6 +224,8 @@ ggplot(accident_summary, aes(x = reorder(province_en, total_accidents), y = tota
        x = "Province",
        y = "Number of Accidents") +
   theme_minimal()
+
+
 ```
 
 Bangkok appears to have the most accidents followed by Samut Prakan.
@@ -242,6 +252,40 @@ tmap_mode("plot")
 From the map above, we can infer the Eastern and South-Eastern region seems to have a high concentration of road accidents. We will verify if this is true using Spatial Analysis techniques later on in this exercise.
 
 There appears to be a significant amount of rollover/driving off the curve accidents on curvy roads, especially when it is rainy.
+
+We further break it down and produce a hexagonal choropleth map to gain a more in-depth understanding of the distribution of accidents across the region.
+
+Below, we start by initializing a variable `grid_size` (2000 meters), and then use the st_make_grid() function of the sf package to create a grid that covers our region of interest. After creating the grid, we will convert to an sf data-frame using the st_sf() function and then ensure that we only have hexagons within the region of interest by implementing the st_intersection() function.
+
+```{r}
+grid_size <- 2000  # Size of the grid cells in meters (adjust as necessary)
+
+# Create a hexagonal grid covering the BMR boundary
+bmr_hex_grid <- st_make_grid(bmr_boundary, cellsize = grid_size, square = FALSE)
+
+# Convert to an sf object and clip to the BMR boundary
+bmr_hex_grid_sf <- st_sf(geometry = bmr_hex_grid)
+bmr_hex_grid_sf <- st_intersection(bmr_hex_grid_sf, bmr_boundary)
+```
+
+We can create the map using functions of the tmap() package.
+
+```{r}
+# Count accidents in the hexagonal grid
+accidents_in_hex_grid <- st_join(bmr_hex_grid_sf, bmr_accsf) %>%
+  group_by(geometry) %>%
+  summarise(accident_count = n())
+
+# Create a polygon heatmap using tmap for the hexagonal grid
+tm_shape(accidents_in_hex_grid) +
+  tm_polygons("accident_count", 
+              palette = "Blues", 
+              title = "Accident Count (Hexagonal Grid)") +
+  tm_layout(title = "Accident Heatmap (Hexagonal Grid)", 
+            legend.outside = TRUE)
+```
+
+We see above that the Eastern, especially towards Samut Prakan, region of the Bangkok Metropolitan region sees more accidents than the rest of the region. These hotspots are areas of interest and roads and speeding laws in these area must be looked at in greater detail and improved.
 
 We will now implement the ggplot2 package to compare the number of accidents in the peak period vs the off-peak period in Bagnkok.
 
@@ -292,6 +336,8 @@ ggplot(top_5_causes, aes(x = reorder(presumed_cause, -count), y = count)) +
 
 Speeding appears to be the primary cause of accidents, responsible for over 80% of all road accidents in the Bangkok Metropolitan Region.
 
+We now convert the sf data-frames into spatial objects to store in our environment to facilitate future spatial analysis. We implement the as_Spatial() function of the sf package for this. We will then write large files as rds files in the interest of computational efficiency.
+
 ```{r}
 
 bmr_acc <- as_Spatial(bmr_accsf)
@@ -309,35 +355,12 @@ write_rds(osm_data, "data/rds/osm_data_spatial")
 osm_data=read_rds("data/rds/osm_data_spatial")
 ```
 
+We now convert the above obtain spatial object into Spatial Point and Spatial Polygon form respectively based on their geometry.
+
 ```{r}
 
 bmracc_sp <- as(bmr_acc, "SpatialPoints")
 boundary_sp <- as(bmr, "SpatialPolygons")
-```
-
-```{r}
-
-# Create a square grid that covers the BMR boundary
-grid_size <- 5000  # Size of the grid cells in meters (adjust as necessary)
-bmr_grid <- st_make_grid(bmr_boundary, cellsize = grid_size, square = TRUE)
-
-# Convert the grid into an sf object
-bmr_grid_sf <- st_sf(geometry = bmr_grid)
-
-# Clip the grid to the BMR boundary (to remove grid cells outside the boundary)
-bmr_grid_sf <- st_intersection(bmr_grid_sf, bmr_boundary)
-
-
-```
-
-```{r}
-# Create a hexagonal grid covering the BMR boundary
-bmr_hex_grid <- st_make_grid(bmr_boundary, cellsize = grid_size, square = FALSE)
-
-# Convert to an sf object and clip to the BMR boundary
-bmr_hex_grid_sf <- st_sf(geometry = bmr_hex_grid)
-bmr_hex_grid_sf <- st_intersection(bmr_hex_grid_sf, bmr_boundary)
-
 ```
 
 Now, we want to determine the road type that has the most accidents.
@@ -477,7 +500,9 @@ ggplot(top_5_weather, aes(x = weather_condition, y = count, fill = presumed_caus
 Speeding, unsurprisingly, is the primary reason for road accidents. However, we see far more instances of accidents in clear conditions.
 :::
 
-# Kernel Density Estimation (KDE)
+# 1.4 Spatial Analysis
+
+## 1.4.1 Kernel Density Estimation (KDE)
 
 KDE will allow us to better estimate the distribution of accidents acrosss the Bangkok Metropolitan Region. Using this, we can make more informed decisions on where to focus resources on to reduce the rate of accidents across the region.
 
@@ -505,6 +530,8 @@ summary(bmracc_ppp)
 Note that you must ensure to convert the spatial objects into ppp (planar point pattern) form before proceeding with Kernel Density Estimation. The spatstat package requires data to be in this format before conducting point pattern analysis. This also improves computational efficiency.
 :::
 
+### 1.4.1.1 Dealing with Duplicates
+
 After creating the above PPP object, we check for duplicates by implementing the code chunk below.
 
 ```{r}
@@ -528,7 +555,7 @@ bmr_ppp_jit <- rjitter(bmracc_ppp,
                              drop=TRUE)
 ```
 
-### Creating an owin object
+### 1.4.1.2 Creating an owin object
 
 When analyzing Spatial Point patterns, it is a good practice to confine the boundaries of the analysis with a Geographical area, such as Singapore’s boundary. Using the **spatstat** package, we can create an **owin** object that is designed to represent such polygonal regions.
 
@@ -544,7 +571,7 @@ We use the plot() function to verify if the owin object has been correctly creat
 plot(bmr_owin)
 ```
 
-### Computing KDE using automatic bandwidth selection
+### 1.4.1.3 Computing KDE using automatic bandwidth selection
 
 We use the **density()** function of the **spatstat** package to compute the kernel density. These are the key configurations used in the computation:
 
@@ -588,9 +615,9 @@ kde_bmracc.bw <- density(bmracc_ppp.km,
 plot(kde_bmracc.bw)
 ```
 
-## Converting the KDE output into a grid object
+### 1.4.1.4 Converting the KDE output into a grid object
 
-### Gridded raster
+#### 1.4.1.4.1 Gridded raster
 
 We convert the gridded kernel density objects into RasterLayer object by using **raster()** of the **raster** package.
 
@@ -607,37 +634,35 @@ projection(kde_bmracc_bw_raster) <- CRS("+init=EPSG:32647")
 plot(kde_bmracc_bw_raster)
 ```
 
-From the above, we infer that the south-east region of Bangkok Metropolitan Region, Samut Prakan Province, specifically has a few hotspots, we want to further analyze the cause of this, so we filter down our data.
+From the above, we infer that the South-East region, specifically districts around the Samut Prakan province seem to have a higher density of accidents.
 
-```{r}
-smt_prk_bndry=bmr_boundary%>%filter(ADM1_EN=='Samut Prakan')
-qtm(smt_prk_bndry)
-```
-
-# Second-Order Spatial Point Pattern Analysis.
+## 1.4.2 Second-Order Spatial Point Pattern Analysis.
 
 We now focus on Second Order Spatial Point Patterns Analysis.
 
 We first filter the data down to the regions of interest and create separate boundaries for each of them. Following this, we produce an owin object using the as.owin() function.
 
 ```{r}
-bkk <- bmr_boundary %>%
+# Filtering the data down to the regions of interest
+bkk = bmr_boundary %>%
   filter(ADM1_EN == "Bangkok")
-smt_pkn <- bmr_boundary %>%
+smt_pkn = bmr_boundary %>%
   filter(ADM1_EN == "Samut Prakan")
-ntbr <- bmr_boundary %>%
+ntbr = bmr_boundary %>%
   filter(ADM1_EN == "Nonthaburi")
-nkn_ptn<- bmr_boundary %>%
+nkn_ptn= bmr_boundary %>%
   filter(ADM1_EN == "Nakhon Pathom")
-smt_skn<- bmr_boundary %>%
+smt_skn= bmr_boundary %>%
   filter(ADM1_EN == "Samut Sakhon")
+
+# Creating the owin object
 bkk_owin = as.owin(bkk)
 smt_pkn_owin = as.owin(smt_pkn)
 ntbr_owin = as.owin(ntbr)
 nkn_ptn_owin = as.owin(nkn_ptn)
 smt_skn_owin = as.owin(smt_skn)
 
-
+#Creating point planar patterns
 acc_bkk_ppp = bmr_ppp_jit[bkk_owin]
 acc_smt_pkn_ppp = bmr_ppp_jit[smt_pkn_owin]
 acc_ntbr_ppp = bmr_ppp_jit[ntbr_owin]
@@ -646,13 +671,19 @@ acc_smt_skn_ppp= bmr_ppp_jit[smt_skn_owin]
 
 ```
 
-## **Calculating G-function estimates and testing for Complete Spatial Randomness**
+### **1.4.2.1 Calculating G-function estimates and testing for Complete Spatial Randomness**
 
 We now focus on computing G-function estimates.
 
 The test below allows us to understand if accidents in the Bangkok Metropolitan Region exhibit Spatial Clustering or if they are Randomly Distributed.
 
-We apply the test for Complete Spatial Randomness to each region individually.
+We apply the test for Complete Spatial Randomness to each region individually. The tests are conducted at a 5% significance level.
+
+The hypotheses are as follows.
+
+-   ***H0: There is no spatial clustering. The accidents are randomly distributed across the region.***
+
+-   ***H1: There is spatial clustering. The accidents are NOT randomly distributed across the region.***
 
 ::: panel-tabset
 ## Bangkok
@@ -664,7 +695,7 @@ G_bkk = Gest(acc_bkk_ppp, correction = "border")
 plot(G_bkk, xlim=c(0,500))
 ```
 
-We now carry out the monte carlo simulation test for complete spatial randomness.
+We now carry out the monte carlo simulation test, using the envelope() function, for complete spatial randomness.
 
 ```{r}
 G_bkk.csr <- envelope(acc_bkk_ppp, Gest, nsim = 99)
@@ -686,7 +717,7 @@ G_smt_pkn = Gest(acc_smt_pkn_ppp, correction = "border")
 plot(G_smt_pkn, xlim=c(0,500))
 ```
 
-We now implement a monte carlo simulation test for Complete Spatial Random in Samut Prakan.
+We now implement a monte carlo simulation test, using the envelope() function, for Complete Spatial Random in Samut Prakan.
 
 ```{r}
 G_smt_pkn.csr <- envelope(acc_smt_pkn_ppp, Gest, nsim = 199)
@@ -707,7 +738,7 @@ G_ntbr = Gest(acc_ntbr_ppp, correction = "border")
 plot(G_ntbr, xlim=c(0,500))
 ```
 
-We now implement a Monte-Carlo Simulation test to check for complete spatial randomness of roads accidents in Nonthaburi.
+We now implement a Monte-Carlo Simulation test, using the envelope() function, to check for complete spatial randomness of roads accidents in Nonthaburi.
 
 ```{r}
 G_ntbr.csr <- envelope(acc_ntbr_ppp, Gest, nsim = 199)
@@ -730,7 +761,7 @@ G_nkn_ptn = Gest(acc_nkn_ptn_ppp, correction = "border")
 plot(G_nkn_ptn, xlim=c(0,500))
 ```
 
-We now conduct the Monte-Carlo Simulation test for complete spatial randomness for accidents in Nakhon Pathom.
+We now conduct the Monte-Carlo Simulation test, using the envelope() function, for complete spatial randomness for accidents in Nakhon Pathom.
 
 ```{r}
 G_nkn_ptn.csr <- envelope(acc_nkn_ptn_ppp, Gest, nsim = 199)
@@ -753,7 +784,7 @@ G_smt_skn = Gest(acc_smt_skn_ppp, correction = "border")
 plot(G_smt_skn, xlim=c(0,500))
 ```
 
-We now conduct the Monte-Carlo Simulation test for complete spatial randomness for accidents in Samut Sakhon.
+We now conduct the Monte-Carlo Simulation test, using the envelope() function, for complete spatial randomness for accidents in Samut Sakhon.
 
 ```{r}
 G_smt_skn.csr <- envelope(acc_smt_skn_ppp, Gest, nsim = 199)
@@ -776,7 +807,7 @@ We once again have sufficient evidence to reject the null hypothesis and conclud
 -   When an observed L value is smaller than its corresponding L(theo) value for a particular distance and beyond the lower confidence envelop, spatial dispersion for that distance is statistically significant. - When an observed L value is smaller than its corresponding L(theo) value for a particular distance and within the lower confidence envelop, spatial dispersion for that distance is statistically NOT significant (e.g. distance between A and B).
 :::
 
-## Spatial Weights
+## 1.4.3 Spatial Weights
 
 We now create a data-frame, `boundary_with_accident_count`, in order to assign Spatial Weights and carry out further analysis.
 
@@ -819,9 +850,9 @@ tmap_arrange(basemap, gdppc, asp=1, ncol=2)
 
 ```
 
-The above map reinforces our earlier finding that the Eastern/South-Eastern region of the Bangkok Metropolitan Region have the most accidents.
+The above map reinforces our earlier finding that the Eastern/South-Eastern region of the Bangkok Metropolitan Region have the most accidents. One district in the bottom left, part of the Samut Sakhon province, also has a high volume of accidents.
 
-## Computing Contiguity Spatial Weights
+### 1.4.3.1 Computing Contiguity Spatial Weights
 
 We now implement the **poly2nb()** function of the **spdep** package to compute contiguity weight matrices for the study area selected.
 
@@ -831,7 +862,7 @@ In this function, we will pass an argument, ‘queen’, that can be set as eith
 
 [You may refer to the `spdep` package documentation here](https://cran.r-project.org/web/packages/spdep/spdep.pdf) to learn more about its functions and arguments.
 
-### Computing (QUEEN) contiguity based neighbors
+#### 1.4.3.1.1 Computing (QUEEN) contiguity based neighbors
 
 The poly2nb() function is implemented as shown in the code chunk below. Using this, we are able to compute a Queen contiguity weight matrix.
 
@@ -840,7 +871,9 @@ wm_q <- poly2nb(boundary_with_accident_count, queen=TRUE)
 summary(wm_q)
 ```
 
-### Computing (ROOK) contiguity based neighbors
+The most connected area has 9 neighbors. In general, most districts have approximately 5 to 6 neighbors.
+
+#### 1.4.3.1.2 Computing (ROOK) contiguity based neighbors
 
 For this, we will set the `queen` argument of the poly2nb() function to false.
 
@@ -851,9 +884,9 @@ summary(wm_r)
 
 ```
 
-The most connected area has 9 neighbors. In general, most districts have approximately 5 to 6 neighbors.
+The most connected area has 8 neighbors. In general, most districts have approximately 5 to 6 neighbors.
 
-### Visualizing contiguity weights
+### 1.4.3.2 Visualizing contiguity weights
 
 A connectivity graph takes a point and displays a line to each neighboring point. We are working with polygons in this situation, so we need to ensure that our points are in order to produce our connectivity graphs.
 
@@ -867,7 +900,7 @@ The function that we implement in this situation will be st_centroid().
 
 We will be using the map_dbl variation of map from the purrr package.
 
-#### Obtaining Coordinate values
+#### 1.4.3.2.1 Obtaining Coordinate values
 
 ::: panel-tabset
 ## Longitude
@@ -902,12 +935,12 @@ par(mfrow=c(1,2))
 plot(boundary_with_accident_count$geometry, border="lightgrey", main="Queen Contiguity")
 plot(wm_q, coords, pch = 19, cex = 0.6, add = TRUE, col= "purple")
 plot(boundary_with_accident_count$geometry, border="lightgrey", main="Rook Contiguity")
-plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "purple")
+plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "darkgreen")
 
 
 ```
 
-# Adaptive Distance Weight Matrix
+### 1.4.3.3 Adaptive Distance Weight Matrix
 
 One of the characteristics of fixed distance weight matrices is that the more densely settled areas (usually urban areas) tend to have more neighbors and the less densely settled areas (usually rural areas) tend to have lesser neighbors.
 
@@ -927,9 +960,9 @@ plot(boundary_with_accident_count$geometry, border="lightgrey")
 plot(knn6, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
 ```
 
-# Row standardized weights matrix
+### 1.4.3.4 Row standardized weights matrix
 
-## Weights Based on Inversed Distance Weighting (IDW)
+#### 1.4.3.4.1 Weights Based on Inversed Distance Weighting (IDW)
 
 We first compute the distances between areas by implementing the **nbdists()** function of the **spdep** package.
 
@@ -999,7 +1032,17 @@ lag_acc <- qtm(boundary_with_accident_count, "lag Accident Count")
 tmap_arrange(acc_qtm, lag_acc, asp=1, ncol=2)
 ```
 
-## Spatial Window Average
+::: insights-box
+The use of spatial weights are highly useful for a variety of reasons.
+
+1.  They allow us to better understand and analyze the dependence between neighboring regions.
+
+2.  The help us understand how accidents are not isolated incidents and are often a part of bigger spatial patterns. This allows us to make better decisions with regards to policy developments, resource allocation and more in order to reduce the number of accidents.
+
+3.  These help us identify clusters and are crucial in identifying 'spillover' effects.
+:::
+
+### 1.4.3.5 Spatial Window Average
 
 The spatial window average uses row-standardized weights and includes the diagonal element. To do this in R, we need to go back to the neighbors structure and add the diagonal element before assigning weights.
 
@@ -1091,13 +1134,13 @@ tmap_arrange(equal,
              ncol=2)
 ```
 
-# Spatial Autocorrelation: Morans I test.
+# 1.4.4 Spatial Autocorrelation: Morans I test.
 
 The hypotheses for the test are as follows:
 
--   H0: Regions with similar number of accidents are randomly distributed.
+-   ***H0: Regions with similar number of accidents are randomly distributed.***
 
--   H1: Regions with similar number of accidents are not randomly distributed and exhibit spatial clustering.
+-   ***H1: Regions with similar number of accidents are not randomly distributed and exhibit spatial clustering.***
 
 ```{r}
 moran.test(boundary_with_accident_count$accident_count, 
@@ -1114,7 +1157,7 @@ From the output above, we can infer the following:
 
 Since Moran’s I Statistic is significantly greater than what we would expect in a randomly distributed region. There is significant evidence to reject H0 and conclude that there is indeed spatial clustering with regards to Accidents in the Bangkok Metropolitan Region.
 
-## Monte Carlo Moran's I
+### 1.4.4.1 Monte Carlo Moran's I
 
 We now implement the moran.mc() function of the spdep package. In this scenario, we will run 1000 simulations.
 
@@ -1129,7 +1172,7 @@ bperm
 
 Based on the above output, p-value (0.001)\<0.05, thus we can reject the null hypothesis at a 5% significance level and conclude that there is indeed spatial clustering.
 
-## Visualizing Monte Carlo Moran's I
+### 1.4.4.2 Visualizing Monte Carlo Moran's I
 
 We can visualize the test statistics obtained from the simulation above by implementing the hist() and abline() functions of R graphics.
 
@@ -1181,7 +1224,7 @@ ggplot(data, aes(x = simulated_moran)) +
 ```
 :::
 
-## Local Morans I
+### 1.4.4.3 Local Morans I
 
 We implement the localmoran() function of spdep compute the local Moran’s I statistic. This function helps us compute li values, given a set of zi values and a listw object providing neighbor weighting information for the polygon associated with the zi values.
 
@@ -1216,7 +1259,7 @@ printCoefmat(data.frame(
   check.names=FALSE)
 ```
 
-### Mapping the local Moran's I
+### 1.4.4.4 Mapping the local Moran's I
 
 Before we map the local Moran’s I map, it is wise to append the local Moran’s data-frame (`localMI`) onto our SpatialPolygonDataFrame.
 
@@ -1224,8 +1267,6 @@ Before we map the local Moran’s I map, it is wise to append the local Moran’
 bmr.localMI <- cbind(boundary_with_accident_count,localMI) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
-
-### Mapping Local Moran's I values
 
 We now make use of the tmap package and its choropleth mapping functions to plot the local Moran’s I values.
 
@@ -1238,7 +1279,17 @@ tm_shape(bmr.localMI) +
   tm_borders(alpha = 0.5)
 ```
 
-### Mapping Local Moran's I p-values
+::: insights-box
+Interpreting Moran Value:
+
+-   Values lesser than 0 indicate negative spatial autocorrelation. (i.e: high accident areas are near low accident areas.)
+
+-   Value equal to 0 indicates random spatial distribution (No spatial autocorrelation).
+
+-   Values greater than 0 indicate spatial autocorrelation.
+:::
+
+### 1.4.4.5 Mapping Local Moran's I p-values
 
 The Choropleth reveals the presence of both positive, as well as negative I values. This indicates that there are varying levels of spatial autocorrelation, however, we must examine the p-values for these I values to check for statistical significance.
 
@@ -1253,7 +1304,13 @@ tm_shape(bmr.localMI) +
   tm_borders(alpha = 0.5)
 ```
 
-### Mapping both local Moran's I values and p-values
+From the above we can infer that generally the local moran value ranges from -1 to 1. The biggest stand outs are:
+
+1.  Nong Suea, at the top right corner of the above map, seems to be absolutely dissimilar to its neighbors as indicated by its local Moran Value being of the highest magnitude. From our earlier analysis, we infer that this region actually has significantly fewer accidents than its neighbors.
+
+2.  The South-East region of the Bangkok Metropolitan Region has very high local Moran Values, indicating that the districts all showcase similar characteristics. They exhibit spatial clustering.
+
+### 1.4.4.6 Mapping both local Moran's I values and p-values
 
 In the interest of easier analysis and interpretation, we plot the two maps next to each other.
 
@@ -1274,9 +1331,9 @@ pvalue.map <- tm_shape(bmr.localMI) +
 tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 ```
 
-# Hot and Cold Spot Areas
+## 1.4.5 Hot and Cold Spot Areas
 
-## Getis and Ord's G-Statistics
+### 1.4.5.1 Getis and Ord's G-Statistics
 
 An alternative spatial statistic used to detect spatial anomalies is the **Getis-Ord G-statistic** (Getis and Ord, 1972; Ord and Getis, 1995). This method examines spatial relationships within a defined proximity to identify clusters of high or low values. Statistically significant **hotspots** are areas where high values are spatially clustered, meaning that not only do these areas have high values, but their neighboring areas also exhibit similarly high values.
 
@@ -1290,7 +1347,7 @@ The analysis involves three key steps:
 
 This approach is useful for identifying localized patterns of spatial clustering and detecting significant anomalies in the data.
 
-## Deriving Distance Based Weight Matrix
+### 1.4.5.2 Deriving Distance Based Weight Matrix
 
 We start by defining a new set of neighbors. While the spatial autocorrelation considered units which shared borders, for Getis-Ord, we will define the neighbors based on distance.
 
@@ -1310,7 +1367,7 @@ To extract the longitude values, we’ll map the st_centroid() function over the
 
 For more detailed information, you can refer to the map documentation [here](https://rdocumentation.org/packages/purrr/versions/1.0.2/topics/map).
 
-#### Determine the Cut-off Distance
+#### 1.4.5.2.1 Determine the Cut-off Distance
 
 To determine the upper limit for the distance band, we follow these steps:
 
@@ -1333,7 +1390,7 @@ summary(k1dists)
 From the above output, we can infer that the largest first-nearest neighbor distance is just under 17000M.\
 Using this as the upper threshold gives certainty that all units will have *at least* one neighbor.
 
-#### Computing fixed distance weight matrix
+#### 1.4.5.2.2 Computing fixed distance weight matrix
 
 We implement the dnearneigh() function of the spdep package to compute the distance weight matrix.
 
@@ -1351,7 +1408,7 @@ wm62_lw <- nb2listw(wm_d62, style = 'B')
 summary(wm62_lw)
 ```
 
-#### Computing Gi statistics using Fixed Distance
+### 1.4.5.3 Computing Gi statistics using Fixed Distance
 
 ```{r}
 fips <- order(boundary_with_accident_count$accident_count)
@@ -1391,6 +1448,6 @@ tmap_arrange(acc_count, Gimap, asp=1, ncol=2)
 
 From the above plot, we can infer that ‘hot spots’ tend to be neighboring regions and likewise for the cold spots too. We see more high value (hot) clusters in the South East region of the Bangkok Metropolitan Region- Near Samut Prakan. The Central Area, near Bangkok and Nonthaburi showcase more 'cold spots'.
 
-# Conclusion
+# 1.5 Conclusion
 
 From all our analysis, we determine that the South East region of Bangkok Metropolitan Region seems to be a hotspot for accidents and needs to be further examined in order to reduce the rate of accidents in the region.
