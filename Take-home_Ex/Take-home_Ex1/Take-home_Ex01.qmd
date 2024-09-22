@@ -34,6 +34,9 @@ For the most part, road accidents can be attributed to two key factors- behavior
 
 For this exercise, we will implement Spatial and Spatio-Temporal Point Pattern Analysis methods to discover the underlying factors behind the accidents in the Bangkok Metropolitan Region.
 
+Over the course of this analysis, we carry out the following:
+First Order Spatial Point Pattern Analysis, Second Order Spatial Point Pattern Analysis, Network Constrained Spatial Point Pattern Analysis, Spatial Autocorrelation amongst others. 
+
 # 1.2 Data and Packages
 
 For the purpose of this study, we will use the following three data-frames.
@@ -642,6 +645,249 @@ plot(kde_bmracc_bw_raster)
 
 From the above, we infer that the South-East region, specifically districts around the Samut Prakan province seem to have a higher density of accidents.
 
+## 1.4.1.5 Network Kernel Density Estimation (NKDE)
+
+By completing Kernel Density Estimation, we have identified two provinces of interest, Bangkok and Samut Prakan.
+
+We will first extract our target regions using the code chunk below.
+
+```{r}
+smt_prk_boundary= bmr_boundary2%>%
+  filter(ADM1_EN=='Samut Prakan')
+smt_prk_roads= bmr_roads%>%
+  filter(ADM1_EN=='Samut Prakan')
+```
+
+We will now join the OpenStreetMap data, `smt_prk_roads` and `bkk_roads`, using st_intersection function of the sf package.
+
+```{r}
+smt_pkn_roads_intersection=st_intersection(smt_prk_roads, smt_prk_boundary)
+```
+
+We will now filter down our accident data, `bmr_accsf`, down to our target regions.
+
+```{r}
+smt_pkn_acc=bmr_accsf%>%
+  filter(province_en=='Samut Prakan')
+```
+
+We can now start with Network Kernel Density Estimation.
+
+We must first cut the SpatialLines object into Lixels with a specified minimal distance.
+
+
+```{r}
+smt_pkn_roads_intersection=st_cast(smt_pkn_roads_intersection, 'LINESTRING', group_or_split= TRUE)
+samut_prakan_lines=st_cast(smt_pkn_roads_intersection,'LINESTRING')
+lixels_smt_pkn <- lixelize_lines(smt_pkn_roads_intersection, 
+                         10000, 
+                         mindist = 5000)
+```
+
+::: insights-box
+There is another function, **lixelize_lines.mc()** that provides multicore support and is typically used in spatial analysis or geospatial data processing, specifically in contexts where large datasets of lines (such as roads, paths, or boundaries) need to be broken down into smaller, equally spaced segments or “lixels” (line pixels). This process is known as “lixelization.”
+
+The main purpose of the lixelize_lines.mc() function is to improve the efficiency of the lixelization process by utilizing multiple CPU cores simultaneously. This is particularly beneficial when dealing with large datasets, as processing each line sequentially can be time-consuming.
+:::
+
+We now proceed to generate a SpatialPointsDataFrame with line centre points using the lines_center() function of spNetwork.
+
+```{r}
+samples_smt_pkn <- lines_center(lixels_smt_pkn) 
+```
+
+Now, we can perform NKDE. We use the nkde() function to carry it out.
+
+
+```{r}
+#| eval: false
+densities_smt_prk <- nkde(smt_pkn_roads_intersection, 
+                  events = smt_pkn_acc,
+                  w = rep(1, nrow(smt_pkn_acc)),
+                  samples = samples_smt_pkn,
+                  kernel_name = "quartic",
+                  bw = 300, 
+                  method = "simple")
+```
+
+```{r}
+#| eval: false
+write_rds(densities_smt_prk, "data/rds/density_samut")
+```
+
+```{r}
+densities_smt_prk=read_rds('data/rds/density_samut')
+```
+
+
+::: insights-box
+-   The `kernel_name` argument specifies the type of kernel function used.
+
+-   Possible kernel methods supported by `spNetwork` include:
+
+    -   Quartic
+
+    -   Triangle
+
+    -   Gaussian
+
+    -   Scaled Gaussian
+
+    -   Tricube
+
+    -   Cosine
+
+    -   Triweight
+
+    -   Epanechnikov
+
+    -   Uniform
+
+-   The `method` argument indicates the method used to calculate Network Kernel Density Estimation (NKDE).
+
+-   `spNetwork` supports three popular methods:
+
+    1.  **Simple (`method = "simple"`)**:
+
+        -   Introduced by Xie et al. (2008).
+
+        -   Distances between events and sampling points are replaced by network distances.
+
+        -   The kernel formula is adapted to calculate density over a linear unit instead of an areal unit.
+
+    2.  **Discontinuous (`method = "discontinuous"`)**:
+
+        -   Proposed by Okabe et al. (2008).
+
+        -   Divides the mass density of an event at intersections of lixels.
+
+        -   Results in a discontinuous kernel function.
+
+    3.  **Continuous (`method = "continuous"`)**:
+
+        -   Also proposed by Okabe et al. (2008).
+
+        -   Adjusts the density before intersections to create a continuous kernel function.
+
+        -   Still divides the mass of the density at intersections but with a continuous adjustment.
+:::
+
+We will now visualize NKDE.
+
+We must first insert the computed density values into samples and lixels objects as the density field.
+
+```{r}
+samples_smt_pkn$density<- densities_smt_prk
+lixels_smt_pkn$density <- densities_smt_prk
+```
+
+We now upscale the density for both in the interest of easier understanding.
+
+```{r}
+samples_smt_pkn$density <- samples_smt_pkn$density*1000
+lixels_smt_pkn$density <- lixels_smt_pkn$density*1000
+```
+
+We can now plot the map as the data is now prepared.
+
+We will use the tmap package to produce a highly cartographic and interactive map.
+
+```{r}
+tmap_mode('plot')
+tm_shape(lixels_smt_pkn)+
+  tm_lines(col="density")+
+tm_shape(smt_pkn_acc)+
+  tm_dots()
+```
+
+The interactive map above effectively reveals road segments with relatively higher density of accidents than road segments with relatively lower density of accidents with the help of shading. The roads with darker shades have a relatively higher density.
+
+From all our analysis, we take away that the south-eastern part of Bangkok Metropolitan Region was a hotspot, and this map above allows us to further understand the distribution of accidents across the region.
+
+### 1.4.1.5.1 Network Constrained G- and K-Function Analysis
+
+We will now conduct a test for Complete Spatial Randomness by using the **kfunctions()** function of the **spNetwork** package.
+
+The hypotheses are as follows:
+
+-   Ho: The observed spatial point events (i.e distribution of accidents) are uniformly distributed over a street network in Samut Prakan.
+
+-   H1: The observed spatial point events (i.e: distribution of accidents) are not uniformly distributed over a street network in Samut Prakan.
+
+```{r}
+#| eval: false
+kfun_accidents <- kfunctions(smt_pkn_roads_intersection, 
+                             smt_pkn_acc,
+                             start = 0, 
+                             end = 1000, 
+                             step = 50, 
+                             width = 50, 
+                             nsim = 50, 
+                             resolution = 50,
+                             verbose = FALSE, 
+                             conf_int = 0.05,
+                             agg = 1)  # Set aggregation to merge close points
+```
+
+```{r}
+#| eval: false
+write_rds(kfun_accidents, "data/rds/kfunction")
+```
+
+```{r}
+kfun_accidents=read_rds('data/rds/kfunction')
+```
+
+::: insights-box
+Below are the arguments of the function above:
+
+-   **lines**: A `SpatialLinesDataFrame` containing the sampling points. The geometries must be valid; using invalid geometries may cause the process to crash.
+
+-   **points**: A `SpatialPointsDataFrame` representing the points on the network. These points will be snapped to the network for analysis.
+
+-   **start**: A numeric value indicating the starting point for evaluating the k and g functions.
+
+-   **end**: A numeric value specifying the endpoint for evaluating the k and g functions.
+
+-   **step**: A numeric value that determines the interval between evaluations of the k and g functions.
+
+-   **width**: The width of each “donut” or ring used in calculating the g-function.
+
+-   **nsim**: An integer representing the number of Monte Carlo simulations to perform. In the example above, 50 simulations were conducted; however, more simulations are often necessary for accurate inference.
+
+-   **resolution**: Specifies the resolution when simulating random points on the network. A higher resolution can significantly reduce calculation time. If set to `NULL`, random points can occur anywhere on the network. If a value is provided, the network’s edges are divided according to this resolution, and random points are selected from the vertices of the newly segmented network.
+
+-   **conf_int**: A numeric value indicating the confidence interval width, with the default set to 0.05.
+:::
+
+The k-function will output the following:
+
+-   *plotk,* a ggplot2 object representing the values of the k-function.
+
+-   *plotg*, a ggplot2 object representing the values of the g-function.
+
+-   *values*, a DataFrame with the values used to build the plots.
+
+Below, we visualize the plots generated.
+
+::: panel-tabset
+## Plot K
+
+```{r}
+kfun_accidents$plotk
+```
+
+Based on the plot above, we can see the the blue line are entirely above the envelope at the bottom, indicating that we do indeed have sufficient evidence to reject the null hypothesis and conclude that the distribution of accidents across Samut Prakan do exhibit spatial clustering tendencies.
+
+## Plot G
+
+```{r}
+kfun_accidents$plotg
+```
+
+Based on the plot above, we can see that the blue line is entirely above the envelope at the bottom, similar to the k plot, indicating that we do indeed have sufficient evidence to reject the null hypothesis and conclude that the distribution of accidents across Samut Prakan do exhibit Spatial Clustering tendencies.
+:::
+
 ## 1.4.2 Second-Order Spatial Point Pattern Analysis.
 
 We now focus on Second Order Spatial Point Patterns Analysis.
@@ -660,6 +906,8 @@ nkn_ptn= bmr_boundary %>%
   filter(ADM1_EN == "Nakhon Pathom")
 smt_skn= bmr_boundary %>%
   filter(ADM1_EN == "Samut Sakhon")
+ptm_thn= bmr_boundary%>%
+  filter(ADM1_EN=='Pathum Thani')
 
 # Creating the owin object
 bkk_owin = as.owin(bkk)
@@ -667,6 +915,7 @@ smt_pkn_owin = as.owin(smt_pkn)
 ntbr_owin = as.owin(ntbr)
 nkn_ptn_owin = as.owin(nkn_ptn)
 smt_skn_owin = as.owin(smt_skn)
+ptm_thn_owin= as.owin(ptm_thn)
 
 #Creating point planar patterns
 acc_bkk_ppp = bmr_ppp_jit[bkk_owin]
@@ -674,10 +923,11 @@ acc_smt_pkn_ppp = bmr_ppp_jit[smt_pkn_owin]
 acc_ntbr_ppp = bmr_ppp_jit[ntbr_owin]
 acc_nkn_ptn_ppp = bmr_ppp_jit[nkn_ptn_owin]
 acc_smt_skn_ppp= bmr_ppp_jit[smt_skn_owin]
+acc_ptm_thn_ppp= bmr_ppp_jit[ptm_thn_owin]
 
 ```
 
-### **1.4.2.1 Calculating G-function estimates and testing for Complete Spatial Randomness**
+### 1.4.2.1 Calculating G-function estimates and testing for Complete Spatial Randomness
 
 We now focus on computing G-function estimates.
 
@@ -797,9 +1047,30 @@ plot(G_smt_skn.csr)
 ```
 
 We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Samut Sakhon do indeed exhibit clustering, more so than is expected in a region that is randomly distributed.
+
+## Patum Thani
+
+We use the Gest() function of the Spatstat package to compute a G-function estimation for Patum Thani
+
+```{r}
+G_ptm_thn = Gest(acc_ptm_thn_ppp, correction = "border")
+plot(G_nkn_ptn, xlim=c(0,500))
+```
+
+We now conduct the Monte Carlo Simulation Test for Complete Spatial Randomness by implementing the envelope() function.
+
+```{r}
+G_ptm_thn.csr <- envelope(acc_ptm_thn_ppp, Gest, nsim = 199)
+```
+
+```{r}
+plot(G_ptm_thn.csr)
+```
+
+We have sufficient Evidence to reject the null hypothesis and can conclude that accidents in Pathum Thani are not randomly distributed and do indeed exhibit spatial clustering.
 :::
 
-::: insights-box
+::: panel-tabset
 -   The grey zone indicates the confidence envelop (In this case, we have set it as 95% as indicated by the critical value of 0.05)
 
 -   When an observed L value is greater than its corresponding L(theo) value for a particular distance and lower than the upper confidence envelop, spatial clustering for that distance is statistically NOT significant (e.g. distance between B and C).

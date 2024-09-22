@@ -238,9 +238,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#computing-kde-using-automatic-bandwidth-selection" id="toc-computing-kde-using-automatic-bandwidth-selection" class="nav-link" data-scroll-target="#computing-kde-using-automatic-bandwidth-selection">1.4.1.3 Computing KDE using automatic bandwidth selection</a></li>
   <li><a href="#converting-the-kde-output-into-a-grid-object" id="toc-converting-the-kde-output-into-a-grid-object" class="nav-link" data-scroll-target="#converting-the-kde-output-into-a-grid-object">1.4.1.4 Converting the KDE output into a grid object</a></li>
   </ul></li>
+  <li><a href="#network-kernel-density-estimation-nkde" id="toc-network-kernel-density-estimation-nkde" class="nav-link" data-scroll-target="#network-kernel-density-estimation-nkde">1.4.1.5 Network Kernel Density Estimation (NKDE)</a>
+  <ul class="collapse">
+  <li><a href="#network-constrained-g--and-k-function-analysis" id="toc-network-constrained-g--and-k-function-analysis" class="nav-link" data-scroll-target="#network-constrained-g--and-k-function-analysis">1.4.1.5.1 Network Constrained G- and K-Function Analysis</a></li>
+  </ul></li>
   <li><a href="#second-order-spatial-point-pattern-analysis." id="toc-second-order-spatial-point-pattern-analysis." class="nav-link" data-scroll-target="#second-order-spatial-point-pattern-analysis.">1.4.2 Second-Order Spatial Point Pattern Analysis.</a>
   <ul class="collapse">
-  <li><a href="#calculating-g-function-estimates-and-testing-for-complete-spatial-randomness" id="toc-calculating-g-function-estimates-and-testing-for-complete-spatial-randomness" class="nav-link" data-scroll-target="#calculating-g-function-estimates-and-testing-for-complete-spatial-randomness"><strong>1.4.2.1 Calculating G-function estimates and testing for Complete Spatial Randomness</strong></a></li>
+  <li><a href="#calculating-g-function-estimates-and-testing-for-complete-spatial-randomness" id="toc-calculating-g-function-estimates-and-testing-for-complete-spatial-randomness" class="nav-link" data-scroll-target="#calculating-g-function-estimates-and-testing-for-complete-spatial-randomness">1.4.2.1 Calculating G-function estimates and testing for Complete Spatial Randomness</a></li>
   </ul></li>
   <li><a href="#spatial-weights" id="toc-spatial-weights" class="nav-link" data-scroll-target="#spatial-weights">1.4.3 Spatial Weights</a>
   <ul class="collapse">
@@ -323,6 +327,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>1.1 Objectives</h1>
 <p>For the most part, road accidents can be attributed to two key factors- behavioral factors. such as driving skill, and environmental factors, such as heavy rain.</p>
 <p>For this exercise, we will implement Spatial and Spatio-Temporal Point Pattern Analysis methods to discover the underlying factors behind the accidents in the Bangkok Metropolitan Region.</p>
+<p>Over the course of this analysis, we carry out the following: First Order Spatial Point Pattern Analysis, Second Order Spatial Point Pattern Analysis, Network Constrained Spatial Point Pattern Analysis, Spatial Autocorrelation amongst others.</p>
 </section>
 <section id="data-and-packages" class="level1">
 <h1>1.2 Data and Packages</h1>
@@ -1075,39 +1080,244 @@ Window area = 11789900000 square units</code></pre>
 </section>
 </section>
 </section>
+<section id="network-kernel-density-estimation-nkde" class="level2">
+<h2 class="anchored" data-anchor-id="network-kernel-density-estimation-nkde">1.4.1.5 Network Kernel Density Estimation (NKDE)</h2>
+<p>By completing Kernel Density Estimation, we have identified two provinces of interest, Bangkok and Samut Prakan.</p>
+<p>We will first extract our target regions using the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>smt_prk_boundary<span class="ot">=</span> bmr_boundary2<span class="sc">%&gt;%</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN<span class="sc">==</span><span class="st">'Samut Prakan'</span>)</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>smt_prk_roads<span class="ot">=</span> bmr_roads<span class="sc">%&gt;%</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN<span class="sc">==</span><span class="st">'Samut Prakan'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We will now join the OpenStreetMap data, <code>smt_prk_roads</code> and <code>bkk_roads</code>, using st_intersection function of the sf package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>smt_pkn_roads_intersection<span class="ot">=</span><span class="fu">st_intersection</span>(smt_prk_roads, smt_prk_boundary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We will now filter down our accident data, <code>bmr_accsf</code>, down to our target regions.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>smt_pkn_acc<span class="ot">=</span>bmr_accsf<span class="sc">%&gt;%</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(province_en<span class="sc">==</span><span class="st">'Samut Prakan'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can now start with Network Kernel Density Estimation.</p>
+<p>We must first cut the SpatialLines object into Lixels with a specified minimal distance.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>smt_pkn_roads_intersection<span class="ot">=</span><span class="fu">st_cast</span>(smt_pkn_roads_intersection, <span class="st">'LINESTRING'</span>, <span class="at">group_or_split=</span> <span class="cn">TRUE</span>)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>samut_prakan_lines<span class="ot">=</span><span class="fu">st_cast</span>(smt_pkn_roads_intersection,<span class="st">'LINESTRING'</span>)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>lixels_smt_pkn <span class="ot">&lt;-</span> <span class="fu">lixelize_lines</span>(smt_pkn_roads_intersection, </span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">10000</span>, </span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>                         <span class="at">mindist =</span> <span class="dv">5000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="insights-box">
+<p>There is another function, <strong>lixelize_lines.mc()</strong> that provides multicore support and is typically used in spatial analysis or geospatial data processing, specifically in contexts where large datasets of lines (such as roads, paths, or boundaries) need to be broken down into smaller, equally spaced segments or “lixels” (line pixels). This process is known as “lixelization.”</p>
+<p>The main purpose of the lixelize_lines.mc() function is to improve the efficiency of the lixelization process by utilizing multiple CPU cores simultaneously. This is particularly beneficial when dealing with large datasets, as processing each line sequentially can be time-consuming.</p>
+</div>
+<p>We now proceed to generate a SpatialPointsDataFrame with line centre points using the lines_center() function of spNetwork.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>samples_smt_pkn <span class="ot">&lt;-</span> <span class="fu">lines_center</span>(lixels_smt_pkn) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now, we can perform NKDE. We use the nkde() function to carry it out.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>densities_smt_prk <span class="ot">&lt;-</span> <span class="fu">nkde</span>(smt_pkn_roads_intersection, </span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">events =</span> smt_pkn_acc,</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">w =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">nrow</span>(smt_pkn_acc)),</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">samples =</span> samples_smt_pkn,</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">kernel_name =</span> <span class="st">"quartic"</span>,</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">bw =</span> <span class="dv">300</span>, </span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">method =</span> <span class="st">"simple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(densities_smt_prk, <span class="st">"data/rds/density_samut"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>densities_smt_prk<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">'data/rds/density_samut'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="insights-box">
+<ul>
+<li><p>The <code>kernel_name</code> argument specifies the type of kernel function used.</p></li>
+<li><p>Possible kernel methods supported by <code>spNetwork</code> include:</p>
+<ul>
+<li><p>Quartic</p></li>
+<li><p>Triangle</p></li>
+<li><p>Gaussian</p></li>
+<li><p>Scaled Gaussian</p></li>
+<li><p>Tricube</p></li>
+<li><p>Cosine</p></li>
+<li><p>Triweight</p></li>
+<li><p>Epanechnikov</p></li>
+<li><p>Uniform</p></li>
+</ul></li>
+<li><p>The <code>method</code> argument indicates the method used to calculate Network Kernel Density Estimation (NKDE).</p></li>
+<li><p><code>spNetwork</code> supports three popular methods:</p>
+<ol type="1">
+<li><p><strong>Simple (<code>method = "simple"</code>)</strong>:</p>
+<ul>
+<li><p>Introduced by Xie et al.&nbsp;(2008).</p></li>
+<li><p>Distances between events and sampling points are replaced by network distances.</p></li>
+<li><p>The kernel formula is adapted to calculate density over a linear unit instead of an areal unit.</p></li>
+</ul></li>
+<li><p><strong>Discontinuous (<code>method = "discontinuous"</code>)</strong>:</p>
+<ul>
+<li><p>Proposed by Okabe et al.&nbsp;(2008).</p></li>
+<li><p>Divides the mass density of an event at intersections of lixels.</p></li>
+<li><p>Results in a discontinuous kernel function.</p></li>
+</ul></li>
+<li><p><strong>Continuous (<code>method = "continuous"</code>)</strong>:</p>
+<ul>
+<li><p>Also proposed by Okabe et al.&nbsp;(2008).</p></li>
+<li><p>Adjusts the density before intersections to create a continuous kernel function.</p></li>
+<li><p>Still divides the mass of the density at intersections but with a continuous adjustment.</p></li>
+</ul></li>
+</ol></li>
+</ul>
+</div>
+<p>We will now visualize NKDE.</p>
+<p>We must first insert the computed density values into samples and lixels objects as the density field.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>samples_smt_pkn<span class="sc">$</span>density<span class="ot">&lt;-</span> densities_smt_prk</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>lixels_smt_pkn<span class="sc">$</span>density <span class="ot">&lt;-</span> densities_smt_prk</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now upscale the density for both in the interest of easier understanding.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>samples_smt_pkn<span class="sc">$</span>density <span class="ot">&lt;-</span> samples_smt_pkn<span class="sc">$</span>density<span class="sc">*</span><span class="dv">1000</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>lixels_smt_pkn<span class="sc">$</span>density <span class="ot">&lt;-</span> lixels_smt_pkn<span class="sc">$</span>density<span class="sc">*</span><span class="dv">1000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can now plot the map as the data is now prepared.</p>
+<p>We will use the tmap package to produce a highly cartographic and interactive map.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(lixels_smt_pkn)<span class="sc">+</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_lines</span>(<span class="at">col=</span><span class="st">"density"</span>)<span class="sc">+</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(smt_pkn_acc)<span class="sc">+</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_dots</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-57-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The interactive map above effectively reveals road segments with relatively higher density of accidents than road segments with relatively lower density of accidents with the help of shading. The roads with darker shades have a relatively higher density.</p>
+<p>From all our analysis, we take away that the south-eastern part of Bangkok Metropolitan Region was a hotspot, and this map above allows us to further understand the distribution of accidents across the region.</p>
+<section id="network-constrained-g--and-k-function-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="network-constrained-g--and-k-function-analysis">1.4.1.5.1 Network Constrained G- and K-Function Analysis</h3>
+<p>We will now conduct a test for Complete Spatial Randomness by using the <strong>kfunctions()</strong> function of the <strong>spNetwork</strong> package.</p>
+<p>The hypotheses are as follows:</p>
+<ul>
+<li><p>Ho: The observed spatial point events (i.e distribution of accidents) are uniformly distributed over a street network in Samut Prakan.</p></li>
+<li><p>H1: The observed spatial point events (i.e: distribution of accidents) are not uniformly distributed over a street network in Samut Prakan.</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>kfun_accidents <span class="ot">&lt;-</span> <span class="fu">kfunctions</span>(smt_pkn_roads_intersection, </span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>                             smt_pkn_acc,</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">start =</span> <span class="dv">0</span>, </span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">end =</span> <span class="dv">1000</span>, </span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">step =</span> <span class="dv">50</span>, </span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">width =</span> <span class="dv">50</span>, </span>
+<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">nsim =</span> <span class="dv">50</span>, </span>
+<span id="cb71-8"><a href="#cb71-8" aria-hidden="true" tabindex="-1"></a>                             <span class="at">resolution =</span> <span class="dv">50</span>,</span>
+<span id="cb71-9"><a href="#cb71-9" aria-hidden="true" tabindex="-1"></a>                             <span class="at">verbose =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb71-10"><a href="#cb71-10" aria-hidden="true" tabindex="-1"></a>                             <span class="at">conf_int =</span> <span class="fl">0.05</span>,</span>
+<span id="cb71-11"><a href="#cb71-11" aria-hidden="true" tabindex="-1"></a>                             <span class="at">agg =</span> <span class="dv">1</span>)  <span class="co"># Set aggregation to merge close points</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(kfun_accidents, <span class="st">"data/rds/kfunction"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>kfun_accidents<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">'data/rds/kfunction'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="insights-box">
+<p>Below are the arguments of the function above:</p>
+<ul>
+<li><p><strong>lines</strong>: A <code>SpatialLinesDataFrame</code> containing the sampling points. The geometries must be valid; using invalid geometries may cause the process to crash.</p></li>
+<li><p><strong>points</strong>: A <code>SpatialPointsDataFrame</code> representing the points on the network. These points will be snapped to the network for analysis.</p></li>
+<li><p><strong>start</strong>: A numeric value indicating the starting point for evaluating the k and g functions.</p></li>
+<li><p><strong>end</strong>: A numeric value specifying the endpoint for evaluating the k and g functions.</p></li>
+<li><p><strong>step</strong>: A numeric value that determines the interval between evaluations of the k and g functions.</p></li>
+<li><p><strong>width</strong>: The width of each “donut” or ring used in calculating the g-function.</p></li>
+<li><p><strong>nsim</strong>: An integer representing the number of Monte Carlo simulations to perform. In the example above, 50 simulations were conducted; however, more simulations are often necessary for accurate inference.</p></li>
+<li><p><strong>resolution</strong>: Specifies the resolution when simulating random points on the network. A higher resolution can significantly reduce calculation time. If set to <code>NULL</code>, random points can occur anywhere on the network. If a value is provided, the network’s edges are divided according to this resolution, and random points are selected from the vertices of the newly segmented network.</p></li>
+<li><p><strong>conf_int</strong>: A numeric value indicating the confidence interval width, with the default set to 0.05.</p></li>
+</ul>
+</div>
+<p>The k-function will output the following:</p>
+<ul>
+<li><p><em>plotk,</em> a ggplot2 object representing the values of the k-function.</p></li>
+<li><p><em>plotg</em>, a ggplot2 object representing the values of the g-function.</p></li>
+<li><p><em>values</em>, a DataFrame with the values used to build the plots.</p></li>
+</ul>
+<p>Below, we visualize the plots generated.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Plot K</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Plot G</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>kfun_accidents<span class="sc">$</span>plotk</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-61-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Based on the plot above, we can see the the blue line are entirely above the envelope at the bottom, indicating that we do indeed have sufficient evidence to reject the null hypothesis and conclude that the distribution of accidents across Samut Prakan do exhibit spatial clustering tendencies.</p>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>kfun_accidents<span class="sc">$</span>plotg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-62-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Based on the plot above, we can see that the blue line is entirely above the envelope at the bottom, similar to the k plot, indicating that we do indeed have sufficient evidence to reject the null hypothesis and conclude that the distribution of accidents across Samut Prakan do exhibit Spatial Clustering tendencies.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
 <section id="second-order-spatial-point-pattern-analysis." class="level2">
 <h2 class="anchored" data-anchor-id="second-order-spatial-point-pattern-analysis.">1.4.2 Second-Order Spatial Point Pattern Analysis.</h2>
 <p>We now focus on Second Order Spatial Point Patterns Analysis.</p>
 <p>We first filter the data down to the regions of interest and create separate boundaries for each of them. Following this, we produce an owin object using the as.owin() function.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtering the data down to the regions of interest</span></span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>bkk <span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Bangkok"</span>)</span>
-<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>smt_pkn <span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
-<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Samut Prakan"</span>)</span>
-<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>ntbr <span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
-<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Nonthaburi"</span>)</span>
-<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>nkn_ptn<span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
-<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Nakhon Pathom"</span>)</span>
-<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>smt_skn<span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
-<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Samut Sakhon"</span>)</span>
-<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating the owin object</span></span>
-<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>bkk_owin <span class="ot">=</span> <span class="fu">as.owin</span>(bkk)</span>
-<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a>smt_pkn_owin <span class="ot">=</span> <span class="fu">as.owin</span>(smt_pkn)</span>
-<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a>ntbr_owin <span class="ot">=</span> <span class="fu">as.owin</span>(ntbr)</span>
-<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a>nkn_ptn_owin <span class="ot">=</span> <span class="fu">as.owin</span>(nkn_ptn)</span>
-<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a>smt_skn_owin <span class="ot">=</span> <span class="fu">as.owin</span>(smt_skn)</span>
-<span id="cb60-19"><a href="#cb60-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb60-20"><a href="#cb60-20" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating point planar patterns</span></span>
-<span id="cb60-21"><a href="#cb60-21" aria-hidden="true" tabindex="-1"></a>acc_bkk_ppp <span class="ot">=</span> bmr_ppp_jit[bkk_owin]</span>
-<span id="cb60-22"><a href="#cb60-22" aria-hidden="true" tabindex="-1"></a>acc_smt_pkn_ppp <span class="ot">=</span> bmr_ppp_jit[smt_pkn_owin]</span>
-<span id="cb60-23"><a href="#cb60-23" aria-hidden="true" tabindex="-1"></a>acc_ntbr_ppp <span class="ot">=</span> bmr_ppp_jit[ntbr_owin]</span>
-<span id="cb60-24"><a href="#cb60-24" aria-hidden="true" tabindex="-1"></a>acc_nkn_ptn_ppp <span class="ot">=</span> bmr_ppp_jit[nkn_ptn_owin]</span>
-<span id="cb60-25"><a href="#cb60-25" aria-hidden="true" tabindex="-1"></a>acc_smt_skn_ppp<span class="ot">=</span> bmr_ppp_jit[smt_skn_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtering the data down to the regions of interest</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>bkk <span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Bangkok"</span>)</span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>smt_pkn <span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Samut Prakan"</span>)</span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>ntbr <span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Nonthaburi"</span>)</span>
+<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a>nkn_ptn<span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
+<span id="cb76-9"><a href="#cb76-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Nakhon Pathom"</span>)</span>
+<span id="cb76-10"><a href="#cb76-10" aria-hidden="true" tabindex="-1"></a>smt_skn<span class="ot">=</span> bmr_boundary <span class="sc">%&gt;%</span></span>
+<span id="cb76-11"><a href="#cb76-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN <span class="sc">==</span> <span class="st">"Samut Sakhon"</span>)</span>
+<span id="cb76-12"><a href="#cb76-12" aria-hidden="true" tabindex="-1"></a>ptm_thn<span class="ot">=</span> bmr_boundary<span class="sc">%&gt;%</span></span>
+<span id="cb76-13"><a href="#cb76-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ADM1_EN<span class="sc">==</span><span class="st">'Pathum Thani'</span>)</span>
+<span id="cb76-14"><a href="#cb76-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb76-15"><a href="#cb76-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating the owin object</span></span>
+<span id="cb76-16"><a href="#cb76-16" aria-hidden="true" tabindex="-1"></a>bkk_owin <span class="ot">=</span> <span class="fu">as.owin</span>(bkk)</span>
+<span id="cb76-17"><a href="#cb76-17" aria-hidden="true" tabindex="-1"></a>smt_pkn_owin <span class="ot">=</span> <span class="fu">as.owin</span>(smt_pkn)</span>
+<span id="cb76-18"><a href="#cb76-18" aria-hidden="true" tabindex="-1"></a>ntbr_owin <span class="ot">=</span> <span class="fu">as.owin</span>(ntbr)</span>
+<span id="cb76-19"><a href="#cb76-19" aria-hidden="true" tabindex="-1"></a>nkn_ptn_owin <span class="ot">=</span> <span class="fu">as.owin</span>(nkn_ptn)</span>
+<span id="cb76-20"><a href="#cb76-20" aria-hidden="true" tabindex="-1"></a>smt_skn_owin <span class="ot">=</span> <span class="fu">as.owin</span>(smt_skn)</span>
+<span id="cb76-21"><a href="#cb76-21" aria-hidden="true" tabindex="-1"></a>ptm_thn_owin<span class="ot">=</span> <span class="fu">as.owin</span>(ptm_thn)</span>
+<span id="cb76-22"><a href="#cb76-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb76-23"><a href="#cb76-23" aria-hidden="true" tabindex="-1"></a><span class="co">#Creating point planar patterns</span></span>
+<span id="cb76-24"><a href="#cb76-24" aria-hidden="true" tabindex="-1"></a>acc_bkk_ppp <span class="ot">=</span> bmr_ppp_jit[bkk_owin]</span>
+<span id="cb76-25"><a href="#cb76-25" aria-hidden="true" tabindex="-1"></a>acc_smt_pkn_ppp <span class="ot">=</span> bmr_ppp_jit[smt_pkn_owin]</span>
+<span id="cb76-26"><a href="#cb76-26" aria-hidden="true" tabindex="-1"></a>acc_ntbr_ppp <span class="ot">=</span> bmr_ppp_jit[ntbr_owin]</span>
+<span id="cb76-27"><a href="#cb76-27" aria-hidden="true" tabindex="-1"></a>acc_nkn_ptn_ppp <span class="ot">=</span> bmr_ppp_jit[nkn_ptn_owin]</span>
+<span id="cb76-28"><a href="#cb76-28" aria-hidden="true" tabindex="-1"></a>acc_smt_skn_ppp<span class="ot">=</span> bmr_ppp_jit[smt_skn_owin]</span>
+<span id="cb76-29"><a href="#cb76-29" aria-hidden="true" tabindex="-1"></a>acc_ptm_thn_ppp<span class="ot">=</span> bmr_ppp_jit[ptm_thn_owin]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="calculating-g-function-estimates-and-testing-for-complete-spatial-randomness" class="level3">
-<h3 class="anchored" data-anchor-id="calculating-g-function-estimates-and-testing-for-complete-spatial-randomness"><strong>1.4.2.1 Calculating G-function estimates and testing for Complete Spatial Randomness</strong></h3>
+<h3 class="anchored" data-anchor-id="calculating-g-function-estimates-and-testing-for-complete-spatial-randomness">1.4.2.1 Calculating G-function estimates and testing for Complete Spatial Randomness</h3>
 <p>We now focus on computing G-function estimates.</p>
 <p>The test below allows us to understand if accidents in the Bangkok Metropolitan Region exhibit Spatial Clustering or if they are Randomly Distributed.</p>
 <p>We apply the test for Complete Spatial Randomness to each region individually. The tests are conducted at a 5% significance level.</p>
@@ -1117,24 +1327,24 @@ Window area = 11789900000 square units</code></pre>
 <li><p><strong><em>H1: There is spatial clustering. The accidents are NOT randomly distributed across the region.</em></strong></p></li>
 </ul>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Bangkok</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Samut Prakhan</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Nonthaburi</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-4" role="tab" aria-controls="tabset-2-4" aria-selected="false">Nakhon Pathom</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-5" role="tab" aria-controls="tabset-2-5" aria-selected="false">Samut Sakhon</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">Bangkok</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Samut Prakhan</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Nonthaburi</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-4" role="tab" aria-controls="tabset-3-4" aria-selected="false">Nakhon Pathom</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-5" role="tab" aria-controls="tabset-3-5" aria-selected="false">Samut Sakhon</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-6-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-6" role="tab" aria-controls="tabset-3-6" aria-selected="false">Patum Thani</a></li></ul>
 <div class="tab-content">
-<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <p>We use the Gest() function of the spatstat package to compute a G-function estimation for Bangkok. Following that, we plot the result.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>G_bkk <span class="ot">=</span> <span class="fu">Gest</span>(acc_bkk_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_bkk, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>G_bkk <span class="ot">=</span> <span class="fu">Gest</span>(acc_bkk_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_bkk, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-48-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-64-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We now carry out the monte carlo simulation test, using the envelope() function, for complete spatial randomness.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>G_bkk.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_bkk_ppp, Gest, <span class="at">nsim =</span> <span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>G_bkk.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_bkk_ppp, Gest, <span class="at">nsim =</span> <span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generating 99 simulations of CSR  ...
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -1148,33 +1358,33 @@ Done.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_bkk.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_bkk.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-50-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-66-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>It is clear that that there is clustering exhibited in this scenario as the black line, observed values, is far above the envelope. We have sufficient evidence to reject the null hypothesis.</p>
 </div>
-<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <p>We use the Gest() function of the spatstat package to compute a G-function estimation for Samut Prakhan. Following that, we plot the result.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>G_smt_pkn <span class="ot">=</span> <span class="fu">Gest</span>(acc_smt_pkn_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_pkn, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>G_smt_pkn <span class="ot">=</span> <span class="fu">Gest</span>(acc_smt_pkn_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_pkn, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-51-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-67-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We now implement a monte carlo simulation test, using the envelope() function, for Complete Spatial Random in Samut Prakan.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>G_smt_pkn.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_smt_pkn_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>G_smt_pkn.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_smt_pkn_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generating 199 simulations of CSR  ...
 1, 2, 3, 4.6.8.10.12.14.16.18.20.22.24.26.28.30.32.34
@@ -1189,33 +1399,33 @@ Done.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_pkn.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_pkn.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-53-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-69-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Samut Prakan do indeed exhibit clustering, more so than is expected in a region that is randomly distributed.</p>
 </div>
-<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
 <p>We use the Gest() function of the spatstat package to compute a G-function estimation for Nonthaburi. Following that, we plot the result.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>G_ntbr <span class="ot">=</span> <span class="fu">Gest</span>(acc_ntbr_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_ntbr, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>G_ntbr <span class="ot">=</span> <span class="fu">Gest</span>(acc_ntbr_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_ntbr, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-54-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-70-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We now implement a Monte-Carlo Simulation test, using the envelope() function, to check for complete spatial randomness of roads accidents in Nonthaburi.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>G_ntbr.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_ntbr_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>G_ntbr.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_ntbr_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generating 199 simulations of CSR  ...
 1, 2, 3, 4.6.8.10.12.14.16.18.20.22.24.26.28.30.32.34
@@ -1230,33 +1440,33 @@ Done.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_ntbr.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_ntbr.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-56-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-72-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Nonthaburi do indeed exhibit clustering, more than is expected in a region that is randomly distributed.</p>
 </div>
-<div id="tabset-2-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-4-tab">
+<div id="tabset-3-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-4-tab">
 <p>We use the Gest() function of the spatstat package to compute a G-function estimation for Nakhon Pathom. Following that, we plot the result.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>G_nkn_ptn <span class="ot">=</span> <span class="fu">Gest</span>(acc_nkn_ptn_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_nkn_ptn, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>G_nkn_ptn <span class="ot">=</span> <span class="fu">Gest</span>(acc_nkn_ptn_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_nkn_ptn, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-57-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-73-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We now conduct the Monte-Carlo Simulation test, using the envelope() function, for complete spatial randomness for accidents in Nakhon Pathom.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>G_nkn_ptn.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_nkn_ptn_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>G_nkn_ptn.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_nkn_ptn_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generating 199 simulations of CSR  ...
 1, 2, 3, 4.6.8.10.12.14.16.18.20.22.24.26.28.30.32.34
@@ -1271,33 +1481,33 @@ Done.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_nkn_ptn.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_nkn_ptn.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-59-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-75-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Nakhon Pathom do indeed exhibit clustering, more than is expected in a region that is randomly distributed.</p>
 </div>
-<div id="tabset-2-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-5-tab">
+<div id="tabset-3-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-5-tab">
 <p>We use the Gest() function of the spatstat package to compute a G-function estimation for Samut Sakhon. Following that, we plot the result.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>G_smt_skn <span class="ot">=</span> <span class="fu">Gest</span>(acc_smt_skn_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_skn, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>G_smt_skn <span class="ot">=</span> <span class="fu">Gest</span>(acc_smt_skn_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_skn, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-60-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-76-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We now conduct the Monte-Carlo Simulation test, using the envelope() function, for complete spatial randomness for accidents in Samut Sakhon.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>G_smt_skn.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_smt_skn_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>G_smt_skn.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_smt_skn_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generating 199 simulations of CSR  ...
 1, 2, 3, 4.6.8.10.12.14.16.18.20.22.24.26.28.30.32.34
@@ -1312,25 +1522,65 @@ Done.</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_skn.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_smt_skn.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-62-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-78-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Samut Sakhon do indeed exhibit clustering, more so than is expected in a region that is randomly distributed.</p>
 </div>
+<div id="tabset-3-6" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-6-tab">
+<p>We use the Gest() function of the Spatstat package to compute a G-function estimation for Patum Thani</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>G_ptm_thn <span class="ot">=</span> <span class="fu">Gest</span>(acc_ptm_thn_ppp, <span class="at">correction =</span> <span class="st">"border"</span>)</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_nkn_ptn, <span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">500</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-79-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
 </div>
-<div class="insights-box">
-<ul>
-<li><p>The grey zone indicates the confidence envelop (In this case, we have set it as 95% as indicated by the critical value of 0.05)</p></li>
-<li><p>When an observed L value is greater than its corresponding L(theo) value for a particular distance and lower than the upper confidence envelop, spatial clustering for that distance is statistically NOT significant (e.g.&nbsp;distance between B and C).</p></li>
-<li><p>When an observed L value is smaller than its corresponding L(theo) value for a particular distance and beyond the lower confidence envelop, spatial dispersion for that distance is statistically significant. - When an observed L value is smaller than its corresponding L(theo) value for a particular distance and within the lower confidence envelop, spatial dispersion for that distance is statistically NOT significant (e.g.&nbsp;distance between A and B).</p></li>
-</ul>
+</div>
+<p>We now conduct the Monte Carlo Simulation Test for Complete Spatial Randomness by implementing the envelope() function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>G_ptm_thn.csr <span class="ot">&lt;-</span> <span class="fu">envelope</span>(acc_ptm_thn_ppp, Gest, <span class="at">nsim =</span> <span class="dv">199</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Generating 199 simulations of CSR  ...
+1, 2, 3, 4.6.8.10.12.14.16.18.20.22.24.26.28.30.32.34
+.36.38.40.42.44.46.48.50.52.54.56.58.60.62.64.66.68.70.72.74
+.76.78.80.82.84.86.88.90.92.94.96.98.100.102.104.106.108.110.112.114
+.116.118.120.122.124.126.128.130.132.134.136.138.140.142.144.146.148.150.152.154
+.156.158.160.162.164.166.168.170.172.174.176.178.180.182.184.186.188.190.192.194
+.196.198
+199.
+
+Done.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(G_ptm_thn.csr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-81-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We have sufficient Evidence to reject the null hypothesis and can conclude that accidents in Pathum Thani are not randomly distributed and do indeed exhibit spatial clustering.</p>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"></ul>
+<div class="tab-content">
+
+</div>
 </div>
 </section>
 </section>
@@ -1341,33 +1591,33 @@ Done.</code></pre>
 <p>We then use the left_join() function of the dplyr package to join this with the boundary data in order to facilitate analysis.</p>
 <p>We then save it as an RDS file.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>accidents_with_districts <span class="ot">&lt;-</span> <span class="fu">st_join</span>(bmr_accsf, bmr_boundary2, <span class="at">join =</span> st_intersects)</span>
-<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by adm2_en and count the number of accidents per district</span></span>
-<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>accident_counts_by_adm2 <span class="ot">&lt;-</span> accidents_with_districts <span class="sc">%&gt;%</span></span>
-<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ADM2_EN) <span class="sc">%&gt;%</span></span>
-<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">accident_count =</span> <span class="fu">n</span>())</span>
-<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform a left join with the boundary data</span></span>
-<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> bmr_boundary2 <span class="sc">%&gt;%</span></span>
-<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(accident_counts_by_adm2, <span class="at">by =</span> <span class="st">"ADM2_EN"</span>)</span>
-<span id="cb81-10"><a href="#cb81-10" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> boundary_with_accident_count <span class="sc">%&gt;%</span></span>
-<span id="cb81-11"><a href="#cb81-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">accident_count =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(accident_count), <span class="dv">0</span>, accident_count))</span>
-<span id="cb81-12"><a href="#cb81-12" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(boundary_with_accident_count, <span class="st">"data/rds/boundary_with_acc_count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>accidents_with_districts <span class="ot">&lt;-</span> <span class="fu">st_join</span>(bmr_accsf, bmr_boundary2, <span class="at">join =</span> st_intersects)</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by adm2_en and count the number of accidents per district</span></span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>accident_counts_by_adm2 <span class="ot">&lt;-</span> accidents_with_districts <span class="sc">%&gt;%</span></span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ADM2_EN) <span class="sc">%&gt;%</span></span>
+<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">accident_count =</span> <span class="fu">n</span>())</span>
+<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform a left join with the boundary data</span></span>
+<span id="cb101-8"><a href="#cb101-8" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> bmr_boundary2 <span class="sc">%&gt;%</span></span>
+<span id="cb101-9"><a href="#cb101-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(accident_counts_by_adm2, <span class="at">by =</span> <span class="st">"ADM2_EN"</span>)</span>
+<span id="cb101-10"><a href="#cb101-10" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> boundary_with_accident_count <span class="sc">%&gt;%</span></span>
+<span id="cb101-11"><a href="#cb101-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">accident_count =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(accident_count), <span class="dv">0</span>, accident_count))</span>
+<span id="cb101-12"><a href="#cb101-12" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(boundary_with_accident_count, <span class="st">"data/rds/boundary_with_acc_count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/boundary_with_acc_count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/boundary_with_acc_count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>After successfully completing the relational join, we can now plot a choropleth map to visualize the number of accidents in the Bangkok Metropolitan Region using various functions of the tmap package</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(boundary_with_accident_count) <span class="sc">+</span></span>
-<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
-<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"ADM2_EN.x"</span>, <span class="at">size=</span><span class="fl">0.5</span>)</span>
-<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>gdppc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"accident_count"</span>)</span>
-<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(basemap, gdppc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(boundary_with_accident_count) <span class="sc">+</span></span>
+<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"ADM2_EN.x"</span>, <span class="at">size=</span><span class="fl">0.5</span>)</span>
+<span id="cb103-4"><a href="#cb103-4" aria-hidden="true" tabindex="-1"></a>gdppc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"accident_count"</span>)</span>
+<span id="cb103-5"><a href="#cb103-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(basemap, gdppc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-65-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-84-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1383,8 +1633,8 @@ Done.</code></pre>
 <h4 class="anchored" data-anchor-id="computing-queen-contiguity-based-neighbors">1.4.3.1.1 Computing (QUEEN) contiguity based neighbors</h4>
 <p>The poly2nb() function is implemented as shown in the code chunk below. Using this, we are able to compute a Queen contiguity weight matrix.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(boundary_with_accident_count, <span class="at">queen=</span><span class="cn">TRUE</span>)</span>
-<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(boundary_with_accident_count, <span class="at">queen=</span><span class="cn">TRUE</span>)</span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
 Number of regions: 79 
@@ -1407,8 +1657,8 @@ Link number distribution:
 <h4 class="anchored" data-anchor-id="computing-rook-contiguity-based-neighbors">1.4.3.1.2 Computing (ROOK) contiguity based neighbors</h4>
 <p>For this, we will set the <code>queen</code> argument of the poly2nb() function to false.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>wm_r <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(boundary_with_accident_count, <span class="at">queen=</span><span class="cn">FALSE</span>) </span>
-<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>wm_r <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(boundary_with_accident_count, <span class="at">queen=</span><span class="cn">FALSE</span>) </span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
 Number of regions: 79 
@@ -1439,25 +1689,25 @@ Link number distribution:
 <section id="obtaining-coordinate-values" class="level4">
 <h4 class="anchored" data-anchor-id="obtaining-coordinate-values">1.4.3.2.1 Obtaining Coordinate values</h4>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">Longitude</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Latitude</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Coords</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">Longitude</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Latitude</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-3" role="tab" aria-controls="tabset-5-3" aria-selected="false">Coords</a></li></ul>
 <div class="tab-content">
-<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>longitude <span class="ot">&lt;-</span> <span class="fu">map_dbl</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">1</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>longitude <span class="ot">&lt;-</span> <span class="fu">map_dbl</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">1</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
-<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>latitude <span class="ot">&lt;-</span> <span class="fu">map_dbl</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">2</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>latitude <span class="ot">&lt;-</span> <span class="fu">map_dbl</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">2</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
-<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div id="tabset-5-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-3-tab">
 <p>Now that we have the latitude and longitude values, we can use the cbind() function to put the longitude and latitude values into the same object,&nbsp;<code>coords</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>coords <span class="ot">&lt;-</span> <span class="fu">cbind</span>(longitude, latitude)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>coords <span class="ot">&lt;-</span> <span class="fu">cbind</span>(longitude, latitude)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     longitude latitude
 [1,]  661951.4  1521172
@@ -1473,15 +1723,15 @@ Link number distribution:
 </div>
 <p>We can now plot the contiguity weights side by side for comparison.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"Queen Contiguity"</span>)</span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_q, coords, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col=</span> <span class="st">"purple"</span>)</span>
-<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"Rook Contiguity"</span>)</span>
-<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r, coords, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"darkgreen"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"Queen Contiguity"</span>)</span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_q, coords, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col=</span> <span class="st">"purple"</span>)</span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"Rook Contiguity"</span>)</span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r, coords, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"darkgreen"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-72-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-91-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1501,8 +1751,8 @@ Link number distribution:
 <p>Having many neighbors smoothens the neighbor relationship across more neighbors.</p>
 <p>It is possible to control the numbers of neighbors directly using k-nearest neighbors by either accepting asymmetric neighbors or imposing symmetry</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>knn6 <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(<span class="fu">knearneigh</span>(coords, <span class="at">k=</span><span class="dv">6</span>))</span>
-<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>knn6</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>knn6 <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(<span class="fu">knearneigh</span>(coords, <span class="at">k=</span><span class="dv">6</span>))</span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>knn6</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
 Number of regions: 79 
@@ -1515,12 +1765,12 @@ Non-symmetric neighbours list</code></pre>
 <p>We immediately see a difference when comparing the above output to <code>wm_q</code> and <code>wm_r</code>. The number of non-zero links is higher.</p>
 <p>We can create the plot for the same using the plot() function.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
-<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(knn6, coords, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(boundary_with_accident_count<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(knn6, coords, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-74-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-93-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1532,9 +1782,9 @@ Non-symmetric neighbours list</code></pre>
 <h4 class="anchored" data-anchor-id="weights-based-on-inversed-distance-weighting-idw">1.4.3.4.1 Weights Based on Inversed Distance Weighting (IDW)</h4>
 <p>We first compute the distances between areas by implementing the&nbsp;<strong>nbdists()</strong>&nbsp;function of the&nbsp;<strong>spdep</strong>&nbsp;package.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>dist <span class="ot">&lt;-</span> <span class="fu">nbdists</span>(wm_q, coords, <span class="at">longlat =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">lapply</span>(dist, <span class="cf">function</span>(x) <span class="dv">1</span><span class="sc">/</span>(x))</span>
-<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>ids</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>dist <span class="ot">&lt;-</span> <span class="fu">nbdists</span>(wm_q, coords, <span class="at">longlat =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>ids <span class="ot">&lt;-</span> <span class="fu">lapply</span>(dist, <span class="cf">function</span>(x) <span class="dv">1</span><span class="sc">/</span>(x))</span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>ids</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
 [1] 0.0002854535 0.0006582134 0.0004566217 0.0002167536 0.0003080119
@@ -1825,8 +2075,8 @@ Note on <code>style</code> argument
 </div>
 </details>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>rswm_q <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>rswm_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>rswm_q <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>rswm_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Characteristics of weights list object:
 Neighbour list object:
@@ -1844,7 +2094,7 @@ W 79 6241 79 29.8143 321.0615</code></pre>
 <p>Setting the argument <code>zero.policy</code> to TRUE allows for lists of non-neighbors. This should be used with caution as users may not be aware of missing neighbors in their data however setting <code>zero,policy</code> to FALSE would return an error.</p>
 <p>The code chunk below is implemented to check the weights of the first polygons eight neighbors type:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>rswm_q<span class="sc">$</span>weights[<span class="dv">10</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>rswm_q<span class="sc">$</span>weights[<span class="dv">10</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
 [1] 0.2 0.2 0.2 0.2 0.2</code></pre>
@@ -1852,8 +2102,8 @@ W 79 6241 79 29.8143 321.0615</code></pre>
 </div>
 <p>Using the same method, we derive a row standardized distance weight matrix by using the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>rswm_ids <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">glist=</span>ids, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
-<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>rswm_ids</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a>rswm_ids <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">glist=</span>ids, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>rswm_ids</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Characteristics of weights list object:
 Neighbour list object:
@@ -1870,8 +2120,8 @@ B 79 6241 0.07702966 4.057545e-05 0.0004441685</code></pre>
 </div>
 <p>We now compute the average neighbor Accident count value for each polygon. We often refer to these values as Spatially Lagged Values.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb105"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>acc.lag <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(rswm_q, boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
-<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>acc.lag</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>acc.lag <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(rswm_q, boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>acc.lag</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> [1]   3.375000  42.750000 440.750000  10.800000 141.000000 115.333333
  [7]  12.500000  10.600000 222.500000 400.600000 351.714286 123.000000
@@ -1891,9 +2141,9 @@ B 79 6241 0.07702966 4.057545e-05 0.0004441685</code></pre>
 </div>
 <p>We can retrieve the Accident count for each by using the code Chunk Below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>nb1 <span class="ot">&lt;-</span> wm_q[[<span class="dv">1</span>]] <span class="co">#Shows the accident counts for the neighboring districts of region 1</span></span>
-<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>nb1 <span class="ot">&lt;-</span> boundary_with_accident_count<span class="sc">$</span>accident_count[nb1]</span>
-<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>nb1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a>nb1 <span class="ot">&lt;-</span> wm_q[[<span class="dv">1</span>]] <span class="co">#Shows the accident counts for the neighboring districts of region 1</span></span>
+<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a>nb1 <span class="ot">&lt;-</span> boundary_with_accident_count<span class="sc">$</span>accident_count[nb1]</span>
+<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a>nb1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1]  0  0  0  2  0  1  1 23</code></pre>
 </div>
@@ -1904,14 +2154,14 @@ B 79 6241 0.07702966 4.057545e-05 0.0004441685</code></pre>
 </div>
 <p>We can append the spatially lagged Accident values onto the <code>boundary_with_accident_count</code> sf data-frame by using the code chunk shown below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>lag.list <span class="ot">&lt;-</span> <span class="fu">list</span>(boundary_with_accident_count<span class="sc">$</span>ADM2_EN.x, <span class="fu">lag.listw</span>(rswm_q, boundary_with_accident_count<span class="sc">$</span>accident_count))</span>
-<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>lag.res <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lag.list)</span>
-<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lag.res) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ADM2_EN.x"</span>, <span class="st">"lag Accident Count"</span>)</span>
-<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> <span class="fu">left_join</span>(boundary_with_accident_count,lag.res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a>lag.list <span class="ot">&lt;-</span> <span class="fu">list</span>(boundary_with_accident_count<span class="sc">$</span>ADM2_EN.x, <span class="fu">lag.listw</span>(rswm_q, boundary_with_accident_count<span class="sc">$</span>accident_count))</span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a>lag.res <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lag.list)</span>
+<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lag.res) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ADM2_EN.x"</span>, <span class="st">"lag Accident Count"</span>)</span>
+<span id="cb129-4"><a href="#cb129-4" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> <span class="fu">left_join</span>(boundary_with_accident_count,lag.res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can gain further insight into this data-frame by implementing the head() function.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(boundary_with_accident_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(boundary_with_accident_count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 6 features and 22 fields
 Geometry type: MULTIPOLYGON
@@ -1950,13 +2200,13 @@ Projected CRS: WGS 84 / UTM zone 47N
 </div>
 <p>We now plot the observed Accident and Spatial Lag Accidents side by side for comparison.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>acc_qtm <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"accident_count"</span>)</span>
-<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>lag_acc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"lag Accident Count"</span>)</span>
-<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(acc_qtm, lag_acc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a>acc_qtm <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"accident_count"</span>)</span>
+<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a>lag_acc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"lag Accident Count"</span>)</span>
+<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(acc_qtm, lag_acc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-83-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-102-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1976,8 +2226,8 @@ Projected CRS: WGS 84 / UTM zone 47N
 <p>The spatial window average uses row-standardized weights and includes the diagonal element. To do this in R, we need to go back to the neighbors structure and add the diagonal element before assigning weights.</p>
 <p>To add the diagonal element to the neighbour list, we use the include.self() function from the <strong>spdep</strong> package.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>wm_qs <span class="ot">&lt;-</span> <span class="fu">include.self</span>(wm_q)</span>
-<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>wm_qs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a>wm_qs <span class="ot">&lt;-</span> <span class="fu">include.self</span>(wm_q)</span>
+<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a>wm_qs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
 Number of regions: 79 
@@ -1989,7 +2239,7 @@ Average number of links: 6.544304 </code></pre>
 <p>There is a difference in the key statistics shown above when compared to wm_q. The average number of links, the number of non-zero links as well as percentage of non-zero weights are all higher for wm_qs.</p>
 <p>We look at the neighbor list of area [1] using the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>wm_qs[[<span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a>wm_qs[[<span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1]  1  2  8 13 15 16 18 20 25</code></pre>
 </div>
@@ -1997,8 +2247,8 @@ Average number of links: 6.544304 </code></pre>
 <p>This region has 9 neighbors.</p>
 <p>We now implement the nb2listw() function in order to obtain weights.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>wm_qs <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_qs)</span>
-<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>wm_qs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a>wm_qs <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_qs)</span>
+<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a>wm_qs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Characteristics of weights list object:
 Neighbour list object:
@@ -2015,9 +2265,9 @@ W 79 6241 79 24.99173 318.4378</code></pre>
 </div>
 <p>We now create the lag variable from our weight structure and <code>accident_count</code> variable.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>lag_w_avg_acc <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(wm_qs, </span>
-<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>                             boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
-<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a>lag_w_avg_acc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb139"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a>lag_w_avg_acc <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(wm_qs, </span>
+<span id="cb139-2"><a href="#cb139-2" aria-hidden="true" tabindex="-1"></a>                             boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
+<span id="cb139-3"><a href="#cb139-3" aria-hidden="true" tabindex="-1"></a>lag_w_avg_acc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> [1]   3.000000  38.000000 364.600000  10.333333 139.333333 100.285714
  [7]  16.111111   8.833333 191.571429 345.833333 423.500000 125.500000
@@ -2037,24 +2287,24 @@ W 79 6241 79 24.99173 318.4378</code></pre>
 </div>
 <p>We then proceed to convert the lag variable&nbsp;<code>listw</code>object into a data-frame by using as.data.frame().</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>lag.list.wm_qs <span class="ot">&lt;-</span> <span class="fu">list</span>(boundary_with_accident_count<span class="sc">$</span>ADM2_EN.x, <span class="fu">lag.listw</span>(wm_qs, boundary_with_accident_count<span class="sc">$</span>accident_count))</span>
-<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>lag_wm_qs.res <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lag.list.wm_qs)</span>
-<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lag_wm_qs.res) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ADM2_EN.x"</span>, <span class="st">"lag_window_avg acc"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb141"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a>lag.list.wm_qs <span class="ot">&lt;-</span> <span class="fu">list</span>(boundary_with_accident_count<span class="sc">$</span>ADM2_EN.x, <span class="fu">lag.listw</span>(wm_qs, boundary_with_accident_count<span class="sc">$</span>accident_count))</span>
+<span id="cb141-2"><a href="#cb141-2" aria-hidden="true" tabindex="-1"></a>lag_wm_qs.res <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lag.list.wm_qs)</span>
+<span id="cb141-3"><a href="#cb141-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lag_wm_qs.res) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ADM2_EN.x"</span>, <span class="st">"lag_window_avg acc"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="note-box">
 <p>Note: The third command line on the code chunk above renames the field names of&nbsp;<em>lag_wm_q1.res</em>&nbsp;object into&nbsp;accident_count and&nbsp;<em>lag_window_avg acc</em>&nbsp;respectively.</p>
 </div>
 <p>We now append&nbsp;the lag_window_avg acc values onto the <code>boundary_with_accident_count</code> sf data.frame by using&nbsp;left_join()&nbsp;of&nbsp;<strong>dplyr</strong>&nbsp;package.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> <span class="fu">left_join</span>(boundary_with_accident_count, lag_wm_qs.res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb142"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="ot">&lt;-</span> <span class="fu">left_join</span>(boundary_with_accident_count, lag_wm_qs.res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To compare the values of lag accident count and Spatial window average,&nbsp;The kable() function&nbsp;of the Knitr package is used to prepare a table.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="sc">%&gt;%</span></span>
-<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="st">"ADM2_EN.x"</span>, </span>
-<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">"lag Accident Count"</span>, </span>
-<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">"lag_window_avg acc"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb143"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a>boundary_with_accident_count <span class="sc">%&gt;%</span></span>
+<span id="cb143-2"><a href="#cb143-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="st">"ADM2_EN.x"</span>, </span>
+<span id="cb143-3"><a href="#cb143-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">"lag Accident Count"</span>, </span>
+<span id="cb143-4"><a href="#cb143-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">"lag_window_avg acc"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb143-5"><a href="#cb143-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -2552,39 +2802,39 @@ W 79 6241 79 24.99173 318.4378</code></pre>
 </div>
 <p>We now plot the lag accident count and w_ave_acc maps next to each other for comparison using the qtm() function of the tmap package.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a>w_avg_acc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"lag_window_avg acc"</span>)</span>
-<span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(lag_acc, w_avg_acc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb144"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a>w_avg_acc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"lag_window_avg acc"</span>)</span>
+<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(lag_acc, w_avg_acc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-91-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-110-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>equal <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(boundary_with_accident_count) <span class="sc">+</span></span>
-<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">"accident_count"</span>,</span>
-<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">n =</span> <span class="dv">5</span>,</span>
-<span id="cb125-4"><a href="#cb125-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"equal"</span>) <span class="sc">+</span></span>
-<span id="cb125-5"><a href="#cb125-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb125-6"><a href="#cb125-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Equal interval classification"</span>)</span>
-<span id="cb125-7"><a href="#cb125-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb125-8"><a href="#cb125-8" aria-hidden="true" tabindex="-1"></a>quantile <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(boundary_with_accident_count) <span class="sc">+</span></span>
-<span id="cb125-9"><a href="#cb125-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">"accident_count"</span>,</span>
-<span id="cb125-10"><a href="#cb125-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">n =</span> <span class="dv">5</span>,</span>
-<span id="cb125-11"><a href="#cb125-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"quantile"</span>) <span class="sc">+</span></span>
-<span id="cb125-12"><a href="#cb125-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb125-13"><a href="#cb125-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Equal quantile classification"</span>)</span>
-<span id="cb125-14"><a href="#cb125-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb125-15"><a href="#cb125-15" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(equal, </span>
-<span id="cb125-16"><a href="#cb125-16" aria-hidden="true" tabindex="-1"></a>             quantile, </span>
-<span id="cb125-17"><a href="#cb125-17" aria-hidden="true" tabindex="-1"></a>             <span class="at">asp=</span><span class="dv">1</span>, </span>
-<span id="cb125-18"><a href="#cb125-18" aria-hidden="true" tabindex="-1"></a>             <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb145"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true" tabindex="-1"></a>equal <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(boundary_with_accident_count) <span class="sc">+</span></span>
+<span id="cb145-2"><a href="#cb145-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">"accident_count"</span>,</span>
+<span id="cb145-3"><a href="#cb145-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">n =</span> <span class="dv">5</span>,</span>
+<span id="cb145-4"><a href="#cb145-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"equal"</span>) <span class="sc">+</span></span>
+<span id="cb145-5"><a href="#cb145-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb145-6"><a href="#cb145-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Equal interval classification"</span>)</span>
+<span id="cb145-7"><a href="#cb145-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb145-8"><a href="#cb145-8" aria-hidden="true" tabindex="-1"></a>quantile <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(boundary_with_accident_count) <span class="sc">+</span></span>
+<span id="cb145-9"><a href="#cb145-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">"accident_count"</span>,</span>
+<span id="cb145-10"><a href="#cb145-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">n =</span> <span class="dv">5</span>,</span>
+<span id="cb145-11"><a href="#cb145-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"quantile"</span>) <span class="sc">+</span></span>
+<span id="cb145-12"><a href="#cb145-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb145-13"><a href="#cb145-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">main.title =</span> <span class="st">"Equal quantile classification"</span>)</span>
+<span id="cb145-14"><a href="#cb145-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb145-15"><a href="#cb145-15" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(equal, </span>
+<span id="cb145-16"><a href="#cb145-16" aria-hidden="true" tabindex="-1"></a>             quantile, </span>
+<span id="cb145-17"><a href="#cb145-17" aria-hidden="true" tabindex="-1"></a>             <span class="at">asp=</span><span class="dv">1</span>, </span>
+<span id="cb145-18"><a href="#cb145-18" aria-hidden="true" tabindex="-1"></a>             <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-92-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-111-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -2599,10 +2849,10 @@ W 79 6241 79 24.99173 318.4378</code></pre>
 <li><p><strong><em>H1: Regions with similar number of accidents are not randomly distributed and exhibit spatial clustering.</em></strong></p></li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="fu">moran.test</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, </span>
-<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">listw=</span>rswm_q, </span>
-<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb126-4"><a href="#cb126-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">na.action=</span>na.omit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb146"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a><span class="fu">moran.test</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, </span>
+<span id="cb146-2"><a href="#cb146-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">listw=</span>rswm_q, </span>
+<span id="cb146-3"><a href="#cb146-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb146-4"><a href="#cb146-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">na.action=</span>na.omit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Moran I test under randomisation
@@ -2627,12 +2877,12 @@ Moran I statistic       Expectation          Variance
 <h3 class="anchored" data-anchor-id="monte-carlo-morans-i">1.4.4.1 Monte Carlo Moran’s I</h3>
 <p>We now implement the moran.mc() function of the spdep package. In this scenario, we will run 1000 simulations.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a>bperm<span class="ot">=</span> <span class="fu">moran.mc</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, </span>
-<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">listw=</span>rswm_q, </span>
-<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">999</span>, </span>
-<span id="cb128-4"><a href="#cb128-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb128-5"><a href="#cb128-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">na.action=</span>na.omit)</span>
-<span id="cb128-6"><a href="#cb128-6" aria-hidden="true" tabindex="-1"></a>bperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb148"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true" tabindex="-1"></a>bperm<span class="ot">=</span> <span class="fu">moran.mc</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, </span>
+<span id="cb148-2"><a href="#cb148-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">listw=</span>rswm_q, </span>
+<span id="cb148-3"><a href="#cb148-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">999</span>, </span>
+<span id="cb148-4"><a href="#cb148-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb148-5"><a href="#cb148-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">na.action=</span>na.omit)</span>
+<span id="cb148-6"><a href="#cb148-6" aria-hidden="true" tabindex="-1"></a>bperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Monte-Carlo simulation of Moran I
@@ -2641,7 +2891,7 @@ data:  boundary_with_accident_count$accident_count
 weights: rswm_q  
 number of simulations + 1: 1000 
 
-statistic = 0.23576, observed rank = 1000, p-value = 0.001
+statistic = 0.23576, observed rank = 999, p-value = 0.001
 alternative hypothesis: greater</code></pre>
 </div>
 </div>
@@ -2651,65 +2901,65 @@ alternative hypothesis: greater</code></pre>
 <h3 class="anchored" data-anchor-id="visualizing-monte-carlo-morans-i">1.4.4.2 Visualizing Monte Carlo Moran’s I</h3>
 <p>We can visualize the test statistics obtained from the simulation above by implementing the hist() and abline() functions of R graphics.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">Summary Statistics</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">The plot</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false">ggplot method</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">Summary Statistics</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">The plot</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-3" role="tab" aria-controls="tabset-6-3" aria-selected="false">ggplot method</a></li></ul>
 <div class="tab-content">
-<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <p>We first calculate the mean and variance, and obtain the summary statistics.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb150"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -0.01073838</code></pre>
+<pre><code>[1] -0.02023623</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb152"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb152-1"><a href="#cb152-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.00437831</code></pre>
+<pre><code>[1] 0.003934229</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb134"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb154"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb154-1"><a href="#cb154-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
--0.20513 -0.05612 -0.01518 -0.01074  0.03086  0.23281 </code></pre>
+-0.19669 -0.06401 -0.02402 -0.02024  0.01971  0.30376 </code></pre>
 </div>
 </div>
 </div>
-<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb136"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(bperm<span class="sc">$</span>res, </span>
-<span id="cb136-2"><a href="#cb136-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">freq=</span><span class="cn">TRUE</span>, </span>
-<span id="cb136-3"><a href="#cb136-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks=</span><span class="dv">20</span>, </span>
-<span id="cb136-4"><a href="#cb136-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Simulated Moran's I"</span>)</span>
-<span id="cb136-5"><a href="#cb136-5" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="dv">0</span>, </span>
-<span id="cb136-6"><a href="#cb136-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="st">"red"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb156"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(bperm<span class="sc">$</span>res, </span>
+<span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">freq=</span><span class="cn">TRUE</span>, </span>
+<span id="cb156-3"><a href="#cb156-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks=</span><span class="dv">20</span>, </span>
+<span id="cb156-4"><a href="#cb156-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Simulated Moran's I"</span>)</span>
+<span id="cb156-5"><a href="#cb156-5" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="dv">0</span>, </span>
+<span id="cb156-6"><a href="#cb156-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="st">"red"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-98-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-117-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>From the above, we can infer that over half of all simulations indicate a negative value for Moran’s I statistic. Generally, a negative value indicates that&nbsp;<strong>dissimilar</strong>&nbsp;regions are located next to each other. (i.e: regions with dissimilar number of Accidents are located next to each other)</p>
 </div>
-<div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
+<div id="tabset-6-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-3-tab">
 <p>We can also make use of the ggplot2 R package to produce a plot.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">simulated_moran =</span> bperm<span class="sc">$</span>res)</span>
-<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb137-3"><a href="#cb137-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> simulated_moran)) <span class="sc">+</span></span>
-<span id="cb137-4"><a href="#cb137-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> (<span class="fu">max</span>(data<span class="sc">$</span>simulated_moran) <span class="sc">-</span> <span class="fu">min</span>(data<span class="sc">$</span>simulated_moran)) <span class="sc">/</span> <span class="dv">20</span>, </span>
-<span id="cb137-5"><a href="#cb137-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">fill =</span> <span class="st">"lightblue"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
-<span id="cb137-6"><a href="#cb137-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
-<span id="cb137-7"><a href="#cb137-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Simulated Moran's I"</span>, </span>
-<span id="cb137-8"><a href="#cb137-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Frequency"</span>,</span>
-<span id="cb137-9"><a href="#cb137-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Histogram of Simulated Moran's I"</span>) <span class="sc">+</span></span>
-<span id="cb137-10"><a href="#cb137-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb157"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">simulated_moran =</span> bperm<span class="sc">$</span>res)</span>
+<span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb157-3"><a href="#cb157-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> simulated_moran)) <span class="sc">+</span></span>
+<span id="cb157-4"><a href="#cb157-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> (<span class="fu">max</span>(data<span class="sc">$</span>simulated_moran) <span class="sc">-</span> <span class="fu">min</span>(data<span class="sc">$</span>simulated_moran)) <span class="sc">/</span> <span class="dv">20</span>, </span>
+<span id="cb157-5"><a href="#cb157-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">fill =</span> <span class="st">"lightblue"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb157-6"><a href="#cb157-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb157-7"><a href="#cb157-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Simulated Moran's I"</span>, </span>
+<span id="cb157-8"><a href="#cb157-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Frequency"</span>,</span>
+<span id="cb157-9"><a href="#cb157-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Histogram of Simulated Moran's I"</span>) <span class="sc">+</span></span>
+<span id="cb157-10"><a href="#cb157-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-99-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-118-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -2723,9 +2973,9 @@ alternative hypothesis: greater</code></pre>
 <p>We implement the localmoran() function of spdep compute the local Moran’s I statistic. This function helps us compute li values, given a set of zi values and a listw object providing neighbor weighting information for the polygon associated with the zi values.</p>
 <p>We compute local Moran’s I of <code>accident_count</code> at the district level.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb138"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a>fips <span class="ot">&lt;-</span> <span class="fu">order</span>(boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
-<span id="cb138-2"><a href="#cb138-2" aria-hidden="true" tabindex="-1"></a>localMI <span class="ot">&lt;-</span> <span class="fu">localmoran</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, rswm_q)</span>
-<span id="cb138-3"><a href="#cb138-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(localMI)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb158"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a>fips <span class="ot">&lt;-</span> <span class="fu">order</span>(boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
+<span id="cb158-2"><a href="#cb158-2" aria-hidden="true" tabindex="-1"></a>localMI <span class="ot">&lt;-</span> <span class="fu">localmoran</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, rswm_q)</span>
+<span id="cb158-3"><a href="#cb158-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(localMI)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           Ii          E.Ii      Var.Ii       Z.Ii Pr(z != E(Ii))
 1  0.60429563 -0.0079097813 0.070446604  2.3065726    0.021078658
@@ -2748,10 +2998,10 @@ alternative hypothesis: greater</code></pre>
 </div>
 <p>We now use the printCoefmat() to display the content of the local Moran matrix that we created above.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb140"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printCoefmat</span>(<span class="fu">data.frame</span>(</span>
-<span id="cb140-2"><a href="#cb140-2" aria-hidden="true" tabindex="-1"></a>  localMI[fips,], </span>
-<span id="cb140-3"><a href="#cb140-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names=</span>boundary_with_accident_count<span class="sc">$</span>ADM2_EN.x[fips]),</span>
-<span id="cb140-4"><a href="#cb140-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb160"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printCoefmat</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb160-2"><a href="#cb160-2" aria-hidden="true" tabindex="-1"></a>  localMI[fips,], </span>
+<span id="cb160-3"><a href="#cb160-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names=</span>boundary_with_accident_count<span class="sc">$</span>ADM2_EN.x[fips]),</span>
+<span id="cb160-4"><a href="#cb160-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                              Ii        E.Ii      Var.Ii        Z.Ii
 Phra Nakhon           6.0430e-01 -7.9098e-03  7.0447e-02  2.3066e+00
@@ -2920,21 +3170,21 @@ Lat Krabang                  0.0047</code></pre>
 <h3 class="anchored" data-anchor-id="mapping-the-local-morans-i">1.4.4.4 Mapping the local Moran’s I</h3>
 <p>Before we map the local Moran’s I map, it is wise to append the local Moran’s data-frame (<code>localMI</code>) onto our SpatialPolygonDataFrame.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb142"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a>bmr.localMI <span class="ot">&lt;-</span> <span class="fu">cbind</span>(boundary_with_accident_count,localMI) <span class="sc">%&gt;%</span></span>
-<span id="cb142-2"><a href="#cb142-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Pr.Ii =</span> Pr.z....E.Ii..)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb162"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true" tabindex="-1"></a>bmr.localMI <span class="ot">&lt;-</span> <span class="fu">cbind</span>(boundary_with_accident_count,localMI) <span class="sc">%&gt;%</span></span>
+<span id="cb162-2"><a href="#cb162-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Pr.Ii =</span> Pr.z....E.Ii..)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We now make use of the tmap package and its choropleth mapping functions to plot the local Moran’s I values.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb143"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
-<span id="cb143-2"><a href="#cb143-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Ii"</span>, </span>
-<span id="cb143-3"><a href="#cb143-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>,</span>
-<span id="cb143-4"><a href="#cb143-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette =</span> <span class="st">"RdBu"</span>,</span>
-<span id="cb143-5"><a href="#cb143-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local moran statistics"</span>) <span class="sc">+</span></span>
-<span id="cb143-6"><a href="#cb143-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb163"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
+<span id="cb163-2"><a href="#cb163-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Ii"</span>, </span>
+<span id="cb163-3"><a href="#cb163-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>,</span>
+<span id="cb163-4"><a href="#cb163-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette =</span> <span class="st">"RdBu"</span>,</span>
+<span id="cb163-5"><a href="#cb163-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local moran statistics"</span>) <span class="sc">+</span></span>
+<span id="cb163-6"><a href="#cb163-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-103-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-122-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -2953,16 +3203,16 @@ Lat Krabang                  0.0047</code></pre>
 <p>The Choropleth reveals the presence of both positive, as well as negative I values. This indicates that there are varying levels of spatial autocorrelation, however, we must examine the p-values for these I values to check for statistical significance.</p>
 <p>We use the tmap package to draw a choropleth map of Moran’s I p-values.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb144"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
-<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Pr.Ii"</span>, </span>
-<span id="cb144-3"><a href="#cb144-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span>),</span>
-<span id="cb144-4"><a href="#cb144-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-Blues"</span>, </span>
-<span id="cb144-5"><a href="#cb144-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Moran's I p-values"</span>) <span class="sc">+</span></span>
-<span id="cb144-6"><a href="#cb144-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb164"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
+<span id="cb164-2"><a href="#cb164-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Pr.Ii"</span>, </span>
+<span id="cb164-3"><a href="#cb164-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span>),</span>
+<span id="cb164-4"><a href="#cb164-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-Blues"</span>, </span>
+<span id="cb164-5"><a href="#cb164-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Moran's I p-values"</span>) <span class="sc">+</span></span>
+<span id="cb164-6"><a href="#cb164-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-104-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-123-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -2977,24 +3227,24 @@ Lat Krabang                  0.0047</code></pre>
 <h3 class="anchored" data-anchor-id="mapping-both-local-morans-i-values-and-p-values">1.4.4.6 Mapping both local Moran’s I values and p-values</h3>
 <p>In the interest of easier analysis and interpretation, we plot the two maps next to each other.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb145"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true" tabindex="-1"></a>localMI.map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
-<span id="cb145-2"><a href="#cb145-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Ii"</span>, </span>
-<span id="cb145-3"><a href="#cb145-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>, </span>
-<span id="cb145-4"><a href="#cb145-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local moran statistics"</span>) <span class="sc">+</span></span>
-<span id="cb145-5"><a href="#cb145-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
-<span id="cb145-6"><a href="#cb145-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb145-7"><a href="#cb145-7" aria-hidden="true" tabindex="-1"></a>pvalue.map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
-<span id="cb145-8"><a href="#cb145-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Pr.Ii"</span>, </span>
-<span id="cb145-9"><a href="#cb145-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span>),</span>
-<span id="cb145-10"><a href="#cb145-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-Blues"</span>, </span>
-<span id="cb145-11"><a href="#cb145-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Moran's I p-values"</span>) <span class="sc">+</span></span>
-<span id="cb145-12"><a href="#cb145-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
-<span id="cb145-13"><a href="#cb145-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb145-14"><a href="#cb145-14" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(localMI.map, pvalue.map, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb165"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a>localMI.map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
+<span id="cb165-2"><a href="#cb165-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Ii"</span>, </span>
+<span id="cb165-3"><a href="#cb165-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>, </span>
+<span id="cb165-4"><a href="#cb165-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local moran statistics"</span>) <span class="sc">+</span></span>
+<span id="cb165-5"><a href="#cb165-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
+<span id="cb165-6"><a href="#cb165-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-7"><a href="#cb165-7" aria-hidden="true" tabindex="-1"></a>pvalue.map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(bmr.localMI) <span class="sc">+</span></span>
+<span id="cb165-8"><a href="#cb165-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Pr.Ii"</span>, </span>
+<span id="cb165-9"><a href="#cb165-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span>),</span>
+<span id="cb165-10"><a href="#cb165-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-Blues"</span>, </span>
+<span id="cb165-11"><a href="#cb165-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Moran's I p-values"</span>) <span class="sc">+</span></span>
+<span id="cb165-12"><a href="#cb165-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
+<span id="cb165-13"><a href="#cb165-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-14"><a href="#cb165-14" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(localMI.map, pvalue.map, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-105-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-124-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -3039,9 +3289,9 @@ Lat Krabang                  0.0047</code></pre>
 </ol>
 <p>This process helps identify the upper limit for a distance band by analyzing the distances between neighboring regions.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb146"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a>k1 <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(<span class="fu">knearneigh</span>(coords))</span>
-<span id="cb146-2"><a href="#cb146-2" aria-hidden="true" tabindex="-1"></a>k1dists <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">nbdists</span>(k1, coords, <span class="at">longlat =</span> <span class="cn">FALSE</span>))</span>
-<span id="cb146-3"><a href="#cb146-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(k1dists)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb166"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb166-1"><a href="#cb166-1" aria-hidden="true" tabindex="-1"></a>k1 <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(<span class="fu">knearneigh</span>(coords))</span>
+<span id="cb166-2"><a href="#cb166-2" aria-hidden="true" tabindex="-1"></a>k1dists <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">nbdists</span>(k1, coords, <span class="at">longlat =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb166-3"><a href="#cb166-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(k1dists)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
    1390    2805    4986    6259    8476   16797 </code></pre>
@@ -3054,8 +3304,8 @@ Using this as the upper threshold gives certainty that all units will have&nbsp;
 <h4 class="anchored" data-anchor-id="computing-fixed-distance-weight-matrix">1.4.5.2.2 Computing fixed distance weight matrix</h4>
 <p>We implement the dnearneigh() function of the spdep package to compute the distance weight matrix.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb148"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true" tabindex="-1"></a>wm_d62 <span class="ot">&lt;-</span> <span class="fu">dnearneigh</span>(coords, <span class="dv">0</span>, <span class="dv">17000</span>, <span class="at">longlat =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb148-2"><a href="#cb148-2" aria-hidden="true" tabindex="-1"></a>wm_d62</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb168"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb168-1"><a href="#cb168-1" aria-hidden="true" tabindex="-1"></a>wm_d62 <span class="ot">&lt;-</span> <span class="fu">dnearneigh</span>(coords, <span class="dv">0</span>, <span class="dv">17000</span>, <span class="at">longlat =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb168-2"><a href="#cb168-2" aria-hidden="true" tabindex="-1"></a>wm_d62</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
 Number of regions: 79 
@@ -3067,8 +3317,8 @@ Average number of links: 22.35443 </code></pre>
 <p>After this, we implement the nb2listw() function to convert the nb object into spatial weights object.</p>
 <p>On average, each region has approximately 22.3neighbors.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb150"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a>wm62_lw <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_d62, <span class="at">style =</span> <span class="st">'B'</span>)</span>
-<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm62_lw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb170"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb170-1"><a href="#cb170-1" aria-hidden="true" tabindex="-1"></a>wm62_lw <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_d62, <span class="at">style =</span> <span class="st">'B'</span>)</span>
+<span id="cb170-2"><a href="#cb170-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm62_lw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Characteristics of weights list object:
 Neighbour list object:
@@ -3098,9 +3348,9 @@ B 79 6241 1766 3532 226656</code></pre>
 <section id="computing-gi-statistics-using-fixed-distance" class="level3">
 <h3 class="anchored" data-anchor-id="computing-gi-statistics-using-fixed-distance">1.4.5.3 Computing Gi statistics using Fixed Distance</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb152"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb152-1"><a href="#cb152-1" aria-hidden="true" tabindex="-1"></a>fips <span class="ot">&lt;-</span> <span class="fu">order</span>(boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
-<span id="cb152-2"><a href="#cb152-2" aria-hidden="true" tabindex="-1"></a>gi.fixed <span class="ot">&lt;-</span> <span class="fu">localG</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, wm62_lw)</span>
-<span id="cb152-3"><a href="#cb152-3" aria-hidden="true" tabindex="-1"></a>gi.fixed</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb172"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb172-1"><a href="#cb172-1" aria-hidden="true" tabindex="-1"></a>fips <span class="ot">&lt;-</span> <span class="fu">order</span>(boundary_with_accident_count<span class="sc">$</span>accident_count)</span>
+<span id="cb172-2"><a href="#cb172-2" aria-hidden="true" tabindex="-1"></a>gi.fixed <span class="ot">&lt;-</span> <span class="fu">localG</span>(boundary_with_accident_count<span class="sc">$</span>accident_count, wm62_lw)</span>
+<span id="cb172-3"><a href="#cb172-3" aria-hidden="true" tabindex="-1"></a>gi.fixed</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> [1] -3.35336397 -3.12912595  2.66840322 -3.40300611 -1.55553377 -1.60535680
  [7] -3.49157140 -3.33512452 -2.30441253  1.39585137  2.02857406 -3.14674976
@@ -3217,28 +3467,28 @@ attr(,"class")
 <p>The Gi statistic is represented as a Z-score, where larger values signify stronger clustering. The sign of the value indicates the type of cluster: positive values point to high-value clusters (hotspots), while negative values indicate low-value clusters (cold spots).</p>
 <p>To merge the Gi values with their corresponding geographic data in the BMR spatial dataframe, use the following code to join the results to the <code>boundary_with_accident_count</code> sf object. This allows for the spatial visualization of clusters within the geographic data.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb154"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb154-1"><a href="#cb154-1" aria-hidden="true" tabindex="-1"></a>bmr.gi <span class="ot">&lt;-</span> <span class="fu">cbind</span>(boundary_with_accident_count, <span class="fu">as.matrix</span>(gi.fixed)) <span class="sc">%&gt;%</span></span>
-<span id="cb154-2"><a href="#cb154-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">gstat_fixed =</span> as.matrix.gi.fixed.)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb174"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb174-1"><a href="#cb174-1" aria-hidden="true" tabindex="-1"></a>bmr.gi <span class="ot">&lt;-</span> <span class="fu">cbind</span>(boundary_with_accident_count, <span class="fu">as.matrix</span>(gi.fixed)) <span class="sc">%&gt;%</span></span>
+<span id="cb174-2"><a href="#cb174-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">gstat_fixed =</span> as.matrix.gi.fixed.)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="note-box">
 <p>the code chunk above actually performs&nbsp;<strong>three</strong>&nbsp;tasks. First, it convert the output vector (i.e.&nbsp;<em>gi.fixed</em>) into r matrix object by using&nbsp;<em>as.matrix()</em>. Next,&nbsp;<em>cbind()</em>&nbsp;is used to join bmr@data and&nbsp;<em>gi.fixed</em>&nbsp;matrix to produce a new SpatialPolygonDataFrame called&nbsp;<em>bmr.gi</em>. Lastly, the field name of the gi values is renamed to&nbsp;<em>gstat_fixed</em>&nbsp;by using&nbsp;<em>rename()</em>.</p>
 </div>
 <p>We can now map the Gi values derived using the fixed-distance weight matrix.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb155"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb155-1"><a href="#cb155-1" aria-hidden="true" tabindex="-1"></a>acc_count <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"accident_count"</span>)</span>
-<span id="cb155-2"><a href="#cb155-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb155-3"><a href="#cb155-3" aria-hidden="true" tabindex="-1"></a>Gimap <span class="ot">&lt;-</span><span class="fu">tm_shape</span>(bmr.gi) <span class="sc">+</span></span>
-<span id="cb155-4"><a href="#cb155-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"gstat_fixed"</span>, </span>
-<span id="cb155-5"><a href="#cb155-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>,</span>
-<span id="cb155-6"><a href="#cb155-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-RdBu"</span>,</span>
-<span id="cb155-7"><a href="#cb155-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Gi"</span>) <span class="sc">+</span></span>
-<span id="cb155-8"><a href="#cb155-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
-<span id="cb155-9"><a href="#cb155-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb155-10"><a href="#cb155-10" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(acc_count, Gimap, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb175"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb175-1"><a href="#cb175-1" aria-hidden="true" tabindex="-1"></a>acc_count <span class="ot">&lt;-</span> <span class="fu">qtm</span>(boundary_with_accident_count, <span class="st">"accident_count"</span>)</span>
+<span id="cb175-2"><a href="#cb175-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb175-3"><a href="#cb175-3" aria-hidden="true" tabindex="-1"></a>Gimap <span class="ot">&lt;-</span><span class="fu">tm_shape</span>(bmr.gi) <span class="sc">+</span></span>
+<span id="cb175-4"><a href="#cb175-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"gstat_fixed"</span>, </span>
+<span id="cb175-5"><a href="#cb175-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>,</span>
+<span id="cb175-6"><a href="#cb175-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-RdBu"</span>,</span>
+<span id="cb175-7"><a href="#cb175-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Gi"</span>) <span class="sc">+</span></span>
+<span id="cb175-8"><a href="#cb175-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
+<span id="cb175-9"><a href="#cb175-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb175-10"><a href="#cb175-10" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(acc_count, Gimap, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-111-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex01_files/figure-html/unnamed-chunk-130-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
