@@ -645,6 +645,7 @@ plot(kde_bmracc_bw_raster)
 
 From the above, we infer that the South-East region, specifically districts around the Samut Prakan province seem to have a higher density of accidents.
 
+
 ## 1.4.1.5 Network Kernel Density Estimation (NKDE)
 
 By completing Kernel Density Estimation, we have identified two provinces of interest, Bangkok and Samut Prakan.
@@ -1070,13 +1071,94 @@ plot(G_ptm_thn.csr)
 We have sufficient Evidence to reject the null hypothesis and can conclude that accidents in Pathum Thani are not randomly distributed and do indeed exhibit spatial clustering.
 :::
 
-::: panel-tabset
+::: insights-box
 -   The grey zone indicates the confidence envelop (In this case, we have set it as 95% as indicated by the critical value of 0.05)
 
 -   When an observed L value is greater than its corresponding L(theo) value for a particular distance and lower than the upper confidence envelop, spatial clustering for that distance is statistically NOT significant (e.g. distance between B and C).
 
 -   When an observed L value is smaller than its corresponding L(theo) value for a particular distance and beyond the lower confidence envelop, spatial dispersion for that distance is statistically significant. - When an observed L value is smaller than its corresponding L(theo) value for a particular distance and within the lower confidence envelop, spatial dispersion for that distance is statistically NOT significant (e.g. distance between A and B).
 :::
+
+#### 1.4.2.2 Clark and Evans Test
+We now perform the Clark-Evans test of Aggregation for a spatial point pattern by using the clarkevans.test() function of spatstat.
+
+The hypotheses that we will be testing are as follows:
+
+Ho = The distribution of accidents are randomly distributed.
+
+H1= The distribution of accidents are not randomly distributed.
+
+The tests will be conducted at a 5% significance level.
+
+::: panel-tabset
+
+## Bangkok
+
+```{r}
+clarkevans.test(acc_bkk_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+
+```
+
+## Samut Prakhan
+
+```{r}
+clarkevans.test(acc_smt_pkn_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+
+## Samut Sakhon
+
+```{r}
+clarkevans.test(acc_smt_skn_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+## Nonthaburi
+
+```{r}
+clarkevans.test(acc_ntbr_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+## Nakhon Pathom
+
+```{r}
+clarkevans.test(acc_nkn_ptn_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+## Patum Thani
+
+```{r}
+clarkevans.test(acc_ptm_thn_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+
+:::
+
+From the above outputs, we are able to reject the null hypothesis given the observed p-value is less than 0.05. We have sufficient evidence and can conclude that the distribution of accidents across the Bangkok Metropolitan Region are not randomly distributed and do indeed exhibit spatial clustering.
+
 
 ## 1.4.3 Spatial Weights
 
