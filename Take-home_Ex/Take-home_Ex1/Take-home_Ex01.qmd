@@ -34,8 +34,7 @@ For the most part, road accidents can be attributed to two key factors- behavior
 
 For this exercise, we will implement Spatial and Spatio-Temporal Point Pattern Analysis methods to discover the underlying factors behind the accidents in the Bangkok Metropolitan Region.
 
-Over the course of this analysis, we carry out the following:
-First Order Spatial Point Pattern Analysis, Second Order Spatial Point Pattern Analysis, Network Constrained Spatial Point Pattern Analysis, Spatial Autocorrelation amongst others. 
+Over the course of this analysis, we carry out the following: First Order Spatial Point Pattern Analysis, Second Order Spatial Point Pattern Analysis, Network Constrained Spatial Point Pattern Analysis, Spatial Autocorrelation amongst others.
 
 # 1.2 Data and Packages
 
@@ -645,7 +644,6 @@ plot(kde_bmracc_bw_raster)
 
 From the above, we infer that the South-East region, specifically districts around the Samut Prakan province seem to have a higher density of accidents.
 
-
 ## 1.4.1.5 Network Kernel Density Estimation (NKDE)
 
 By completing Kernel Density Estimation, we have identified two provinces of interest, Bangkok and Samut Prakan.
@@ -676,7 +674,6 @@ We can now start with Network Kernel Density Estimation.
 
 We must first cut the SpatialLines object into Lixels with a specified minimal distance.
 
-
 ```{r}
 smt_pkn_roads_intersection=st_cast(smt_pkn_roads_intersection, 'LINESTRING', group_or_split= TRUE)
 samut_prakan_lines=st_cast(smt_pkn_roads_intersection,'LINESTRING')
@@ -699,7 +696,6 @@ samples_smt_pkn <- lines_center(lixels_smt_pkn)
 
 Now, we can perform NKDE. We use the nkde() function to carry it out.
 
-
 ```{r}
 #| eval: false
 densities_smt_prk <- nkde(smt_pkn_roads_intersection, 
@@ -719,7 +715,6 @@ write_rds(densities_smt_prk, "data/rds/density_samut")
 ```{r}
 densities_smt_prk=read_rds('data/rds/density_samut')
 ```
-
 
 ::: insights-box
 -   The `kernel_name` argument specifies the type of kernel function used.
@@ -1080,6 +1075,7 @@ We have sufficient Evidence to reject the null hypothesis and can conclude that 
 :::
 
 #### 1.4.2.2 Clark and Evans Test
+
 We now perform the Clark-Evans test of Aggregation for a spatial point pattern by using the clarkevans.test() function of spatstat.
 
 The hypotheses that we will be testing are as follows:
@@ -1091,7 +1087,6 @@ H1= The distribution of accidents are not randomly distributed.
 The tests will be conducted at a 5% significance level.
 
 ::: panel-tabset
-
 ## Bangkok
 
 ```{r}
@@ -1112,7 +1107,6 @@ clarkevans.test(acc_smt_pkn_ppp,
                 alternative=c("two.sided"),
                 nsim=999)
 ```
-
 
 ## Samut Sakhon
 
@@ -1153,12 +1147,9 @@ clarkevans.test(acc_ptm_thn_ppp,
                 alternative=c("two.sided"),
                 nsim=999)
 ```
-
-
 :::
 
 From the above outputs, we are able to reject the null hypothesis given the observed p-value is less than 0.05. We have sufficient evidence and can conclude that the distribution of accidents across the Bangkok Metropolitan Region are not randomly distributed and do indeed exhibit spatial clustering.
-
 
 ## 1.4.3 Spatial Weights
 
