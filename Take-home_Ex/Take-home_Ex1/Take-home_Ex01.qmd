@@ -60,6 +60,10 @@ We will use the following R packages for our analysis:
 
 -   `spNetwork` which provides functions to perform Spatial Point Patterns Analysis such as kernel density estimation (KDE) and K-function on network. It also can be used to build spatial matrices (‘listw’ objects like in ‘spdep’ package) to conduct any kind of traditional spatial analysis with spatial weights based on reticular distances.
 
+-   **`spdep`**: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.
+
+-   **`knitr`**: A dynamic report generation tool in R, allowing for the integration of code, results, and narrative in reproducible documents.
+
 We import them into our environment using the code chunk below. The **p_load**() function of the **pacman** package is used for this.
 
 <details>
