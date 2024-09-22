@@ -1586,6 +1586,7 @@ Done.</code></pre>
 <section id="clark-and-evans-test" class="level4">
 <h4 class="anchored" data-anchor-id="clark-and-evans-test">1.4.2.2 Clark and Evans Test</h4>
 <p>We now perform the Clark-Evans test of Aggregation for a spatial point pattern by using the clarkevans.test() function of spatstat.</p>
+<p>The Clark and Evans is a method used to analyze the spatial distribution of points in selected areas of interest. It allows us to understand whether a point pattern is Random, Clustered or Regularly Spaced by comparing the observed nearest-neighbor distances between points to the expected distances under a random distribution.</p>
 <p>The hypotheses that we will be testing are as follows:</p>
 <p>Ho = The distribution of accidents are randomly distributed.</p>
 <p>H1= The distribution of accidents are not randomly distributed.</p>
@@ -1710,6 +1711,14 @@ alternative hypothesis: two-sided</code></pre>
 </div>
 </div>
 <p>From the above outputs, we are able to reject the null hypothesis given the observed p-value is less than 0.05. We have sufficient evidence and can conclude that the distribution of accidents across the Bangkok Metropolitan Region are not randomly distributed and do indeed exhibit spatial clustering.</p>
+<div class="insights-box">
+<p>The R value is an important part of the output.</p>
+<ul>
+<li><p>When R=1, it means there is random spatial distribution.</p></li>
+<li><p>When R&gt;1 It means that there is Regularly Spaced Spatial Distribution</p></li>
+<li><p>When R&lt;1, it means that there is Clustered Spatial Distribution.</p></li>
+</ul>
+</div>
 </section>
 </section>
 </section>

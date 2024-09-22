@@ -1074,9 +1074,11 @@ We have sufficient Evidence to reject the null hypothesis and can conclude that 
 -   When an observed L value is smaller than its corresponding L(theo) value for a particular distance and beyond the lower confidence envelop, spatial dispersion for that distance is statistically significant. - When an observed L value is smaller than its corresponding L(theo) value for a particular distance and within the lower confidence envelop, spatial dispersion for that distance is statistically NOT significant (e.g. distance between A and B).
 :::
 
-#### 1.4.2.2 Clark and Evans Test
+#### 1.4.2.2 Clark and Evans Test 
 
 We now perform the Clark-Evans test of Aggregation for a spatial point pattern by using the clarkevans.test() function of spatstat.
+
+The Clark and Evans is a method used to analyze the spatial distribution of points in selected areas of interest. It allows us to understand whether a point pattern is Random, Clustered or Regularly Spaced by comparing the observed nearest-neighbor distances between points to the expected distances under a random distribution.
 
 The hypotheses that we will be testing are as follows:
 
@@ -1150,6 +1152,16 @@ clarkevans.test(acc_ptm_thn_ppp,
 :::
 
 From the above outputs, we are able to reject the null hypothesis given the observed p-value is less than 0.05. We have sufficient evidence and can conclude that the distribution of accidents across the Bangkok Metropolitan Region are not randomly distributed and do indeed exhibit spatial clustering.
+
+::: insights-box
+The R value is an important part of the output.
+
+-   When R=1, it means there is random spatial distribution.
+
+-   When R\>1 It means that there is Regularly Spaced Spatial Distribution
+
+-   When R\<1, it means that there is Clustered Spatial Distribution.
+:::
 
 ## 1.4.3 Spatial Weights
 
