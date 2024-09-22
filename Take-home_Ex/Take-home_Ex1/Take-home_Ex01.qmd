@@ -750,9 +750,7 @@ G_ntbr.csr <- envelope(acc_ntbr_ppp, Gest, nsim = 199)
 plot(G_ntbr.csr)
 ```
 
-::: panel-tabset
-We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Nonthaburi do indeed exhibit clustering, more so than is expected in a region that is randomly distributed.
-:::
+We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Nonthaburi do indeed exhibit clustering, more than is expected in a region that is randomly distributed.
 
 ## Nakhon Pathom
 
@@ -773,9 +771,7 @@ G_nkn_ptn.csr <- envelope(acc_nkn_ptn_ppp, Gest, nsim = 199)
 plot(G_nkn_ptn.csr)
 ```
 
-::: panel-tabset
-We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Nakhon Pathom do indeed exhibit clustering, more so than is expected in a region that is randomly distributed.
-:::
+We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Nakhon Pathom do indeed exhibit clustering, more than is expected in a region that is randomly distributed.
 
 ## Samut Sakhon
 
@@ -796,9 +792,7 @@ G_smt_skn.csr <- envelope(acc_smt_skn_ppp, Gest, nsim = 199)
 plot(G_smt_skn.csr)
 ```
 
-::: panel-tabset
 We once again have sufficient evidence to reject the null hypothesis and conclude that accidents in Samut Sakhon do indeed exhibit clustering, more so than is expected in a region that is randomly distributed.
-:::
 :::
 
 ::: insights-box
@@ -942,6 +936,14 @@ plot(wm_r, coords, pch = 19, cex = 0.6, add = TRUE, col = "darkgreen")
 
 ```
 
+::: insights-box
+-   Queen Contiguity creates more connections as seen above, as it considers both shared vertices AND edges. This results in a more dense network.
+
+-   Rook Contiguity results in fewer connections as it only considers shared borders as opposed to Queen Contiguity. This results in a simpler network.
+:::
+
+We often use these in order to proceed with Spatial Autocorrelation Analysis to understand the neighbors taken into consideration amongst other factors.
+
 ### 1.4.3.3 Adaptive Distance Weight Matrix
 
 One of the characteristics of fixed distance weight matrices is that the more densely settled areas (usually urban areas) tend to have more neighbors and the less densely settled areas (usually rural areas) tend to have lesser neighbors.
@@ -954,6 +956,8 @@ It is possible to control the numbers of neighbors directly using k-nearest neig
 knn6 <- knn2nb(knearneigh(coords, k=6))
 knn6
 ```
+
+We immediately see a difference when comparing the above output to `wm_q` and `wm_r`. The number of non-zero links is higher.
 
 We can create the plot for the same using the plot() function.
 
@@ -1010,28 +1014,52 @@ rswm_ids <- nb2listw(wm_q, glist=ids, style="B", zero.policy=TRUE)
 rswm_ids
 ```
 
+We now compute the average neighbor Accident count value for each polygon. We often refer to these values as Spatially Lagged Values.
+
 ```{r}
 acc.lag <- lag.listw(rswm_q, boundary_with_accident_count$accident_count)
 acc.lag
 ```
 
+We can retrieve the Accident count for each by using the code Chunk Below.
+
 ```{r}
-nb1 <- wm_q[[1]]
+nb1 <- wm_q[[1]] #Shows the accident counts for the neighboring districts of region 1
 nb1 <- boundary_with_accident_count$accident_count[nb1]
 nb1
 ```
+
+::: insights-box
+A spatial lag with row-standardized weights means that each observation’s value is influenced by the average values of its neighboring observations. Specifically, the weights are standardized so that the sum of the weights for each observation equals one.
+
+This approach ensures that the spatial lag is essentially the weighted average of the neighboring values.
+:::
+
+We can append the spatially lagged Accident values onto the `boundary_with_accident_count` sf data-frame by using the code chunk shown below.
 
 ```{r}
 lag.list <- list(boundary_with_accident_count$ADM2_EN.x, lag.listw(rswm_q, boundary_with_accident_count$accident_count))
 lag.res <- as.data.frame(lag.list)
 colnames(lag.res) <- c("ADM2_EN.x", "lag Accident Count")
 boundary_with_accident_count <- left_join(boundary_with_accident_count,lag.res)
+
 ```
+
+We can gain further insight into this data-frame by implementing the head() function.
+
+```{r}
+head(boundary_with_accident_count)
+```
+
+We now plot the observed Accident and Spatial Lag Accidents side by side for comparison.
 
 ```{r}
 acc_qtm <- qtm(boundary_with_accident_count, "accident_count")
 lag_acc <- qtm(boundary_with_accident_count, "lag Accident Count")
 tmap_arrange(acc_qtm, lag_acc, asp=1, ncol=2)
+
+
+
 ```
 
 ::: insights-box
