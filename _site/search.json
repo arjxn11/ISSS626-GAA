@@ -1,0 +1,65 @@
+[
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html",
+    "title": "In Class Exercise 5",
+    "section": "",
+    "text": "This exercise will help reinforce our learning from Hands on exercise 5. Additionally, we explore the sfdep package and its uses."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#performing-relational-join",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#performing-relational-join",
+    "title": "In Class Exercise 5",
+    "section": "5.3.1 Performing relational join",
+    "text": "5.3.1 Performing relational join\nWe will update the attribute table of Hunan’s SpatialPolygonsDataFrame with the attribute fields of the hunan2012 data-frame. We can do this by using the left_join() function of the dplyr package.\n\nhunan_GDPPC &lt;- left_join(hunan,hunan2012) %&gt;%\n  select(1:4, 7, 15)\n\n\n5.3.1.2 Plotting a Choropleth map\n\ntmap_mode('plot')\ntm_shape(hunan_GDPPC)+\n  tm_fill('GDPPC', style='quantile', palette = 'Blues', title= 'GDPPC')"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#deriving-queens-contiguity-weights-sfdep-methods",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#deriving-queens-contiguity-weights-sfdep-methods",
+    "title": "In Class Exercise 5",
+    "section": "5.4.1 Deriving Queens Contiguity Weights: sfdep methods",
+    "text": "5.4.1 Deriving Queens Contiguity Weights: sfdep methods\n\nwm_q=hunan_GDPPC%&gt;%\n  mutate(nb=st_contiguity(geometry),\n         wt=st_weights(nb,\n                       style='W'),\n         .before=1)\n\n\nnb: A neighbor list object as created by st_neighbor.\nstyle: Default ‘W’ for row standardized weights. This value can also be ‘B’, ‘C’, ‘U’, ‘minimax’, and ‘S’\nallow_zero: if TRUE, assigns zero as a lagged value to zone without neighbors."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#computing-global-morans-i",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#computing-global-morans-i",
+    "title": "In Class Exercise 5",
+    "section": "5.4.2 Computing Global Moran’s I",
+    "text": "5.4.2 Computing Global Moran’s I\nWe use the global_moran() function to compute this.\n\nmoranI= global_moran(wm_q$GDPPC,\n                     wm_q$nb,\n                     wm_q$wt)\n\nThe below code chunk, using global_moran_test() helps us conduct the test easier.\n\nglobal_moran_test(wm_q$GDPPC,\n                  wm_q$nb,\n                  wm_q$wt)\n\n\n    Moran I test under randomisation\n\ndata:  x  \nweights: listw    \n\nMoran I statistic standard deviate = 4.7351, p-value = 1.095e-06\nalternative hypothesis: greater\nsample estimates:\nMoran I statistic       Expectation          Variance \n      0.300749970      -0.011494253       0.004348351 \n\n\nSince p-value is less than 0.05, we infer that there is indeed a sign of positive autocorrelation."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#global-morans-permutation-test",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#global-morans-permutation-test",
+    "title": "In Class Exercise 5",
+    "section": "5.4.3 Global Moran’s Permutation Test",
+    "text": "5.4.3 Global Moran’s Permutation Test\nIn practice, we generally use Monte Carlo simulation to conduct tests. This is where the global_moran_perm() function comes into play. The nsim argument is key.\n\nglobal_moran_perm(wm_q$GDPPC,\n                  wm_q$nb,\n                  wm_q$wt,\n                  nsim = 99)\n\n\n    Monte-Carlo simulation of Moran I\n\ndata:  x \nweights: listw  \nnumber of simulations + 1: 100 \n\nstatistic = 0.30075, observed rank = 100, p-value &lt; 2.2e-16\nalternative hypothesis: two.sided"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#computing-local-morans-i",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#computing-local-morans-i",
+    "title": "In Class Exercise 5",
+    "section": "5.4.4 Computing Local Moran’s I",
+    "text": "5.4.4 Computing Local Moran’s I\nIn this section, we use the local_moran() function of the sfdep package.\n\nlisa=wm_q%&gt;%\n  mutate(local_moran=local_moran(\n    GDPPC, nb, wt, nsim=99),\n    .before=1)%&gt;%\n  unnest(local_moran)\n\nunnest() helps us combine the data into the intended data-frame."
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#visualizing-p-value-of-local-morans-i",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#visualizing-p-value-of-local-morans-i",
+    "title": "In Class Exercise 5",
+    "section": "5.4.5 Visualizing p-value of local Moran’s I",
+    "text": "5.4.5 Visualizing p-value of local Moran’s I\n\ntmap_mode('plot')\ntm_shape(lisa)+\n  tm_fill('p_ii_sim')+\n  tm_borders(alpha=0.5)+\n  tm_layout(main.title = 'p-value of Local Morans I',\n            main.title.size = 2)\n\n\n\n\n\n\n\n\n\n5.4.5.1 Visualizing Local Moran’s I\n\ntm_shape(lisa)+\n  tm_fill('ii')+\n  tm_borders(alpha=0.5)+\n  tm_view(set.zoom.limits = c(6,8))+\n  tm_layout(main.title='Local Morans I of GDPPC',\n            main.title.size = 2)\n\n\n\n\n\n\n\n\n\n\n5.4.5.2 Visualizing both\n\nmap1= tm_shape(lisa)+\n  tm_fill('p_ii_sim')+\n  tm_borders(alpha=0.5)+\n  tm_layout(main.title = 'p-value of Local Morans I',\n            main.title.size = 2)\n\nmap2= tm_shape(lisa)+\n  tm_fill('ii')+\n  tm_borders(alpha=0.5)+\n  tm_view(set.zoom.limits = c(6,8))+\n  tm_layout(main.title='Local Morans I of GDPPC',\n            main.title.size = 2)\n\ntmap_arrange(map1,map2, ncol=2)"
+  },
+  {
+    "objectID": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#visualizing-lisa-map",
+    "href": "In-class_Ex/In-class_Ex5/In-class_Ex5.html#visualizing-lisa-map",
+    "title": "In Class Exercise 5",
+    "section": "5.4.6 Visualizing LISA map",
+    "text": "5.4.6 Visualizing LISA map\nLISA map is a categorical map showing outliers and clusters. There are two types of outliers- high-low and low-high outliers. Likewise, there are two types of clusters namely High-High and Low-Low.\nIn fact, LISA map is an interpreted map by combining local Moran’s I of geographical areas and their respective p values.\n\nlisa_sig=lisa%&gt;%\n  filter(p_ii&lt;0.05)\ntmap_mode('plot')\ntm_shape(lisa)+\n  tm_polygons()+\n  tm_borders(alpha=0.5)+\n  tm_shape(lisa_sig)+\n  tm_fill('mean')+\n  tm_borders(alpha=0.4)\n\n\n\n\n\n\n\n\nWe see two outliers in the cluster on the North-East region of Hunan which contains mostly high-high regions. rm -f .git/index.lock"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "ISSS626-GAA",
+    "section": "",
+    "text": "Introduction\nWelcome to my journey through ISSS626 Geospatial Analytics. This website contains my coursework that were completed through this course.\n\n\n\nAbout\nMy name is Arjun Singh and I am a student at Singapore Management University pursuing a Masters degree in Analytics. This website documents my journey of learning Geospatial Analytics under the guidance of Professor Tin Seong Kam.\nIf you have any inquiries, feel free to reach out to me at arjun.singh.2023@smu.edu.sg\n“It is a rough road that leads to the heights of greatness.”- Seneca"
+  }
+]

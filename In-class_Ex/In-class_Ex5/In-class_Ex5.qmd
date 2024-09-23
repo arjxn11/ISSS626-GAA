@@ -208,7 +208,7 @@ tm_shape(lisa)+
   tm_borders(alpha=0.4)
 ```
 
-We see two outliers in the cluster on the North-East region of Hunan which contains mostly high-high regions.
+We see two outliers in the cluster on the North-East region of Hunan which contains mostly high-high regions. rm -f .git/index.lock
 
 # 5.5 Computing Local Gi statistics
 
@@ -237,6 +237,7 @@ tm_shape(HCSA)+
 We can now visualize the hot and cold spots.
 
 ```{r}
+#| eval: false
 HCSA_sig=HCSA%>%
   filter(p_sim<0.05)
 tm_shape(HCSA)+
