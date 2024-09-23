@@ -22,6 +22,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -162,6 +196,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex4/In-class_Ex4.html">
  <span class="dropdown-text">In Class Exercise 4</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex5/In-class_Ex5.html">
+ <span class="dropdown-text">In Class Exercise 5</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -181,8 +219,28 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">5 Introduction</a></li>
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">5.1 Objective</a></li>
+  <li><a href="#data-and-packages" id="toc-data-and-packages" class="nav-link" data-scroll-target="#data-and-packages">5.2 Data and Packages</a></li>
+  <li><a href="#importing-the-data" id="toc-importing-the-data" class="nav-link" data-scroll-target="#importing-the-data">5.3 Importing the Data</a>
+  <ul class="collapse">
+  <li><a href="#performing-relational-join" id="toc-performing-relational-join" class="nav-link" data-scroll-target="#performing-relational-join">5.3.1 Performing relational join</a>
+  <ul class="collapse">
+  <li><a href="#plotting-a-choropleth-map" id="toc-plotting-a-choropleth-map" class="nav-link" data-scroll-target="#plotting-a-choropleth-map">5.3.1.2 Plotting a Choropleth map</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#global-and-local-measures-of-spatial-autocorrelation-sfdep-methods" id="toc-global-and-local-measures-of-spatial-autocorrelation-sfdep-methods" class="nav-link" data-scroll-target="#global-and-local-measures-of-spatial-autocorrelation-sfdep-methods">5.4 Global and Local Measures of Spatial Autocorrelation: sfdep methods</a>
+  <ul class="collapse">
+  <li><a href="#deriving-queens-contiguity-weights-sfdep-methods" id="toc-deriving-queens-contiguity-weights-sfdep-methods" class="nav-link" data-scroll-target="#deriving-queens-contiguity-weights-sfdep-methods">5.4.1 Deriving Queens Contiguity Weights: sfdep methods</a></li>
+  <li><a href="#computing-global-morans-i" id="toc-computing-global-morans-i" class="nav-link" data-scroll-target="#computing-global-morans-i">5.4.2 Computing Global Moran’s I</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -224,8 +282,139 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="introduction" class="level1">
+<h1>5 Introduction</h1>
+<p>This exercise will help reinforce our learning from Hands on exercise 5. Additionally, we explore the sfdep package and its uses.</p>
+</section>
+<section id="objective" class="level1">
+<h1>5.1 Objective</h1>
+<p>In spatial policy, a key objective for local governments and urban planners is to promote balanced development across the province. In this study, our goal is to apply appropriate spatial statistical methods to assess whether development is evenly distributed geographically in Hunan Province, People’s Republic of China, using GDP per capita as a development indicator.</p>
+<p>If we find that development is not evenly distributed, our next step will be to investigate whether there are signs of spatial clustering. Should clustering be present, we will then identify the locations of these clusters. Through this exercise, we aim to uncover the spatial patterns of development in the province.</p>
+</section>
+<section id="data-and-packages" class="level1">
+<h1>5.2 Data and Packages</h1>
+<p>For this exercise, we have the following two datasets:</p>
+<ul>
+<li><p>Hunan province administrative boundary layer at county level. This is a geospatial data set in ESRI shapefile format.</p></li>
+<li><p>Hunan_2012.csv: This csv file contains selected Hunan’s local development indicators in 2012.</p></li>
+</ul>
+<p>The packages used are as follows:</p>
+<ul>
+<li><strong><code>sf</code></strong>: Provides simple features support for handling and analyzing spatial vector data in R.</li>
+<li><strong><code>spdep</code></strong>: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.</li>
+<li><strong><code>tmap</code></strong>: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.</li>
+<li><strong><code>tidyverse</code></strong>: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.</li>
+<li><code>sfdep</code> is designed for spatial analysis, providing tools to work with spatial dependencies and spatial econometrics, particularly in conjunction with simple features (sf) objects. It helps analyze relationships and interactions between spatially distributed data.</li>
+</ul>
+<p>We import these packages into our environment using the following code chunk.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spdep, tmap, tidyverse, sfdep)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="importing-the-data" class="level1">
+<h1>5.3 Importing the Data</h1>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Geospatial Data</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Aspatial Data</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<p>We will use the st_read() function of the sf package to import the Hunan Shapefile into our environment.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>hunan <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">layer =</span> <span class="st">"Hunan"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `Hunan' from data source 
+  `C:\arjxn11\ISSS626-GAA\In-class_Ex\In-class_Ex5\data\geospatial' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 88 features and 7 fields
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 108.7831 ymin: 24.6342 xmax: 114.2544 ymax: 30.12812
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<p>We will use the read_csv() function of the readr package to import the Hunan_2012 data file.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hunan2012 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/aspatial/Hunan_2012.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<section id="performing-relational-join" class="level2">
+<h2 class="anchored" data-anchor-id="performing-relational-join">5.3.1 Performing relational join</h2>
+<p>We will update the attribute table of <code>Hunan</code>’s SpatialPolygonsDataFrame with the attribute fields of the <code>hunan2012</code> data-frame. We can do this by using the left_join() function of the dplyr package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hunan_GDPPC <span class="ot">&lt;-</span> <span class="fu">left_join</span>(hunan,hunan2012) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="dv">7</span>, <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="plotting-a-choropleth-map" class="level3">
+<h3 class="anchored" data-anchor-id="plotting-a-choropleth-map">5.3.1.2 Plotting a Choropleth map</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(hunan_GDPPC)<span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">'GDPPC'</span>, <span class="at">style=</span><span class="st">'quantile'</span>, <span class="at">palette =</span> <span class="st">'Blues'</span>, <span class="at">title=</span> <span class="st">'GDPPC'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex5_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="global-and-local-measures-of-spatial-autocorrelation-sfdep-methods" class="level1">
+<h1>5.4 Global and Local Measures of Spatial Autocorrelation: sfdep methods</h1>
+<section id="deriving-queens-contiguity-weights-sfdep-methods" class="level2">
+<h2 class="anchored" data-anchor-id="deriving-queens-contiguity-weights-sfdep-methods">5.4.1 Deriving Queens Contiguity Weights: sfdep methods</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wm_q<span class="ot">=</span>hunan_GDPPC<span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nb=</span><span class="fu">st_contiguity</span>(geometry),</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">wt=</span><span class="fu">st_weights</span>(nb,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">style=</span><span class="st">'W'</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">.before=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li><p>nb: A neighbor list object as created by st_neighbor.</p></li>
+<li><p>style: Default ‘W’ for row standardized weights. This value can also be ‘B’, ‘C’, ‘U’, ‘minimax’, and ‘S’</p></li>
+<li><p>allow_zero: if TRUE, assigns zero as a lagged value to zone without neighbors.</p></li>
+</ul>
+</section>
+<section id="computing-global-morans-i" class="level2">
+<h2 class="anchored" data-anchor-id="computing-global-morans-i">5.4.2 Computing Global Moran’s I</h2>
+<p>We use the global_moran() function to compute this.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>moranI<span class="ot">=</span> <span class="fu">global_moran</span>(wm_q<span class="sc">$</span>GDPPC,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                     wm_q<span class="sc">$</span>nb,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                     wm_q<span class="sc">$</span>wt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The below code chunk, using global_moran_test() helps us conduct the test easier.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">global_moran_test</span>(wm_q<span class="sc">$</span>GDPPC,</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                  wm_q<span class="sc">$</span>nb,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                  wm_q<span class="sc">$</span>wt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Moran I test under randomisation
+
+data:  x  
+weights: listw    
+
+Moran I statistic standard deviate = 4.7351, p-value = 1.095e-06
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation          Variance 
+      0.300749970      -0.011494253       0.004348351 </code></pre>
+</div>
+</div>
+<p>Since p-value is less than 0.05, we infer that there is indeed a sign of positive autocorrelation.</p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
