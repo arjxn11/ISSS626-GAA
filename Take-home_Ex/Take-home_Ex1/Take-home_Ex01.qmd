@@ -898,6 +898,7 @@ The hypotheses are as follows:
 
 ```{r}
 #| eval: false
+# Samut Prakan
 kfun_accidents <- kfunctions(smt_pkn_roads_intersection, 
                              smt_pkn_acc,
                              start = 0, 
@@ -918,6 +919,36 @@ write_rds(kfun_accidents, "data/rds/kfunction")
 
 ```{r}
 kfun_accidents=read_rds('data/rds/kfunction')
+```
+
+We now do the same for the selected Bangkok Districts.
+
+```{r}
+#| eval: false
+# Manually snap points with a larger tolerance
+snapped_points <- st_snap(district_accidents, bkk_roads_linestring, tolerance = 100)
+
+# Now run kfunctions on the snapped points
+kfun_accidents_bkk <- kfunctions(
+  bkk_roads_linestring, 
+  snapped_points,
+  start = 0, 
+  end = 1000, 
+  step = 50, 
+  width = 50, 
+  nsim = 50, 
+  resolution = 50,
+  verbose = FALSE, 
+  conf_int = 0.05,
+  agg = 500  # Reasonable aggregation value
+)
+
+write_rds(kfun_accidents_bkk, 'data/rds/kfunction_bkk')
+
+```
+
+```{r}
+kfun_accidents_bkk=read_rds('data/rds/kfunction_bkk')
 ```
 
 ::: insights-box
@@ -952,6 +983,8 @@ The k-function will output the following:
 
 Below, we visualize the plots generated.
 
+We start with **Samut Prakan**.
+
 ::: panel-tabset
 ## Plot K
 
@@ -968,6 +1001,22 @@ kfun_accidents$plotg
 ```
 
 Based on the plot above, we can see that the blue line is entirely above the envelope at the bottom, similar to the k plot, indicating that we do indeed have sufficient evidence to reject the null hypothesis and conclude that the distribution of accidents across Samut Prakan do exhibit Spatial Clustering tendencies.
+:::
+
+We will now plot the K and G plot for the selected **Bangkok Districts**.
+
+::: panel-tabset
+## K Plot
+
+```{r}
+plot(kfun_accidents_bkk$plotk)
+```
+
+## G Function
+
+```{r}
+plot(kfun_accidents_bkk$plotg)
+```
 :::
 
 ## 1.4.2 Second-Order Spatial Point Pattern Analysis.
