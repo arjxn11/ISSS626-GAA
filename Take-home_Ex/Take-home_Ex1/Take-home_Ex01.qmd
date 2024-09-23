@@ -657,27 +657,63 @@ smt_prk_roads= bmr_roads%>%
   filter(ADM1_EN=='Samut Prakan')
 ```
 
+```{r}
+# We now extract the three districts with the highest number of accidents in Bangkok
+bkk_boundary= bmr_boundary2%>%
+  filter(ADM2_EN %in% c("Lat Krabang", "Saphan Sung", "Khan Na Yao"))
+bkk_roads= bmr_districts%>%
+  filter(ADM2_EN %in% c("Lat Krabang", "Saphan Sung", "Khan Na Yao"))
+```
+
 We will now join the OpenStreetMap data, `smt_prk_roads` and `bkk_roads`, using st_intersection function of the sf package.
 
 ```{r}
+#Samut Prakan
 smt_pkn_roads_intersection=st_intersection(smt_prk_roads, smt_prk_boundary)
+```
+
+```{r}
+# Bangkok Districts
+bkk_roads_intersection=st_intersection(bkk_roads, bkk_boundary)
 ```
 
 We will now filter down our accident data, `bmr_accsf`, down to our target regions.
 
 ```{r}
+#Samut Prakan
 smt_pkn_acc=bmr_accsf%>%
   filter(province_en=='Samut Prakan')
 ```
 
+```{r}
+#Bangkok Districts
+bkk_acc=bmr_accsf%>%
+  filter(province_en=='Bangkok')
+district_accidents=st_intersection(bkk_acc, bkk_boundary)
+```
+
 We can now start with Network Kernel Density Estimation.
 
-We must first cut the SpatialLines object into Lixels with a specified minimal distance.
+We must first cut the SpatialLines object into Lixels by implementing the lixelize_lines() function with a specified minimal distance.
 
 ```{r}
+# We first ensure that the geometries are in the right format for lixelization.
 smt_pkn_roads_intersection=st_cast(smt_pkn_roads_intersection, 'LINESTRING', group_or_split= TRUE)
 samut_prakan_lines=st_cast(smt_pkn_roads_intersection,'LINESTRING')
 lixels_smt_pkn <- lixelize_lines(smt_pkn_roads_intersection, 
+                         10000, 
+                         mindist = 5000)
+```
+
+```{r}
+# Filter out POINT geometries
+bkk_roads_lines <- bkk_roads_intersection[st_is(bkk_roads_intersection, c("LINESTRING", "MULTILINESTRING")), ]
+
+# Cast MULTILINESTRING to LINESTRING
+bkk_roads_linestring <- st_cast(bkk_roads_lines, "LINESTRING", group_or_split = TRUE)
+
+# Create Lixels
+lixels_bkk <- lixelize_lines(bkk_roads_linestring, 
                          10000, 
                          mindist = 5000)
 ```
@@ -694,16 +730,21 @@ We now proceed to generate a SpatialPointsDataFrame with line centre points usin
 samples_smt_pkn <- lines_center(lixels_smt_pkn) 
 ```
 
+```{r}
+samples_bkk <- lines_center(lixels_bkk)
+```
+
 Now, we can perform NKDE. We use the nkde() function to carry it out.
 
 ```{r}
 #| eval: false
-densities_smt_prk <- nkde(smt_pkn_roads_intersection, 
+# Samut Prakan NKDE
+densities_smt_prk <- nkde(lixels_smt_pkn, 
                   events = smt_pkn_acc,
                   w = rep(1, nrow(smt_pkn_acc)),
                   samples = samples_smt_pkn,
                   kernel_name = "quartic",
-                  bw = 300, 
+                  bw = 1000, 
                   method = "simple")
 ```
 
@@ -714,6 +755,27 @@ write_rds(densities_smt_prk, "data/rds/density_samut")
 
 ```{r}
 densities_smt_prk=read_rds('data/rds/density_samut')
+```
+
+```{r}
+#| eval: false
+# Perform NKDE for Bangkok Districts
+densities_bkk <- nkde(
+  lines = lixels_bkk    ,               # Road network
+  events = district_accidents,      # Subset of accident data (for testing)
+  w = rep(1,nrow(district_accidents)),                # Weights (equal for all events)
+  samples = samples_bkk,           # Sample points along the road network
+  kernel_name = "quartic",         # Kernel type (quartic kernel)
+  bw = 500, # Bandwidth (smoothing parameter)
+  div = 'bw',
+  method = "simple",               # Simple method for NKDE,
+  verbose = TRUE
+  )          # Spatial grid resolution (lower for faster computation)                   
+write_rds(densities_bkk, 'data/rds/density_bkk')
+```
+
+```{r}
+densities_bkk=read_rds('data/rds/density_bkk')
 ```
 
 ::: insights-box
@@ -773,15 +835,29 @@ We will now visualize NKDE.
 We must first insert the computed density values into samples and lixels objects as the density field.
 
 ```{r}
+#Samut Prakan
 samples_smt_pkn$density<- densities_smt_prk
 lixels_smt_pkn$density <- densities_smt_prk
+```
+
+```{r}
+#Bangkok Districts
+samples_bkk$density<- densities_bkk
+lixels_bkk$density <- densities_bkk
 ```
 
 We now upscale the density for both in the interest of easier understanding.
 
 ```{r}
+#Samut Prakan
 samples_smt_pkn$density <- samples_smt_pkn$density*1000
 lixels_smt_pkn$density <- lixels_smt_pkn$density*1000
+```
+
+```{r}
+#Bangkok Districts
+samples_bkk$density <- samples_bkk$density*1000
+lixels_bkk$density <- lixels_bkk$density*1000
 ```
 
 We can now plot the map as the data is now prepared.
@@ -789,6 +865,7 @@ We can now plot the map as the data is now prepared.
 We will use the tmap package to produce a highly cartographic and interactive map.
 
 ```{r}
+#Samut Prakan
 tmap_mode('plot')
 tm_shape(lixels_smt_pkn)+
   tm_lines(col="density")+
@@ -797,6 +874,15 @@ tm_shape(smt_pkn_acc)+
 ```
 
 The interactive map above effectively reveals road segments with relatively higher density of accidents than road segments with relatively lower density of accidents with the help of shading. The roads with darker shades have a relatively higher density.
+
+```{r}
+#Bangkok Districts
+tmap_mode('plot')
+tm_shape(lixels_bkk)+
+  tm_lines(col="density")
+```
+
+We see a highway on the North West side, across roads such as Kanchanapishek Road, of the three districts have a particularly high density of accidents on it after examining the plots above. This can be further investigated in order to develop policies and improve roads in those specific regions.
 
 From all our analysis, we take away that the south-eastern part of Bangkok Metropolitan Region was a hotspot, and this map above allows us to further understand the distribution of accidents across the region.
 
@@ -1074,7 +1160,7 @@ We have sufficient Evidence to reject the null hypothesis and can conclude that 
 -   When an observed L value is smaller than its corresponding L(theo) value for a particular distance and beyond the lower confidence envelop, spatial dispersion for that distance is statistically significant. - When an observed L value is smaller than its corresponding L(theo) value for a particular distance and within the lower confidence envelop, spatial dispersion for that distance is statistically NOT significant (e.g. distance between A and B).
 :::
 
-#### 1.4.2.2 Clark and Evans Test 
+#### 1.4.2.2 Clark and Evans Test
 
 We now perform the Clark-Evans test of Aggregation for a spatial point pattern by using the clarkevans.test() function of spatstat.
 
