@@ -646,6 +646,77 @@ From the above, we infer that the South-East region, specifically districts arou
 
 ### 1.4.1.4.2 Peak vs Off-Peak Hours KDE \[Spatio-Temporal Analysis)
 
+We now want to check for the difference in accident density for off-peak and peak hours and see if there is any difference.
+
+We go through the same data preparation steps as above.
+
+```{r}
+#First extract target values
+peak=bmr_accsf%>%filter(traffic_period=='Peak')
+off_peak=bmr_accsf%>%filter(traffic_period=='Off-Peak')
+
+#Convert to Spatial objects
+peak=as_Spatial(peak)
+off_peak=as_Spatial(off_peak)
+
+# Convert to SP object
+peak_sp <- as(peak, "SpatialPoints")
+offpeak_sp <- as(off_peak, "SpatialPoints")
+
+# Converting to Point Planar Patterns
+coordinates_peak <- coordinates(peak_sp)
+coordinates_offpeak<- coordinates(offpeak_sp)
+peak_ppp <- ppp(x = coordinates_peak[,1], y = coordinates_peak[,2], window = window)
+offpeak_ppp<- ppp(x= coordinates_offpeak[,1], y= coordinates_offpeak[,2], window=window)
+
+# Deal with Duplicates
+peak_ppp_jit <- rjitter(peak_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+offpeak_ppp_jit <- rjitter(offpeak_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+
+
+```
+
+We can now carry out Kernel Density Estimation using the density() function. We will first rescale the values using the rescale.ppp() function as shown in the code chunk below.
+
+```{r}
+#Rescale PPP to facilitate understanding
+peak_ppp.km <- rescale.ppp(peak_ppp_jit, 1000, "km")
+offpeak_ppp.km <- rescale.ppp(offpeak_ppp_jit, 1000, "km")
+
+```
+
+Now, we apply KDE.
+
+::: panel-tabset
+## Peak
+
+```{r}
+kde_peak.bw <- density(peak_ppp.km, 
+                         sigma=bw.diggle, 
+                         edge=TRUE, 
+                         kernel="gaussian")
+plot(kde_peak.bw)
+```
+
+## Off Peak
+
+```{r}
+kde_offpeak.bw <- density(offpeak_ppp.km, 
+                         sigma=bw.diggle, 
+                         edge=TRUE, 
+                         kernel="gaussian")
+plot(kde_offpeak.bw)
+```
+:::
+
+We do a slight difference in densities especially across the highway leading from Samut Prakan into Bangkok then into Patum Thani, where there is a higher density of accidents in the off-peak hours. This can be further analyzed to determine exact hours of high volumes to develop policies.
+
 ## 1.4.1.5 Network Kernel Density Estimation (NKDE)
 
 By completing Kernel Density Estimation, we have identified two provinces of interest, Bangkok and Samut Prakan.
