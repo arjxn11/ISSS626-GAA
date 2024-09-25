@@ -1,5 +1,5 @@
 ---
-title: "Hands On Exercise 6"
+title: "Hands On Exercise 6- Geographical Segmentation with Spatially Constrained Clustering Techniques"
 author: "Arjun Singh"
 date: 2024-09-25
 date-modified: "last-modified"
@@ -11,5 +11,51 @@ execute:
   warning: false
 format:
   html:
-    css: styles.css  
+    css: styles.css 
+    code-fold: true
+    code-summary: "Click to show/hide code"
 ---
+
+# 6 Introduction
+
+In this hands-on exercise, we will delineate homogeneous regions by using geographically referenced multivariate data.
+
+There are two analytical techniques that we will focus on for this:
+
+-   Hierarchical Cluster Analysis
+
+-   Spatially Constrained Cluster Analysis
+
+# 6.1 Data and Packages
+
+For this exercise, we will use the following two data-sets:
+
+1.  Myanmar Township Boundary Data (i.e. *myanmar_township_boundaries*) : This is a GIS data in ESRI shapefile format. It consists of township boundary information of Myanmar. The spatial data are captured in polygon features.
+
+2.  *Shan-ICT.csv*: This is an extract of [**The 2014 Myanmar Population and Housing Census Myanmar**](https://myanmar.unfpa.org/en/publications/2014-population-and-housing-census-myanmar-data-sheet) at the township level.
+
+Both these data-sets were download from [Myanmar Information Management Unit (MIMU)](#0).
+
+The following packages will be used:
+
+-   **`sf`**: Provides simple features support for handling and analyzing spatial vector data in R.
+
+-   **`tidyverse`**: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.
+
+-   **`tmap`**: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.
+
+-   **`spdep`**: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.
+
+-   **`corrplot`**: A package for visualizing correlation matrices using graphical methods such as heatmaps or circle plots.
+
+-   **`ggpubr`**: A package built on ggplot2 that simplifies the creation of publication-ready plots with additional customization options.
+
+-   **`heatmaply`**: An interactive heatmap package that integrates with plotly, enabling dynamic heatmap visualizations for complex data.
+
+-   **`cluster`**: A package providing methods for cluster analysis, including hierarchical clustering and partitioning techniques like k-means.
+
+-   **`ClustGeo`**: A package for performing spatially-constrained hierarchical clustering that accounts for both geographical proximity and data features.
+
+We now import the above packages into our environment using the p_load function of the pacman package.
+
+\`\`\`\<
