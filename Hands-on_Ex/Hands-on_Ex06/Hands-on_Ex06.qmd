@@ -12,8 +12,6 @@ execute:
 format:
   html:
     css: styles.css 
-    code-fold: true
-    code-summary: "Click to show/hide code"
 ---
 
 # 6 Introduction
@@ -556,7 +554,7 @@ plot(hclust_ward, cex=0.6)
 ```
 :::
 
-## 6.5.6 Selecting the optimal clustering algorithm 
+## 6.5.6 Selecting the optimal clustering algorithm
 
 A big challenge when conducting hierarchical clustering is to identify stronger clustering structures.
 
