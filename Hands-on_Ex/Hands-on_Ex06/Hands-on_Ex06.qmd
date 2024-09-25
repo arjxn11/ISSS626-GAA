@@ -1,0 +1,15 @@
+---
+title: "Hands On Exercise 6"
+author: "Arjun Singh"
+date: 2024-09-25
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css  
+---

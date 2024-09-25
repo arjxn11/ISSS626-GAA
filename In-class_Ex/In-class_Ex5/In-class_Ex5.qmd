@@ -237,7 +237,6 @@ tm_shape(HCSA)+
 We can now visualize the hot and cold spots.
 
 ```{r}
-#| eval: false
 HCSA_sig=HCSA%>%
   filter(p_sim<0.05)
 tm_shape(HCSA)+
@@ -245,5 +244,4 @@ tm_shape(HCSA)+
   tm_borders(alpha = 0.5)+
   tm_shape(HCSA_sig)+
   tm_fill('cluster')
-  tm_borders(alpha=0.4)
 ```
