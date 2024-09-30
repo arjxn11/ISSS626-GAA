@@ -123,7 +123,7 @@ In the code chunk below, we use Changsha,
 ```{r}
 cbg <- gi_stars %>% 
   ungroup() %>% 
-  filter(County == "Changsha") |> 
+  filter(County == "Changsha") %>% 
   select(County, Year, gi_star)
 ```
 
