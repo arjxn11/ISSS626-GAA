@@ -258,3 +258,5 @@ tm_shape(ehsa_sig) +
   tm_fill("classification") + 
   tm_borders(alpha = 0.4)
 ```
+
+We can further look at this in greater detail by each location as well if required.

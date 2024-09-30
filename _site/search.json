@@ -508,6 +508,6 @@
     "href": "In-class_Ex/In-class_Ex6/In-class_Ex6.html#visualizing-ehsa",
     "title": "In Class Exercise 6",
     "section": "6.4.2 Visualizing EHSA",
-    "text": "6.4.2 Visualizing EHSA\nBefore we can proceed with visualization, we need to join both hunan and ehsa together by using the code chunk below.\n\nhunan_ehsa &lt;- hunan %&gt;%\n  left_join(ehsa,\n            by = join_by(County == location))\n\nWe can now implement functions of the tmap package to produce a visualization for the above.\n\nehsa_sig &lt;- hunan_ehsa  %&gt;%\n  filter(p_value &lt; 0.05)\ntmap_mode(\"plot\")\ntm_shape(hunan_ehsa) +\n  tm_polygons() +\n  tm_borders(alpha = 0.5) +\ntm_shape(ehsa_sig) +\n  tm_fill(\"classification\") + \n  tm_borders(alpha = 0.4)"
+    "text": "6.4.2 Visualizing EHSA\nBefore we can proceed with visualization, we need to join both hunan and ehsa together by using the code chunk below.\n\nhunan_ehsa &lt;- hunan %&gt;%\n  left_join(ehsa,\n            by = join_by(County == location))\n\nWe can now implement functions of the tmap package to produce a visualization for the above.\n\nehsa_sig &lt;- hunan_ehsa  %&gt;%\n  filter(p_value &lt; 0.05)\ntmap_mode(\"plot\")\ntm_shape(hunan_ehsa) +\n  tm_polygons() +\n  tm_borders(alpha = 0.5) +\ntm_shape(ehsa_sig) +\n  tm_fill(\"classification\") + \n  tm_borders(alpha = 0.4)\n\n\n\n\n\n\n\n\nWe can further look at this in greater detail by each location as well if required."
   }
 ]
