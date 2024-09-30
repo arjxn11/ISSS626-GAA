@@ -151,6 +151,20 @@ ggplotly(p)
 
 ### 6.3.3.1 Mann-Kendall Test Report
 
+A Monotonic series or function is one that only increases (or decreases) and never changes direction. So long as the function either stays flat or continues to increase, it is monotonic.
+
+-   **H0: No monotic trend.**
+
+-   **H1: Monotonic trend is present**
+
+::: note-box
+Tau ranges between -1 and 1 where:
+
+-   -1 is a perfectly decreasing series.
+
+-   1 is a perfectly increasing series.
+:::
+
 We implement the below code chunk to obtain the required report.
 
 ```{r}
