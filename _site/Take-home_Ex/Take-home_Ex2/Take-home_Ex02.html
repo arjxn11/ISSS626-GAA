@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.56">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Arjun Singh">
+<meta name="dcterms.date" content="2024-09-30">
+
+<title>Take Home Exercise 2- Discovering impacts of COVID-19 on Thailand tourism economy at the province level using spatial and spatio-temporal statistics – ISSS626-GAA</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">ISSS626-GAA</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-hands-on-exercise" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Hands-on Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-hands-on-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01.html">
+ <span class="dropdown-text">Hands-on Exercise 1- Geospatial Data Wrangling</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex01/Hands-on_Ex01b.html">
+ <span class="dropdown-text">Hands-on Exercise 1 - Part 2- Choropleth Mapping</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02a.html">
+ <span class="dropdown-text">Hands-on Exercise 2 - Part 1- 1st Order Spatial Point Patterns Analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02b.html">
+ <span class="dropdown-text">Hands-on Exercise 2 - Part 2- 2nd Order Spatial Point Patterns Analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex03/Hands-on_Ex03.html">
+ <span class="dropdown-text">Hands On Exercise 3- Network Constrained Spatial Point Patterns Analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex04/Hands-on_Ex04.html">
+ <span class="dropdown-text">Hands On Exercise 4- Spatial Weights and Applications</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex05/Hands-on_Ex05a.html">
+ <span class="dropdown-text">Hands On Exercise 5- Global Spatial Autocorrelation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex05/Hands-on_Ex05b.html">
+ <span class="dropdown-text">Hands On Exercise 5- Part 2- Local Measures of Spatial Autocorrelation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Hands-on_Ex/Hands-on_Ex06/Hands-on_Ex06.html">
+ <span class="dropdown-text">Hands On Exercise 6- Geographical Segmentation with Spatially Constrained Clustering Techniques</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-take-home-exercise" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Take-Home Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-take-home-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex1/Take-home_Ex01.html">
+ <span class="dropdown-text">Take Home Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../Take-home_Ex/Take-home_Ex2/Take-home_Ex02.html">
+ <span class="dropdown-text">Take Home Exercise 2</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-in-class-exercise" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">In Class Exercise</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-in-class-exercise">    
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex1/In-class_Ex1.html">
+ <span class="dropdown-text">In Class Exercise 1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex2/In-class_Ex2.html">
+ <span class="dropdown-text">In Class Exercise 2</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex3/In-class_Ex3.html">
+ <span class="dropdown-text">In Class Exercise 3</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex4/In-class_Ex4.html">
+ <span class="dropdown-text">In Class Exercise 4</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex5/In-class_Ex5.html">
+ <span class="dropdown-text">In Class Exercise 5</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../In-class_Ex/In-class_Ex6/In-class_Ex6.html">
+ <span class="dropdown-text">In Class Exercise 6</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">2 Introduction</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">2.1 Objectives</a></li>
+  <li><a href="#data-and-packages" id="toc-data-and-packages" class="nav-link" data-scroll-target="#data-and-packages">2.2 Data and Packages</a>
+  <ul class="collapse">
+  <li><a href="#importing-the-data" id="toc-importing-the-data" class="nav-link" data-scroll-target="#importing-the-data">2.1 Importing the data</a>
+  <ul class="collapse">
+  <li><a href="#importing-the-aspatial-data" id="toc-importing-the-aspatial-data" class="nav-link" data-scroll-target="#importing-the-aspatial-data">2.1.1 Importing the aspatial data</a></li>
+  <li><a href="#importing-the-geospatial-data" id="toc-importing-the-geospatial-data" class="nav-link" data-scroll-target="#importing-the-geospatial-data">2.1.2 Importing the geospatial data</a></li>
+  <li><a href="#performing-relational-join" id="toc-performing-relational-join" class="nav-link" data-scroll-target="#performing-relational-join">2.1.3 Performing relational join</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">2.3 Exploratory Data Analysis</a>
+  <ul class="collapse">
+  <li><a href="#visualizing-regional-indicators" id="toc-visualizing-regional-indicators" class="nav-link" data-scroll-target="#visualizing-regional-indicators">2.3.1 Visualizing regional indicators</a></li>
+  </ul></li>
+  <li><a href="#spatial-analysis" id="toc-spatial-analysis" class="nav-link" data-scroll-target="#spatial-analysis">2.4 Spatial Analysis</a>
+  <ul class="collapse">
+  <li><a href="#spatial-weights" id="toc-spatial-weights" class="nav-link" data-scroll-target="#spatial-weights">2.4.1 Spatial Weights</a>
+  <ul class="collapse">
+  <li><a href="#computing-contiguity-spatial-weights" id="toc-computing-contiguity-spatial-weights" class="nav-link" data-scroll-target="#computing-contiguity-spatial-weights">2.4.1.1 Computing Contiguity Spatial Weights</a></li>
+  <li><a href="#visualizing-contiguity-spatial-weights" id="toc-visualizing-contiguity-spatial-weights" class="nav-link" data-scroll-target="#visualizing-contiguity-spatial-weights">2.4.1.2 Visualizing Contiguity Spatial Weights</a></li>
+  <li><a href="#computing-distance-based-neighbors" id="toc-computing-distance-based-neighbors" class="nav-link" data-scroll-target="#computing-distance-based-neighbors">2.4.1.3 Computing Distance Based Neighbors</a></li>
+  <li><a href="#weights-based-on-inversed-distance-weighting-idw" id="toc-weights-based-on-inversed-distance-weighting-idw" class="nav-link" data-scroll-target="#weights-based-on-inversed-distance-weighting-idw">2.4.1.4 <strong>Weights based on Inversed Distance Weighting (IDW)</strong></a></li>
+  <li><a href="#row-standardized-weights-matrix" id="toc-row-standardized-weights-matrix" class="nav-link" data-scroll-target="#row-standardized-weights-matrix">2.4.1.5 <strong>Row-Standardized Weights Matrix</strong></a></li>
+  <li><a href="#application-of-spatial-weight-matrix" id="toc-application-of-spatial-weight-matrix" class="nav-link" data-scroll-target="#application-of-spatial-weight-matrix">2.4.1.6 Application of Spatial Weight Matrix</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Take Home Exercise 2- Discovering impacts of COVID-19 on Thailand tourism economy at the province level using spatial and spatio-temporal statistics</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Arjun Singh </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 30, 2024</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">October 4, 2024</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level1">
+<h1>2 Introduction</h1>
+<p>Tourism is one of Thailand’s largest industries, accounting for some 20% of the gross domestic product (GDP). In 2019, Thailand earned 90 billion US$ from domestic and international tourism, but the COVID-19 pandemic caused revenues to crash to 24 billion US$ in 2020.</p>
+<p>The figure below shows the total revenue for the tourism sector from January 2019 until Feb 2023. The figure reveals that the revenue for the industry have been recovering gradually since September 2021.</p>
+<p><img src="images/clipboard-378385426.png" class="img-fluid"></p>
+<p>However, it is important to note that the tourism economy of Thailand is not evenly distributed- not all provinces make a lot of revenue.</p>
+<p>The figure below reveals that the tourism economy of Thailand is carried by five provinces, namely Bangkok, Phuket, Chiang Mai, Sukhothai and Phetchaburi.</p>
+<p><img src="images/clipboard-986836251.png" class="img-fluid"></p>
+</section>
+<section id="objectives" class="level1">
+<h1>2.1 Objectives</h1>
+<p>The objectives of this exercise are to understand:</p>
+<ul>
+<li><p>if the key indicators of the tourism economy of Thailand are independent from space and space and time.</p></li>
+<li><p>If the tourism economy is indeed spatial and spatio-temporal dependent. If so, then we would like to detect where the clusters and outliers are, as well as the emerging hot spot/cold spot areas.</p></li>
+</ul>
+</section>
+<section id="data-and-packages" class="level1">
+<h1>2.2 Data and Packages</h1>
+<p>The data used for this exercise are as follows:</p>
+<ul>
+<li><p><a href="https://www.kaggle.com/datasets/thaweewatboy/thailand-domestic-tourism-statistics">Thailand Domestic Tourism Statistics</a>&nbsp;which is sourced from Kaggle.&nbsp;</p>
+<p><img src="images/Screenshot 2024-10-02 180644.png" class="img-fluid"></p></li>
+<li><p><a href="https://data.humdata.org/dataset/cod-ab-tha?">Thailand - Subnational Administrative Boundaries</a> which is sourced from Humanitarian Data Exchange. We will use the data at the province level (i.e: ADM1).</p>
+<p><img src="images/clipboard-3292985936.png" class="img-fluid"></p></li>
+</ul>
+<p>The following packages are used:</p>
+<ul>
+<li><strong><code>sf</code></strong>: Provides simple features support for handling and analyzing spatial vector data in R.</li>
+<li><strong><code>spdep</code></strong>: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.</li>
+<li><strong><code>tmap</code></strong>: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.</li>
+<li><strong><code>tidyverse</code></strong>: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.</li>
+<li><strong><code>knitr</code></strong>: A dynamic report generation tool in R, allowing for the integration of code, results, and narrative in reproducible documents.</li>
+</ul>
+<p>We now load these packages into our environment by using the p_load() function of the pacman package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spdep, tmap, tidyverse, knitr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">'plot'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="importing-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="importing-the-data">2.1 Importing the data</h2>
+<section id="importing-the-aspatial-data" class="level3">
+<h3 class="anchored" data-anchor-id="importing-the-aspatial-data">2.1.1 Importing the aspatial data</h3>
+<p>We will now import the aspatial data by implementing the read_csv() function of the readr package as shown in the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tourists<span class="ot">=</span><span class="fu">read_csv</span>(<span class="st">'data/aspatial/thailand_domestic_tourism_2019_2023.csv'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Summing the 'value' based on 'province_eng' and 'variable'</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>summed_data <span class="ot">&lt;-</span> tourists <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(province_eng, variable) <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">total_value =</span> <span class="fu">sum</span>(value, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># View the result</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(summed_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+# Groups:   province_eng [1]
+  province_eng  variable            total_value
+  &lt;chr&gt;         &lt;chr&gt;                     &lt;dbl&gt;
+1 Amnat Charoen net_profit_all           1075. 
+2 Amnat Charoen net_profit_foreign         37.8
+3 Amnat Charoen net_profit_thai          1037. 
+4 Amnat Charoen no_tourist_all         841477  
+5 Amnat Charoen no_tourist_foreign      12878  
+6 Amnat Charoen no_tourist_occupied    259406  </code></pre>
+</div>
+</div>
+</section>
+<section id="importing-the-geospatial-data" class="level3">
+<h3 class="anchored" data-anchor-id="importing-the-geospatial-data">2.1.2 Importing the geospatial data</h3>
+<p>We now import the geospatial data using the st_read() function of the sf package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>province<span class="ot">=</span><span class="fu">st_read</span>(<span class="at">dsn =</span> <span class="st">"data/geospatial"</span>, </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">layer =</span> <span class="st">"tha_admbnda_adm1_rtsd_20220121"</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">17</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `tha_admbnda_adm1_rtsd_20220121' from data source 
+  `C:\arjxn11\ISSS626-GAA\Take-home_Ex\Take-home_Ex2\data\geospatial' 
+  using driver `ESRI Shapefile'
+Simple feature collection with 77 features and 16 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 97.34336 ymin: 5.613038 xmax: 105.637 ymax: 20.46507
+Geodetic CRS:  WGS 84</code></pre>
+</div>
+</div>
+</section>
+<section id="performing-relational-join" class="level3">
+<h3 class="anchored" data-anchor-id="performing-relational-join">2.1.3 Performing relational join</h3>
+<p>We will now join the aspatial and geospatial data by using the left_join() function of the package as showing in the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pro_tourism<span class="ot">=</span><span class="fu">left_join</span>(summed_data, province, <span class="at">by=</span> <span class="fu">c</span>(<span class="st">"province_eng"</span><span class="ot">=</span><span class="st">"ADM1_EN"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="exploratory-data-analysis" class="level1">
+<h1>2.3 Exploratory Data Analysis</h1>
+<section id="visualizing-regional-indicators" class="level2">
+<h2 class="anchored" data-anchor-id="visualizing-regional-indicators">2.3.1 Visualizing regional indicators</h2>
+<p>After successfully completing the relational join, we can now plot a choropleth map to visualize the tourism in each province in Thailand using various functions of the tmap package.</p>
+<section id="number-of-tourists" class="level4">
+<h4 class="anchored" data-anchor-id="number-of-tourists">2.3.1.1 Number of tourists</h4>
+<p>We first take a look at the number of tourists, both foreign and domestic, across all provinces in Thailand.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Number of Foreign Tourists</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Number of Domestic Tourists</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tourist_foreign<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'no_tourist_foreign'</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_foreign)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>tourist_foreign<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_foreign)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>basemap01 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(tourist_foreign) <span class="sc">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>) <span class="sc">+</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>basemap01</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tourist_domestic<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'no_tourist_foreign'</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_domestic)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>tourist_domestic<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_domestic)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>basemap02 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(tourist_domestic) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>basemap02</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="revenue" class="level4">
+<h4 class="anchored" data-anchor-id="revenue">2.3.1.2 Revenue</h4>
+<p>We now take a look at the revenue generated by foreign and domestic tourists in Thailand</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Revenue generated by Foreigners</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Revenue generated by Domestic Tourists</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'net_profit_foreign'</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_foreigners)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_foreigners) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span> <span class="st">'jenks'</span>) <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>basemap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>profit_domestic<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'net_profit_thai'</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_domestic)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>profit_domestic<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_domestic)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>basemap2 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_domestic) <span class="sc">+</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span><span class="st">'jenks'</span>) <span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>basemap2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>Bangkok seems to be the most lucrative province for both foreign and domestic tourists.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_domestic) <span class="sc">+</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size=</span><span class="fl">0.5</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>gdppc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_domestic, <span class="st">"total_value"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(basemap, gdppc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="spatial-analysis" class="level1">
+<h1>2.4 Spatial Analysis</h1>
+<p>We now implement the <strong>poly2nb()</strong> function of the <strong>spdep</strong> package to compute contiguity weight matrices for the study area selected.</p>
+<p>Using this function, we are able to build a ‘neighbors list’ based on regions with contiguous boundaries.</p>
+<p>In this function, we will pass an argument, ‘queen’, that can be set as either TRUE (default) or FALSE. If the ‘queen’ argument is not explicitly set to FALSE, the function returns a list of first order neighbors using the Queen criteria.</p>
+<p><a href="https://cran.r-project.org/web/packages/spdep/spdep.pdf">You may refer to the <code>spdep</code> package documentation here</a> to learn more about its functions and arguments.</p>
+<section id="spatial-weights" class="level2">
+<h2 class="anchored" data-anchor-id="spatial-weights">2.4.1 Spatial Weights</h2>
+<section id="computing-contiguity-spatial-weights" class="level3">
+<h3 class="anchored" data-anchor-id="computing-contiguity-spatial-weights">2.4.1.1 Computing Contiguity Spatial Weights</h3>
+<p>We use the poly2nb() function as shown in the code chunk below. Using this, we are able to compute a Queen contiguity weight matrix.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rook contiguity</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>wm_r <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_foreigners, <span class="at">queen=</span><span class="cn">FALSE</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_r, <span class="st">'data/rds/wm_r_pro_foreign'</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Queen Contiguity</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_foreigners, <span class="at">queen=</span><span class="cn">TRUE</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_q, <span class="st">'data/rds/wm_q_pro_foreign'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">Rook Contiguity</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Queen Contiguity</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>wm_r_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_r_pro_foreign"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 69 
+Number of nonzero links: 284 
+Percentage nonzero weights: 5.965133 
+Average number of links: 4.115942 
+1 region with no links:
+42
+2 disjoint connected subgraphs
+Link number distribution:
+
+ 0  1  2  3  4  5  6  7  9 
+ 1  2  7 17 15 11 12  3  1 
+2 least connected regions:
+46 63 with 1 link
+1 most connected region:
+61 with 9 links</code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>wm_q_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_q_pro_foreign"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_q_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 69 
+Number of nonzero links: 284 
+Percentage nonzero weights: 5.965133 
+Average number of links: 4.115942 
+1 region with no links:
+42
+2 disjoint connected subgraphs
+Link number distribution:
+
+ 0  1  2  3  4  5  6  7  9 
+ 1  2  7 17 15 11 12  3  1 
+2 least connected regions:
+46 63 with 1 link
+1 most connected region:
+61 with 9 links</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>wm_r_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_r_pro_foreign"</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 69 
+Number of nonzero links: 284 
+Percentage nonzero weights: 5.965133 
+Average number of links: 4.115942 
+1 region with no links:
+42
+2 disjoint connected subgraphs
+Link number distribution:
+
+ 0  1  2  3  4  5  6  7  9 
+ 1  2  7 17 15 11 12  3  1 
+2 least connected regions:
+46 63 with 1 link
+1 most connected region:
+61 with 9 links</code></pre>
+</div>
+</div>
+</section>
+<section id="visualizing-contiguity-spatial-weights" class="level3">
+<h3 class="anchored" data-anchor-id="visualizing-contiguity-spatial-weights">2.4.1.2 Visualizing Contiguity Spatial Weights</h3>
+<p>A connectivity graph takes a point and displays a line to each neighboring point. We are working with polygons in this situation, so we need to ensure that our points are in order to produce our connectivity graphs.</p>
+<p>Usually, the method of choice will be polygon centroids. We calculate using the sf package before moving onto the graphs. Getting latitude and longitude of the Polygon Centroids.</p>
+<p>We need points to associate with each polygon before we can make our connectivity graph. It won’t be as simple as applying the st_centroid() function of the sf sf object: <em><code>us.bound</code></em>. We need the coordinates in a separate data-frame for this to work.</p>
+<p>To do this, we will use a mapping function which will apply a given function to each element of a vector and returns a vector of the same length. Our input vector will be the geometry column of <code>us.bound</code>.</p>
+<p>The function that we implement in this situation will be st_centroid().</p>
+<p>We will be using the map_dbl variation of map from the purrr package.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">Longitude &amp; Latitude of Foreign Travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Longitude and Latitude of Domestic Travellers</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<p>We start by extracting the longitude and latitude values for foreign travellers.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>longitude_profit_foreign<span class="ot">=</span> <span class="fu">map_dbl</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">1</span>]])</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>latitude_profit_foreign<span class="ot">=</span> <span class="fu">map_dbl</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">2</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that we have the latitude and longitude values, we can use the cbind() function to put the longitude and latitude values into the same object,&nbsp;<code>coords</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>coords_profit_foreign <span class="ot">&lt;-</span> <span class="fu">cbind</span>(longitude_profit_foreign, latitude_profit_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We use the head() function to verify if&nbsp;<code>coords</code>&nbsp;is in the correct format.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(coords_profit_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     longitude_profit_foreign latitude_profit_foreign
+[1,]                 104.7414                15.89261
+[2,]                 100.3485                14.62354
+[3,]                 100.6235                13.77183
+[4,]                 103.7109                18.14879
+[5,]                 101.4254                13.60649
+[6,]                 101.8194                16.03212</code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>longitude_profit_domestic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>latitude_profit_domestic<span class="ot">=</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now create the coords object.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>coords_profit_domestic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>We can now visualize it using the plot() function as shown in the following code chunks.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">Profits from foreign travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Profits from domestic travellers</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r_pro_foreign, coords_profit_foreign, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"purple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_domestic<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r_pro_domestic, coords_profit_domestic, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"purple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="computing-distance-based-neighbors" class="level3">
+<h3 class="anchored" data-anchor-id="computing-distance-based-neighbors">2.4.1.3 Computing Distance Based Neighbors</h3>
+<p>In order to derive distance-based weight matrices, we will implement the <strong>dnearneigh()</strong> function of the <strong>spdep</strong> package.</p>
+<p>This function identifies neighbors of region points by Euclidean Distance with a distance band with lower d1 and upper d2 bounds controlled by the <code>bounds=</code> argument.</p>
+<p>If un-projected coordinates are used and either specified in the coordinates object x or with x as a two column matrix and <code>longlat=TRUE,</code> great circle distances in km will be calculated assuming the WGS84 reference ellipsoid.</p>
+<section id="determining-cut-off-distance" class="level4">
+<h4 class="anchored" data-anchor-id="determining-cut-off-distance">2.4.1.3.1 Determining cut-off distance</h4>
+<p>We must first determine the upper limit for the distance band by using the steps shown below:</p>
+<ul>
+<li><p><strong>Find k Nearest Neighbours</strong>: Use <strong><code>knearneigh()</code></strong> from the <strong><code>spdep</code></strong> package to get a matrix of indices for the k nearest neighbours of each point.</p></li>
+<li><p><strong>Convert to Neighbours List</strong>: Convert the <strong><code>knn</code></strong> object returned by <strong><code>knearneigh()</code></strong> into a neighbours list of class <strong><code>nb</code></strong> using <strong><code>knn2nb()</code></strong>. This list contains integer vectors with neighbour region number IDs.</p></li>
+<li><p><strong>Calculate Edge Lengths</strong>: Use <strong><code>nbdists()</code></strong> from <strong><code>spdep</code></strong> to return the lengths of neighbour relationship edges. The function returns distances in the units of the coordinates if projected, otherwise in kilometers.</p></li>
+<li><p><strong>Flatten the List</strong>: Remove the list structure of the returned object using <strong><code>unlist()</code></strong></p></li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">Profits from foreign travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Profits from domestic travellers</a></li></ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#coords &lt;- coordinates(hunan)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>k1_pro_foreign <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(<span class="fu">knearneigh</span>(coords_profit_foreign))</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>k1dists_pro_foreign <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">nbdists</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">longlat =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(k1dists_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  21.55   52.52   69.06   66.79   77.42  124.72 </code></pre>
+</div>
+</div>
+<p>From the output above, we can infer that the largest first nearest neighbor distance is just under 125KM. Using this value, 125KM, as the upper threshold gives certainty that all units will have at least one neighbor.</p>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+
+</div>
+</div>
+</div>
+</section>
+<section id="computing-distance-based-weight-matrix" class="level4">
+<h4 class="anchored" data-anchor-id="computing-distance-based-weight-matrix">2.4.1.3.2 Computing Distance Based Weight Matrix</h4>
+<p>We now implement the dnearneigh() function to compute the distance weight matrix.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>wm_d62_pro_foreign <span class="ot">&lt;-</span> <span class="fu">dnearneigh</span>(coords_profit_foreign, <span class="dv">0</span>, <span class="dv">125</span>, <span class="at">longlat =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>wm_d62_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 69 
+Number of nonzero links: 368 
+Percentage nonzero weights: 7.729469 
+Average number of links: 5.333333 
+2 disjoint connected subgraphs</code></pre>
+</div>
+</div>
+<div class="insights-box">
+<p>From the output above, we infer that there are 69 distinct regions, as we identified earlier. There are 368 connections between regions where the distance is within the threshold that we have set. 7.73% of all possible region pairs have a connection. On average, each region is connected to approximately 5.3 other regions.</p>
+</div>
+<p>We now use the combination of table() and card() functions from the spdep package to display the structure of the weight matrix.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(profit_foreigners<span class="sc">$</span>province_eng, <span class="fu">card</span>(wm_d62_pro_foreign))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                          
+                           1 2 3 4 5 6 7 8 9 10 11 12 13 14
+  Amnat Charoen            0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Ang Thong                0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Bangkok                  0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Bueng Kan                0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Chachoengsao             0 0 0 0 0 0 0 0 1  0  0  0  0  0
+  Chaiyaphum               0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Chanthaburi              0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Chiang Mai               0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Chiang Rai               1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Chumphon                 1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Kalasin                  0 0 0 0 0 0 0 1 0  0  0  0  0  0
+  Kamphaeng Phet           0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Kanchanaburi             0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Khon Kaen                0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Krabi                    0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Lampang                  0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Lamphun                  0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Loei                     1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Mae Hong Son             0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Maha Sarakham            0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Mukdahan                 0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Nakhon Nayok             0 0 0 0 0 0 0 0 0  1  0  0  0  0
+  Nakhon Pathom            0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Nakhon Phanom            0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Nakhon Ratchasima        0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Nakhon Sawan             0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Nakhon Si Thammarat      0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Nan                      0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Narathiwat               0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Nong Khai                0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Nonthaburi               0 0 0 0 0 0 0 0 0  0  0  0  0  1
+  Pathum Thani             0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Pattani                  0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Phatthalung              0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Phayao                   0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Phetchabun               0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Phetchaburi              0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Phichit                  0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Phitsanulok              0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Phra Nakhon Si Ayutthaya 0 0 0 0 0 0 0 0 0  0  0  1  0  0
+  Phrae                    0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Phuket                   1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Prachuap Khiri Khan      1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Ranong                   0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Ratchaburi               0 0 0 0 0 0 0 1 0  0  0  0  0  0
+  Rayong                   0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Roi Et                   0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Sa Kaeo                  0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Sakon Nakhon             0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Samut Prakan             0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Samut Sakhon             0 0 0 0 0 0 0 0 0  0  1  0  0  0
+  Samut Songkhram          0 0 0 0 0 0 0 0 1  0  0  0  0  0
+  Saraburi                 0 0 0 0 0 0 0 0 0  0  1  0  0  0
+  Satun                    0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Sing Buri                0 0 0 0 0 0 0 0 0  1  0  0  0  0
+  Songkhla                 0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Sukhothai                0 0 0 0 0 0 1 0 0  0  0  0  0  0
+  Suphan Buri              0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Surat Thani              0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Surin                    1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Tak                      0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Trang                    0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Trat                     1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Ubon Ratchathani         0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Udon Thani               0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Uthai Thani              0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Uttaradit                0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Yala                     0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Yasothon                 0 0 0 0 1 0 0 0 0  0  0  0  0  0</code></pre>
+</div>
+</div>
+<p>Next, we implement the n.comp.nb() function to identify the number of connected components in a neighbor list object of class nb.</p>
+<div class="note-box">
+<p>Note: A connected component is a subset of regions where each region is reachable from any other region within the same subset. The function returns an object that includes the number of connected components (<code>nc</code>) and a vector indicating the component membership for each region.</p>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>n_comp_pro_foreign <span class="ot">&lt;-</span> <span class="fu">n.comp.nb</span>(wm_d62_pro_foreign)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>n_comp_pro_foreign<span class="sc">$</span>nc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(n_comp_pro_foreign<span class="sc">$</span>comp.id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ 1  2 
+56 13 </code></pre>
+</div>
+</div>
+</section>
+<section id="plotting-fixed-distance-weight-matrix" class="level4">
+<h4 class="anchored" data-anchor-id="plotting-fixed-distance-weight-matrix">2.4.1.3.3 <strong>Plotting fixed distance weight matrix</strong></h4>
+<p>We now plot the distance weight matrix using the plot() function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_d62_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">col=</span><span class="st">"purple"</span>, <span class="at">length=</span><span class="fl">0.08</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As identified earlier, we see two distinct groups. The upper 56 and the bottom 13.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"1st nearest neighbours"</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">col=</span><span class="st">"red"</span>, <span class="at">length=</span><span class="fl">0.08</span>)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"Distance link"</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_d62_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="weights-based-on-inversed-distance-weighting-idw" class="level3">
+<h3 class="anchored" data-anchor-id="weights-based-on-inversed-distance-weighting-idw">2.4.1.4 <strong>Weights based on Inversed Distance Weighting (IDW)</strong></h3>
+<p>We first compute the distances between areas by implementing the&nbsp;<strong>nbdists()</strong>&nbsp;function of the&nbsp;<strong>spdep</strong>&nbsp;package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dist_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nbdists</span>(wm_r_pro_foreign, coords_profit_foreign, <span class="at">longlat =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>ids_pro_foreign <span class="ot">&lt;-</span> <span class="fu">lapply</span>(dist_pro_foreign, <span class="cf">function</span>(x) <span class="dv">1</span><span class="sc">/</span>(x))</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>ids_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] 0.01283122 0.01137165 0.02317374
+
+[[2]]
+[1] 0.02756509 0.03127482 0.02029286
+
+[[3]]
+[1] 0.01128043 0.01701948 0.03322088 0.03024035 0.04641391 0.02007407
+
+[[4]]
+[1] 0.008785487 0.010451301 0.011784417
+
+[[5]]
+[1] 0.011280434 0.009026604 0.013713812 0.010525478 0.010089340 0.012920254
+
+[[6]]
+[1] 0.010963897 0.008134706 0.013026280
+
+[[7]]
+[1] 0.009026604 0.013102472 0.009765844 0.013223766
+
+[[8]]
+[1] 0.005984037 0.010253006 0.012763865 0.013589149 0.004349372
+
+[[9]]
+[1] 0.005984037 0.005799456 0.013165076
+
+[[10]]
+[1] 0.005327427 0.017306975 0.007000767
+
+[[11]]
+[1] 0.008769672 0.011775171 0.010437208 0.012343675 0.011493123 0.008361253
+
+[[12]]
+[1] 0.010254426 0.011527636 0.007714179 0.009533663 0.011111643
+
+[[13]]
+[1] 0.007385957 0.007716901 0.010982604 0.004211749 0.010358229
+
+[[14]]
+[1] 0.010963897 0.008769672 0.006691737 0.012916807 0.005943019 0.006514320
+[7] 0.008588872
+
+[[15]]
+[1] 0.01132654 0.00997081 0.01085922
+
+[[16]]
+[1] 0.010253006 0.005799456 0.015806184 0.008104541 0.016638036 0.008359249
+[7] 0.005157708
+
+[[17]]
+[1] 0.012763865 0.015806184 0.006403244
+
+[[18]]
+[1] 0.006691737 0.007140588 0.007375029 0.007976693 0.007671985
+
+[[19]]
+[1] 0.013589149 0.004073493
+
+[[20]]
+[1] 0.011775171 0.012916807 0.014293885 0.007462094
+
+[[21]]
+[1] 0.012831217 0.010437208 0.010934747 0.009660859 0.008504967 0.013119927
+
+[[22]]
+[1] 0.013713812 0.007685469 0.018047546 0.020717010
+
+[[23]]
+[1] 0.017019481 0.007385957 0.031941419 0.015333035 0.014028638 0.024413177
+[7] 0.012579923
+
+[[24]]
+[1] 0.008785487 0.010934747 0.015545066
+
+[[25]]
+[1] 0.008134706 0.005943019 0.007685469 0.007605151 0.008117703
+
+[[26]]
+[1] 0.010254426 0.007982010 0.014915995 0.011395871 0.005405036 0.012326369
+
+[[27]]
+[1] 0.011326537 0.009956219 0.005544296 0.009359481 0.010554311
+
+[[28]]
+[1] 0.012495409 0.009206376 0.007880812
+
+[[29]]
+[1] 0.01359979 0.01841909
+
+[[30]]
+[1] 0.010451301 0.007140588 0.008232097 0.017483864
+
+[[31]]
+[1] 0.03322088 0.03194142 0.02860548 0.02049667
+
+[[32]]
+[1] 0.03024035 0.01052548 0.01804755 0.02860548 0.02835278 0.01391843
+
+[[33]]
+[1] 0.01359979 0.01090219 0.01634790
+
+[[34]]
+[1] 0.009956219 0.013192981 0.012040582 0.019039684
+
+[[35]]
+[1] 0.013165076 0.008104541 0.012495409 0.008669969
+
+[[36]]
+[1] 0.013026280 0.006514320 0.007375029 0.007982010 0.011614531 0.009899588
+
+[[37]]
+[1] 0.009013905 0.015334899 0.016262271
+
+[[38]]
+[1] 0.01152764 0.01491600 0.01161453 0.01209489
+
+[[39]]
+[1] 0.007714179 0.007976693 0.009899588 0.012094889 0.010632695 0.011816759
+
+[[40]]
+[1] 0.02756509 0.01533303 0.02049667 0.02835278 0.01630089 0.01339948
+
+[[41]]
+[1] 0.016638036 0.009206376 0.008669969 0.009069811 0.014433186
+
+[[42]]
+numeric(0)
+
+[[43]]
+[1] 0.005327427 0.009013905
+
+[[44]]
+[1] 0.01730698 0.00908563
+
+[[45]]
+[1] 0.007716901 0.014028638 0.015334899 0.014563573 0.023042875
+
+[[46]]
+[1] 0.01310247
+
+[[47]]
+[1] 0.012343675 0.014293885 0.009660859 0.008645806 0.017784128
+
+[[48]]
+[1] 0.010089340 0.009765844 0.007605151
+
+[[49]]
+[1] 0.011784417 0.011493123 0.008504967 0.015545066 0.008232097 0.009781624
+
+[[50]]
+[1] 0.04641391 0.01292025
+
+[[51]]
+[1] 0.02007407 0.02441318 0.01456357 0.02941852
+
+[[52]]
+[1] 0.01626227 0.02304288 0.02941852
+
+[[53]]
+[1] 0.020717010 0.008117703 0.013918429 0.016300886
+
+[[54]]
+[1] 0.01319298 0.01448029 0.01168217
+
+[[55]]
+[1] 0.03127482 0.01139587 0.01688512
+
+[[56]]
+[1] 0.005544296 0.010902192 0.012040582 0.014480293 0.008955556
+
+[[57]]
+[1] 0.009533663 0.008359249 0.010632695 0.009069811 0.008697288 0.009934394
+
+[[58]]
+[1] 0.02029286 0.01098260 0.01257992 0.01339948 0.01688512 0.01076819
+
+[[59]]
+[1] 0.007000767 0.009970810 0.009359481 0.009085630
+
+[[60]]
+[1] 0.007462094 0.008645806
+
+[[61]]
+[1] 0.004349372 0.011111643 0.004211749 0.005157708 0.006403244 0.004073493
+[7] 0.005405036 0.008697288 0.005949594
+
+[[62]]
+[1] 0.01085922 0.01055431 0.01903968 0.01168217
+
+[[63]]
+[1] 0.01322377
+
+[[64]]
+[1] 0.011371651 0.008739397
+
+[[65]]
+[1] 0.008361253 0.008588872 0.007671985 0.017483864 0.009781624
+
+[[66]]
+[1] 0.010358229 0.012326369 0.010768191 0.005949594
+
+[[67]]
+[1] 0.007880812 0.011816759 0.014433186 0.009934394
+
+[[68]]
+[1] 0.018419095 0.016347902 0.008955556
+
+[[69]]
+[1] 0.023173744 0.013119927 0.017784128 0.008739397</code></pre>
+</div>
+</div>
+</section>
+<section id="row-standardized-weights-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="row-standardized-weights-matrix">2.4.1.5 <strong>Row-Standardized Weights Matrix</strong></h3>
+<p>We now need to assign weights to each neighboring polygon. We use equal weights (style=“W”), where each neighboring polygon is assigned a weight of 1 divided by the number of neighbors.</p>
+<p>This means each neighboring county’s weight is calculated as 1/(# of neighbors), and these weights are then used to sum the weighted income values.</p>
+<p>While this method is intuitive for summarizing neighbors’ values, it has a drawback: polygons at the edges of the study area may rely on fewer neighbors, potentially skewing the spatial autocorrelation results.</p>
+<div class="note-box">
+<p>Note: For simplicity, we’ll use the style=“W” option in this example, but be aware that more robust options, such as style=“B”, are available.</p>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>rswm_r_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_r_pro_foreign, <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>rswm_r_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Characteristics of weights list object:
+Neighbour list object:
+Number of regions: 69 
+Number of nonzero links: 284 
+Percentage nonzero weights: 5.965133 
+Average number of links: 4.115942 
+1 region with no links:
+42
+2 disjoint connected subgraphs
+
+Weights style: W 
+Weights constants summary:
+   n   nn S0       S1       S2
+W 68 4624 68 36.26116 284.0635</code></pre>
+</div>
+</div>
+<p>Setting the argument <code>zero.policy</code> to TRUE allows for lists of non-neighbors. This should be used with caution as users may not be aware of missing neighbors in their data however setting <code>zero,policy</code> to FALSE would return an error.</p>
+<p>The code chunk below is implemented to check the weights of the first polygons three neighbors type:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>rswm_r_pro_foreign<span class="sc">$</span>weights[<span class="dv">10</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] 0.3333333 0.3333333 0.3333333</code></pre>
+</div>
+</div>
+<div class="insights-box">
+<p>Each neighbor is assigned a 0.33 of the total weight. This means that when R computes the average neighboring income values, each neighbor’s income will be multiplied by 0.125 before being tallied.</p>
+</div>
+<p>Using the same method, we derive a row standardized distance weight matrix by using the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>rswm_ids_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_r_pro_foreign, <span class="at">glist=</span>ids_pro_foreign, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>rswm_ids_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Characteristics of weights list object:
+Neighbour list object:
+Number of regions: 69 
+Number of nonzero links: 284 
+Percentage nonzero weights: 5.965133 
+Average number of links: 4.115942 
+1 region with no links:
+42
+2 disjoint connected subgraphs
+
+Weights style: B 
+Weights constants summary:
+   n   nn       S0        S1        S2
+B 68 4624 3.603816 0.1156751 0.9708891</code></pre>
+</div>
+</div>
+</section>
+<section id="application-of-spatial-weight-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="application-of-spatial-weight-matrix">2.4.1.6 Application of Spatial Weight Matrix</h3>
+<p>We now create four different spatial lagged variables:</p>
+<ul>
+<li><p>spatial lag with row-standardized weights</p></li>
+<li><p>spatial lag as a sum of neighbouring values</p></li>
+<li><p>spatial window average</p></li>
+<li><p>spatial window sum</p></li>
+</ul>
+<section id="spatial-lag-with-row-standardized-weights" class="level4">
+<h4 class="anchored" data-anchor-id="spatial-lag-with-row-standardized-weights">2.4.1.6.1 <strong>Spatial Lag With Row-Standardized Weights</strong></h4>
+<p>We now compute the average neighbor profit value for each polygon. We often refer to these values as Spatially Lagged Values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>pro_foreign.lag <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(rswm_r_pro_foreign, profit_foreigners<span class="sc">$</span>total_value)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>pro_foreign.lag</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1]   8515.193  17968.737   9786.125   8146.420 134596.605  38955.723
+ [7]  30027.315  25849.308  69950.727  49495.860  14466.082  12682.008
+[13]  12285.500  17722.284  32856.583  45153.527  74359.923  24181.276
+[19] 105254.185  13518.028   3746.675  23303.505 127335.297   5904.817
+[25]  18962.564   9199.730  41815.892   5435.180   3151.225  11707.842
+[31] 199104.537 139465.317  23475.267  34077.745  27604.423  16031.888
+[37]  38026.663  15162.938   9194.675  11038.343   7792.872      0.000
+[43]  46017.585  31137.765  36364.686  20841.120   4422.484  30034.113
+[49]   9350.865 377986.320 193862.645  30662.133  28195.245  29101.100
+[55]  10132.620  13507.610  11402.520  22217.052  32074.963   3159.425
+[61]  35931.461  33712.050  20841.120   1412.345  14707.668  30176.722
+[67]  11022.135  22918.337   7102.637</code></pre>
+</div>
+</div>
+<p>We can append the spatially lagged profit values onto our <code>profit_foreigners</code> sf data-frame by using the code chunk shown below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>lag.list_pro_foreign <span class="ot">&lt;-</span> <span class="fu">list</span>(profit_foreigners<span class="sc">$</span>province_eng, <span class="fu">lag.listw</span>(rswm_r_pro_foreign, profit_foreigners<span class="sc">$</span>total_value))</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>lag.res_pro_foreign <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lag.list_pro_foreign)</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lag.res_pro_foreign) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"province_eng"</span>, <span class="st">"lag Profit"</span>)</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners <span class="ot">&lt;-</span> <span class="fu">left_join</span>(profit_foreigners,lag.res_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now plot the actual profit and spatial lag profits side by side to facilitate comparison.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>pro_foreign <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_foreigners, <span class="st">"total_value"</span>)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>lag_pro_foreign <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_foreigners, <span class="st">"lag Profit"</span>)</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(pro_foreign, lag_pro_foreign, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We see a difference in the surrounding regions of Bangkok as well as Mae Hong Son, all of which are in a higher band as compared to the non-spatially lagged values.</p>
+</section>
+<section id="spatial-lag-as-a-sum-of-neighboring-values" class="level4">
+<h4 class="anchored" data-anchor-id="spatial-lag-as-a-sum-of-neighboring-values">2.4.1.6.2 <strong>Spatial Lag as a sum of neighboring values</strong></h4>
+<p>We can calculate spatial lag as a sum of neighboring values by assigning binary weights. For this, we must apply a function that will assign binary weights to our neighbors list. We then use the <code>glist</code> argument in the nb2listw function to explicitly assign these weights.</p>
+<p>We first apply a function that assigns a value of 1 per neighbor. This is done with help of lapply(), which helps manipulate the neighbors structure. It basically applies a function across each value in the neighbors structure.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>b_weights <span class="ot">&lt;-</span> <span class="fu">lapply</span>(wm_r_pro_foreign, <span class="cf">function</span>(x) <span class="dv">0</span><span class="sc">*</span>x <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>b_weights2 <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_r_pro_foreign, </span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">glist =</span> b_weights, </span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">style =</span> <span class="st">"B"</span>)</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>b_weights2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

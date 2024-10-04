@@ -1,0 +1,534 @@
+---
+title: "Take Home Exercise 2- Discovering impacts of COVID-19 on Thailand tourism economy at the province level using spatial and spatio-temporal statistics"
+author: "Arjun Singh"
+date: 2024-09-30
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css 
+---
+
+# 2 Introduction
+
+Tourism is one of Thailand’s largest industries, accounting for some 20% of the gross domestic product (GDP). In 2019, Thailand earned 90 billion US\$ from domestic and international tourism, but the COVID-19 pandemic caused revenues to crash to 24 billion US\$ in 2020.
+
+The figure below shows the total revenue for the tourism sector from January 2019 until Feb 2023. The figure reveals that the revenue for the industry have been recovering gradually since September 2021.
+
+![](images/clipboard-378385426.png)
+
+However, it is important to note that the tourism economy of Thailand is not evenly distributed- not all provinces make a lot of revenue.
+
+The figure below reveals that the tourism economy of Thailand is carried by five provinces, namely Bangkok, Phuket, Chiang Mai, Sukhothai and Phetchaburi.
+
+![](images/clipboard-986836251.png)
+
+# 2.1 Objectives
+
+The objectives of this exercise are to understand:
+
+-   if the key indicators of the tourism economy of Thailand are independent from space and space and time.
+
+-   If the tourism economy is indeed spatial and spatio-temporal dependent. If so, then we would like to detect where the clusters and outliers are, as well as the emerging hot spot/cold spot areas.
+
+# 2.2 Data and Packages
+
+The data used for this exercise are as follows:
+
+-   [Thailand Domestic Tourism Statistics](https://www.kaggle.com/datasets/thaweewatboy/thailand-domestic-tourism-statistics) which is sourced from Kaggle. 
+
+    ![](images/Screenshot%202024-10-02%20180644.png)
+
+-   [Thailand - Subnational Administrative Boundaries](https://data.humdata.org/dataset/cod-ab-tha?) which is sourced from Humanitarian Data Exchange. We will use the data at the province level (i.e: ADM1).
+
+    ![](images/clipboard-3292985936.png)
+
+The following packages are used:
+
+-   **`sf`**: Provides simple features support for handling and analyzing spatial vector data in R.
+-   **`spdep`**: A package for spatial dependence and spatial regression analysis, particularly for handling spatial weights.
+-   **`tmap`**: A flexible visualization package for thematic maps, supporting both static and interactive mapping in R.
+-   **`tidyverse`**: A collection of R packages designed for data science, emphasizing data manipulation, visualization, and functional programming.
+-   **`knitr`**: A dynamic report generation tool in R, allowing for the integration of code, results, and narrative in reproducible documents.
+
+We now load these packages into our environment by using the p_load() function of the pacman package.
+
+```{r}
+pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
+set.seed(123)
+tmap_mode('plot')
+```
+
+## 2.1 Importing the data
+
+### 2.1.1 Importing the aspatial data
+
+We will now import the aspatial data by implementing the read_csv() function of the readr package as shown in the code chunk below.
+
+```{r}
+tourists=read_csv('data/aspatial/thailand_domestic_tourism_2019_2023.csv')
+# Summing the 'value' based on 'province_eng' and 'variable'
+summed_data <- tourists %>%
+  group_by(province_eng, variable) %>%
+  summarize(total_value = sum(value, na.rm = TRUE))
+
+# View the result
+head(summed_data)
+
+```
+
+### 2.1.2 Importing the geospatial data
+
+We now import the geospatial data using the st_read() function of the sf package.
+
+```{r}
+province=st_read(dsn = "data/geospatial", 
+                 layer = "tha_admbnda_adm1_rtsd_20220121")%>%
+  select(1:5, 17)
+```
+
+### 2.1.3 Performing relational join
+
+We will now join the aspatial and geospatial data by using the left_join() function of the package as showing in the code chunk below.
+
+```{r}
+pro_tourism=left_join(summed_data, province, by= c("province_eng"="ADM1_EN"))
+```
+
+# 2.3 Exploratory Data Analysis
+
+## 2.3.1 Visualizing regional indicators
+
+After successfully completing the relational join, we can now plot a choropleth map to visualize the tourism in each province in Thailand using various functions of the tmap package.
+
+#### 2.3.1.1 Number of tourists
+
+We first take a look at the number of tourists, both foreign and domestic, across all provinces in Thailand.
+
+::: panel-tabset
+## Number of Foreign Tourists
+
+```{r}
+tourist_foreign=pro_tourism%>%
+  filter(variable=='no_tourist_foreign')%>%
+  filter(!st_is_empty(geometry))
+profit_foreigners=st_as_sf(tourist_foreign)
+
+tourist_foreign=st_as_sf(tourist_foreign)
+
+
+# Create the interactive basemap
+basemap01 <- tm_shape(tourist_foreign) +
+  tm_polygons(col = "total_value", palette = "Blues") +
+  tm_text("province_eng", size = 0.5)
+
+# Display the interactive map
+basemap01
+```
+
+## Number of Domestic Tourists
+
+```{r}
+tourist_domestic=pro_tourism%>%
+  filter(variable=='no_tourist_foreign')%>%
+  filter(!st_is_empty(geometry))
+profit_foreigners=st_as_sf(tourist_domestic)
+
+tourist_domestic=st_as_sf(tourist_domestic)
+
+
+# Create the interactive basemap
+basemap02 <- tm_shape(tourist_domestic) +
+  tm_polygons(col = "total_value", palette = "Blues") +
+  tm_text("province_eng", size = 0.5)
+
+# Display the interactive map
+basemap02
+```
+:::
+
+#### 2.3.1.2 Revenue
+
+We now take a look at the revenue generated by foreign and domestic tourists in Thailand
+
+::: panel-tabset
+## Revenue generated by Foreigners
+
+```{r}
+#| cache: true
+profit_foreigners=pro_tourism%>%
+  filter(variable=='net_profit_foreign')%>%
+  filter(!st_is_empty(geometry))
+profit_foreigners=st_as_sf(profit_foreigners)
+  
+
+
+# Create the interactive basemap
+basemap <- tm_shape(profit_foreigners) +
+  tm_polygons(col = "total_value", palette = "Blues", style= 'jenks') +
+  tm_text("province_eng", size = 0.5)
+
+# Display the interactive map
+basemap
+
+
+```
+
+## Revenue generated by Domestic Tourists
+
+```{r}
+#| cache: true
+profit_domestic=pro_tourism%>%
+  filter(variable=='net_profit_thai')%>%
+  filter(!st_is_empty(geometry))
+profit_foreigners=st_as_sf(profit_domestic)
+
+profit_domestic=st_as_sf(profit_domestic)
+
+
+# Create the interactive basemap
+basemap2 <- tm_shape(profit_domestic) +
+  tm_polygons(col = "total_value", palette = "Blues", style='jenks') +
+  tm_text("province_eng", size = 0.5)
+
+# Display the interactive map
+basemap2
+
+```
+:::
+
+Bangkok seems to be the most lucrative province for both foreign and domestic tourists.
+
+```{r}
+#| eval: false
+#| cache: true
+basemap <- tm_shape(profit_domestic) +
+  tm_polygons() +
+  tm_text("province_eng", size=0.5)
+
+gdppc <- qtm(profit_domestic, "total_value")
+tmap_arrange(basemap, gdppc, asp=1, ncol=2)
+```
+
+# 2.4 Spatial Analysis
+
+We now implement the **poly2nb()** function of the **spdep** package to compute contiguity weight matrices for the study area selected.
+
+Using this function, we are able to build a ‘neighbors list’ based on regions with contiguous boundaries.
+
+In this function, we will pass an argument, ‘queen’, that can be set as either TRUE (default) or FALSE. If the ‘queen’ argument is not explicitly set to FALSE, the function returns a list of first order neighbors using the Queen criteria.
+
+[You may refer to the `spdep` package documentation here](https://cran.r-project.org/web/packages/spdep/spdep.pdf) to learn more about its functions and arguments.
+
+## 2.4.1 Spatial Weights
+
+### 2.4.1.1 Computing Contiguity Spatial Weights
+
+We use the poly2nb() function as shown in the code chunk below. Using this, we are able to compute a Queen contiguity weight matrix.
+
+```{r}
+#| eval: false
+# Rook contiguity
+wm_r <- poly2nb(profit_foreigners, queen=FALSE)
+write_rds(wm_r, 'data/rds/wm_r_pro_foreign')
+
+# Queen Contiguity
+wm_q <- poly2nb(profit_foreigners, queen=TRUE)
+write_rds(wm_q, 'data/rds/wm_q_pro_foreign')
+```
+
+::: panel-tabset
+## Rook Contiguity
+
+```{r}
+wm_r_pro_foreign=read_rds("data/rds/wm_r_pro_foreign")
+summary(wm_r_pro_foreign)
+```
+
+## Queen Contiguity
+
+```{r}
+wm_q_pro_foreign=read_rds("data/rds/wm_q_pro_foreign")
+summary(wm_q_pro_foreign)
+```
+:::
+
+```{r}
+wm_r_pro_foreign=read_rds("data/rds/wm_r_pro_foreign")
+summary(wm_r_pro_foreign)
+```
+
+### 2.4.1.2 Visualizing Contiguity Spatial Weights
+
+A connectivity graph takes a point and displays a line to each neighboring point. We are working with polygons in this situation, so we need to ensure that our points are in order to produce our connectivity graphs.
+
+Usually, the method of choice will be polygon centroids. We calculate using the sf package before moving onto the graphs. Getting latitude and longitude of the Polygon Centroids.
+
+We need points to associate with each polygon before we can make our connectivity graph. It won’t be as simple as applying the st_centroid() function of the sf sf object: *`us.bound`*. We need the coordinates in a separate data-frame for this to work.
+
+To do this, we will use a mapping function which will apply a given function to each element of a vector and returns a vector of the same length. Our input vector will be the geometry column of `us.bound`.
+
+The function that we implement in this situation will be st_centroid().
+
+We will be using the map_dbl variation of map from the purrr package.
+
+::: panel-tabset
+## Longitude & Latitude of Foreign Travellers
+
+We start by extracting the longitude and latitude values for foreign travellers.
+
+```{r}
+longitude_profit_foreign= map_dbl(profit_foreigners$geometry, ~st_centroid(.x)[[1]])
+latitude_profit_foreign= map_dbl(profit_foreigners$geometry, ~st_centroid(.x)[[2]])
+```
+
+Now that we have the latitude and longitude values, we can use the cbind() function to put the longitude and latitude values into the same object, `coords`.
+
+```{r}
+coords_profit_foreign <- cbind(longitude_profit_foreign, latitude_profit_foreign)
+```
+
+We use the head() function to verify if `coords` is in the correct format.
+
+```{r}
+head(coords_profit_foreign)
+```
+
+## Longitude and Latitude of Domestic Travellers
+
+```{r}
+#| eval: false
+longitude_profit_domestic
+```
+
+```{r}
+#| eval: false
+latitude_profit_domestic=
+```
+
+We now create the coords object.
+
+```{r}
+#| eval: false
+coords_profit_domestic
+```
+:::
+
+We can now visualize it using the plot() function as shown in the following code chunks.
+
+::: panel-tabset
+## Profits from foreign travellers
+
+```{r}
+plot(profit_foreigners$geometry, border="lightgrey")
+plot(wm_r_pro_foreign, coords_profit_foreign, pch = 19, cex = 0.6, add = TRUE, col = "purple")
+```
+
+## Profits from domestic travellers
+
+```{r}
+#| eval: false
+plot(profit_domestic$geometry, border="lightgrey")
+plot(wm_r_pro_domestic, coords_profit_domestic, pch = 19, cex = 0.6, add = TRUE, col = "purple")
+```
+:::
+
+### 2.4.1.3 Computing Distance Based Neighbors
+
+In order to derive distance-based weight matrices, we will implement the **dnearneigh()** function of the **spdep** package.
+
+This function identifies neighbors of region points by Euclidean Distance with a distance band with lower d1 and upper d2 bounds controlled by the `bounds=` argument.
+
+If un-projected coordinates are used and either specified in the coordinates object x or with x as a two column matrix and `longlat=TRUE,` great circle distances in km will be calculated assuming the WGS84 reference ellipsoid.
+
+#### 2.4.1.3.1 Determining cut-off distance
+
+We must first determine the upper limit for the distance band by using the steps shown below:
+
+-   **Find k Nearest Neighbours**: Use **`knearneigh()`** from the **`spdep`** package to get a matrix of indices for the k nearest neighbours of each point.
+
+-   **Convert to Neighbours List**: Convert the **`knn`** object returned by **`knearneigh()`** into a neighbours list of class **`nb`** using **`knn2nb()`**. This list contains integer vectors with neighbour region number IDs.
+
+-   **Calculate Edge Lengths**: Use **`nbdists()`** from **`spdep`** to return the lengths of neighbour relationship edges. The function returns distances in the units of the coordinates if projected, otherwise in kilometers.
+
+-   **Flatten the List**: Remove the list structure of the returned object using **`unlist()`**
+
+::: panel-tabset
+## Profits from foreign travellers
+
+```{r}
+#coords <- coordinates(hunan)
+k1_pro_foreign <- knn2nb(knearneigh(coords_profit_foreign))
+k1dists_pro_foreign <- unlist(nbdists(k1_pro_foreign, coords_profit_foreign, longlat = TRUE))
+summary(k1dists_pro_foreign)
+```
+
+From the output above, we can infer that the largest first nearest neighbor distance is just under 125KM. Using this value, 125KM, as the upper threshold gives certainty that all units will have at least one neighbor.
+
+## Profits from domestic travellers
+
+```{r}
+
+```
+:::
+
+#### 2.4.1.3.2 Computing Distance Based Weight Matrix
+
+We now implement the dnearneigh() function to compute the distance weight matrix.
+
+```{r}
+wm_d62_pro_foreign <- dnearneigh(coords_profit_foreign, 0, 125, longlat = TRUE)
+wm_d62_pro_foreign
+```
+
+::: insights-box
+From the output above, we infer that there are 69 distinct regions, as we identified earlier. There are 368 connections between regions where the distance is within the threshold that we have set. 7.73% of all possible region pairs have a connection. On average, each region is connected to approximately 5.3 other regions.
+:::
+
+We now use the combination of table() and card() functions from the spdep package to display the structure of the weight matrix.
+
+```{r}
+table(profit_foreigners$province_eng, card(wm_d62_pro_foreign))
+```
+
+Next, we implement the n.comp.nb() function to identify the number of connected components in a neighbor list object of class nb.
+
+::: note-box
+Note: A connected component is a subset of regions where each region is reachable from any other region within the same subset. The function returns an object that includes the number of connected components (`nc`) and a vector indicating the component membership for each region.
+:::
+
+```{r}
+n_comp_pro_foreign <- n.comp.nb(wm_d62_pro_foreign)
+n_comp_pro_foreign$nc
+```
+
+```{r}
+table(n_comp_pro_foreign$comp.id)
+```
+
+#### 2.4.1.3.3 **Plotting fixed distance weight matrix**
+
+We now plot the distance weight matrix using the plot() function.
+
+```{r}
+plot(profit_foreigners$geometry, border="lightgrey")
+plot(wm_d62_pro_foreign, coords_profit_foreign, add=TRUE)
+plot(k1_pro_foreign, coords_profit_foreign, add=TRUE, col="purple", length=0.08)
+```
+
+As identified earlier, we see two distinct groups. The upper 56 and the bottom 13.
+
+```{r}
+par(mfrow=c(1,2))
+plot(profit_foreigners$geometry, border="lightgrey", main="1st nearest neighbours")
+plot(k1_pro_foreign, coords_profit_foreign, add=TRUE, col="red", length=0.08)
+plot(profit_foreigners$geometry, border="lightgrey", main="Distance link")
+plot(wm_d62_pro_foreign, coords_profit_foreign, add=TRUE, pch = 19, cex = 0.6)
+```
+
+### 2.4.1.4 **Weights based on Inversed Distance Weighting (IDW)**
+
+We first compute the distances between areas by implementing the **nbdists()** function of the **spdep** package.
+
+```{r}
+dist_pro_foreign <- nbdists(wm_r_pro_foreign, coords_profit_foreign, longlat = TRUE)
+ids_pro_foreign <- lapply(dist_pro_foreign, function(x) 1/(x))
+ids_pro_foreign
+```
+
+### 2.4.1.5 **Row-Standardized Weights Matrix**
+
+We now need to assign weights to each neighboring polygon. We use equal weights (style=“W”), where each neighboring polygon is assigned a weight of 1 divided by the number of neighbors.
+
+This means each neighboring county’s weight is calculated as 1/(# of neighbors), and these weights are then used to sum the weighted income values.
+
+While this method is intuitive for summarizing neighbors’ values, it has a drawback: polygons at the edges of the study area may rely on fewer neighbors, potentially skewing the spatial autocorrelation results.
+
+::: note-box
+Note: For simplicity, we’ll use the style=“W” option in this example, but be aware that more robust options, such as style=“B”, are available.
+:::
+
+```{r}
+rswm_r_pro_foreign <- nb2listw(wm_r_pro_foreign, style="W", zero.policy = TRUE)
+rswm_r_pro_foreign
+```
+
+Setting the argument `zero.policy` to TRUE allows for lists of non-neighbors. This should be used with caution as users may not be aware of missing neighbors in their data however setting `zero,policy` to FALSE would return an error.
+
+The code chunk below is implemented to check the weights of the first polygons three neighbors type:
+
+```{r}
+rswm_r_pro_foreign$weights[10]
+```
+
+::: insights-box
+Each neighbor is assigned a 0.33 of the total weight. This means that when R computes the average neighboring income values, each neighbor’s income will be multiplied by 0.125 before being tallied.
+:::
+
+Using the same method, we derive a row standardized distance weight matrix by using the code chunk below.
+
+```{r}
+rswm_ids_pro_foreign <- nb2listw(wm_r_pro_foreign, glist=ids_pro_foreign, style="B", zero.policy=TRUE)
+rswm_ids_pro_foreign
+
+```
+
+### 2.4.1.6 Application of Spatial Weight Matrix
+
+We now create four different spatial lagged variables:
+
+-   spatial lag with row-standardized weights
+
+-   spatial lag as a sum of neighbouring values
+
+-   spatial window average
+
+-   spatial window sum
+
+#### 2.4.1.6.1 **Spatial Lag With Row-Standardized Weights**
+
+We now compute the average neighbor profit value for each polygon. We often refer to these values as Spatially Lagged Values.
+
+```{r}
+pro_foreign.lag <- lag.listw(rswm_r_pro_foreign, profit_foreigners$total_value)
+pro_foreign.lag
+```
+
+We can append the spatially lagged profit values onto our `profit_foreigners` sf data-frame by using the code chunk shown below.
+
+```{r}
+lag.list_pro_foreign <- list(profit_foreigners$province_eng, lag.listw(rswm_r_pro_foreign, profit_foreigners$total_value))
+lag.res_pro_foreign <- as.data.frame(lag.list_pro_foreign)
+colnames(lag.res_pro_foreign) <- c("province_eng", "lag Profit")
+profit_foreigners <- left_join(profit_foreigners,lag.res_pro_foreign)
+```
+
+We now plot the actual profit and spatial lag profits side by side to facilitate comparison.
+
+```{r}
+pro_foreign <- qtm(profit_foreigners, "total_value")
+lag_pro_foreign <- qtm(profit_foreigners, "lag Profit")
+tmap_arrange(pro_foreign, lag_pro_foreign, asp=1, ncol=2)
+```
+
+We see a difference in the surrounding regions of Bangkok as well as Mae Hong Son, all of which are in a higher band as compared to the non-spatially lagged values.
+
+#### 2.4.1.6.2 **Spatial Lag as a sum of neighboring values**
+
+We can calculate spatial lag as a sum of neighboring values by assigning binary weights. For this, we must apply a function that will assign binary weights to our neighbors list. We then use the `glist` argument in the nb2listw function to explicitly assign these weights.
+
+We first apply a function that assigns a value of 1 per neighbor. This is done with help of lapply(), which helps manipulate the neighbors structure. It basically applies a function across each value in the neighbors structure.
+
+```{r}
+#| eval: false
+b_weights <- lapply(wm_r_pro_foreign, function(x) 0*x + 1)
+b_weights2 <- nb2listw(wm_r_pro_foreign, 
+                       glist = b_weights, 
+                       style = "B")
+b_weights2
+```
