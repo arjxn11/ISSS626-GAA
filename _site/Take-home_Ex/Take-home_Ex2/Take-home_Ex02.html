@@ -262,6 +262,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#row-standardized-weights-matrix" id="toc-row-standardized-weights-matrix" class="nav-link" data-scroll-target="#row-standardized-weights-matrix">2.4.1.5 <strong>Row-Standardized Weights Matrix</strong></a></li>
   <li><a href="#application-of-spatial-weight-matrix" id="toc-application-of-spatial-weight-matrix" class="nav-link" data-scroll-target="#application-of-spatial-weight-matrix">2.4.1.6 Application of Spatial Weight Matrix</a></li>
   </ul></li>
+  <li><a href="#global-measures-of-spatial-autocorrelation" id="toc-global-measures-of-spatial-autocorrelation" class="nav-link" data-scroll-target="#global-measures-of-spatial-autocorrelation">2.4.2 Global Measures of Spatial Autocorrelation</a>
+  <ul class="collapse">
+  <li><a href="#spatial-correlogram" id="toc-spatial-correlogram" class="nav-link" data-scroll-target="#spatial-correlogram">2.4.2.3 Spatial Correlogram</a></li>
+  </ul></li>
+  <li><a href="#local-indicators-of-spatial-association" id="toc-local-indicators-of-spatial-association" class="nav-link" data-scroll-target="#local-indicators-of-spatial-association">2.4.3 Local Indicators of Spatial Association</a>
+  <ul class="collapse">
+  <li><a href="#computing-local-morans-i" id="toc-computing-local-morans-i" class="nav-link" data-scroll-target="#computing-local-morans-i">2.4.3.1 Computing Local Moran’s I</a></li>
+  <li><a href="#creating-a-lisa-cluster-map" id="toc-creating-a-lisa-cluster-map" class="nav-link" data-scroll-target="#creating-a-lisa-cluster-map">2.4.3.2 Creating a LISA Cluster Map</a></li>
+  <li><a href="#hot-and-cold-spot-analysis" id="toc-hot-and-cold-spot-analysis" class="nav-link" data-scroll-target="#hot-and-cold-spot-analysis">2.4.3.3 Hot and Cold Spot Analysis</a></li>
+  <li><a href="#gi-statistics" id="toc-gi-statistics" class="nav-link" data-scroll-target="#gi-statistics">2.4.4 Gi Statistics</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -295,7 +306,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">October 4, 2024</p>
+      <p class="date-modified">October 7, 2024</p>
     </div>
   </div>
     
@@ -392,12 +403,77 @@ Bounding box:  xmin: 97.34336 ymin: 5.613038 xmax: 105.637 ymax: 20.46507
 Geodetic CRS:  WGS 84</code></pre>
 </div>
 </div>
+<p>We now check the CRS information using the st_crs() function of the sf package and transform the EPSG code using the st_transform() function if it is not 32647, the EPSG code of Thailand.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_crs</span>(province)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Coordinate Reference System:
+  User input: WGS 84 
+  wkt:
+GEOGCRS["WGS 84",
+    DATUM["World Geodetic System 1984",
+        ELLIPSOID["WGS 84",6378137,298.257223563,
+            LENGTHUNIT["metre",1]]],
+    PRIMEM["Greenwich",0,
+        ANGLEUNIT["degree",0.0174532925199433]],
+    CS[ellipsoidal,2],
+        AXIS["latitude",north,
+            ORDER[1],
+            ANGLEUNIT["degree",0.0174532925199433]],
+        AXIS["longitude",east,
+            ORDER[2],
+            ANGLEUNIT["degree",0.0174532925199433]],
+    ID["EPSG",4326]]</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">st_transform</span>(province, <span class="dv">32647</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Simple feature collection with 77 features and 5 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 325178.8 ymin: 620860.6 xmax: 1213656 ymax: 2263241
+Projected CRS: WGS 84 / UTM zone 47N
+First 10 features:
+   Shape_Leng Shape_Area                  ADM1_EN       ADM1_TH ADM1_PCODE
+1    2.417227 0.13133873                  Bangkok  กรุงเทพมหานคร       TH10
+2    1.695100 0.07926199             Samut Prakan    สมุทรปราการ       TH11
+3    1.251111 0.05323766               Nonthaburi         นนทบุรี       TH12
+4    1.884945 0.12698345             Pathum Thani        ปทุมธานี       TH13
+5    3.041716 0.21393797 Phra Nakhon Si Ayutthaya พระนครศรีอยุธยา       TH14
+6    1.739908 0.07920961                Ang Thong        อ่างทอง       TH15
+7    5.693342 0.54578838                 Lop Buri          ลพบุรี       TH16
+8    1.778326 0.06872655                Sing Buri         สิงห์บุรี       TH17
+9    2.896316 0.20907828                 Chai Nat         ชัยนาท       TH18
+10   4.766446 0.29208711                 Saraburi         สระบุรี       TH19
+                         geometry
+1  MULTIPOLYGON (((674339.8 15...
+2  MULTIPOLYGON (((687139.8 15...
+3  MULTIPOLYGON (((644817.9 15...
+4  MULTIPOLYGON (((704086 1575...
+5  MULTIPOLYGON (((662941.6 16...
+6  MULTIPOLYGON (((643472.8 16...
+7  MULTIPOLYGON (((751293.3 17...
+8  MULTIPOLYGON (((647136.1 16...
+9  MULTIPOLYGON (((620165.4 17...
+10 MULTIPOLYGON (((757935.1 16...</code></pre>
+</div>
+</div>
 </section>
 <section id="performing-relational-join" class="level3">
 <h3 class="anchored" data-anchor-id="performing-relational-join">2.1.3 Performing relational join</h3>
+<p>After performing consistency checks, we notice that the provinces aren’t named correctly in our tourist data-set. We correct the names below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Nong Bua Lamphu"</span>, <span class="st">"Nong Bua Lam Phu"</span>, summed_data<span class="sc">$</span>province_eng)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Sisaket"</span>, <span class="st">"Si Sa Ket"</span>, summed_data<span class="sc">$</span>province_eng)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Phang Nga"</span>, <span class="st">"Phangnga"</span>, summed_data<span class="sc">$</span>province_eng)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Lopburi"</span>, <span class="st">"Lop Buri"</span>, summed_data<span class="sc">$</span>province_eng)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Chonburi"</span>, <span class="st">"Chon Buri"</span>, summed_data<span class="sc">$</span>province_eng)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Chainat"</span>, <span class="st">"Chai Nat"</span>, summed_data<span class="sc">$</span>province_eng)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Buriram"</span>, <span class="st">"Buri Ram"</span>, summed_data<span class="sc">$</span>province_eng)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>summed_data<span class="sc">$</span>province_eng <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Prachinburi"</span>, <span class="st">"Prachin Buri"</span>, summed_data<span class="sc">$</span>province_eng)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <p>We will now join the aspatial and geospatial data by using the left_join() function of the package as showing in the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pro_tourism<span class="ot">=</span><span class="fu">left_join</span>(summed_data, province, <span class="at">by=</span> <span class="fu">c</span>(<span class="st">"province_eng"</span><span class="ot">=</span><span class="st">"ADM1_EN"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>pro_tourism<span class="ot">=</span><span class="fu">left_join</span>(summed_data, province, <span class="at">by=</span> <span class="fu">c</span>(<span class="st">"province_eng"</span><span class="ot">=</span><span class="st">"ADM1_EN"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
@@ -415,25 +491,25 @@ Geodetic CRS:  WGS 84</code></pre>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tourist_foreign<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'no_tourist_foreign'</span>)<span class="sc">%&gt;%</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_foreign)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>tourist_foreign<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_foreign)</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>basemap01 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(tourist_foreign) <span class="sc">+</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>) <span class="sc">+</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>basemap01</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>tourist_foreign<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'no_tourist_foreign'</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_foreign)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>tourist_foreign<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_foreign)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>basemap01 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_foreigners) <span class="sc">+</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span> <span class="st">'jenks'</span>)<span class="sc">+</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.3</span>) </span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>basemap01</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -441,25 +517,25 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tourist_domestic<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'no_tourist_foreign'</span>)<span class="sc">%&gt;%</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_domestic)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>tourist_domestic<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_domestic)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>basemap02 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(tourist_domestic) <span class="sc">+</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>) <span class="sc">+</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>basemap02</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tourist_domestic<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'no_tourist_foreign'</span>)<span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_domestic)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>tourist_domestic<span class="ot">=</span><span class="fu">st_as_sf</span>(tourist_domestic)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>basemap02 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(tourist_domestic) <span class="sc">+</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span><span class="st">'jenks'</span>)<span class="sc">+</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.3</span>) </span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>basemap02</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -476,24 +552,23 @@ Geodetic CRS:  WGS 84</code></pre>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'net_profit_foreign'</span>)<span class="sc">%&gt;%</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_foreigners)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_foreigners) <span class="sc">+</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span> <span class="st">'jenks'</span>) <span class="sc">+</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>basemap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'net_profit_foreign'</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_foreigners)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_foreigners) <span class="sc">+</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span> <span class="st">'jenks'</span>) <span class="sc">+</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>basemap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -501,25 +576,24 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>profit_domestic<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'net_profit_thai'</span>)<span class="sc">%&gt;%</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">st_is_empty</span>(geometry))</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_domestic)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>profit_domestic<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_domestic)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>basemap2 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_domestic) <span class="sc">+</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span><span class="st">'jenks'</span>) <span class="sc">+</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>basemap2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>profit_domestic<span class="ot">=</span>pro_tourism<span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable<span class="sc">==</span><span class="st">'net_profit_thai'</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>profit_foreigners<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_domestic)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>profit_domestic<span class="ot">=</span><span class="fu">st_as_sf</span>(profit_domestic)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the interactive basemap</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>basemap2 <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_domestic) <span class="sc">+</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"total_value"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">style=</span><span class="st">'jenks'</span>) <span class="sc">+</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the interactive map</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>basemap2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -529,12 +603,12 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <p>Bangkok seems to be the most lucrative province for both foreign and domestic tourists.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_domestic) <span class="sc">+</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size=</span><span class="fl">0.5</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>gdppc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_domestic, <span class="st">"total_value"</span>)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(basemap, gdppc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>basemap <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_domestic) <span class="sc">+</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>() <span class="sc">+</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_text</span>(<span class="st">"province_eng"</span>, <span class="at">size=</span><span class="fl">0.5</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>gdppc <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_domestic, <span class="st">"total_value"</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(basemap, gdppc, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
@@ -551,70 +625,85 @@ Geodetic CRS:  WGS 84</code></pre>
 <h3 class="anchored" data-anchor-id="computing-contiguity-spatial-weights">2.4.1.1 Computing Contiguity Spatial Weights</h3>
 <p>We use the poly2nb() function as shown in the code chunk below. Using this, we are able to compute a Queen contiguity weight matrix.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rook contiguity</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>wm_r <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_foreigners, <span class="at">queen=</span><span class="cn">FALSE</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_r, <span class="st">'data/rds/wm_r_pro_foreign'</span>)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Queen Contiguity</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_foreigners, <span class="at">queen=</span><span class="cn">TRUE</span>)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_q, <span class="st">'data/rds/wm_q_pro_foreign'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rook contiguity</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>wm_r <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_foreigners, <span class="at">queen=</span><span class="cn">FALSE</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_r, <span class="st">'data/rds/wm_r_pro_foreign'</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Queen Contiguity</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_foreigners, <span class="at">queen=</span><span class="cn">TRUE</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_q, <span class="st">'data/rds/wm_q_pro_foreign'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">Rook Contiguity</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Queen Contiguity</a></li></ul>
 <div class="tab-content">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>wm_r_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_r_pro_foreign"</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>wm_r_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_r_pro_foreign"</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
-Number of regions: 69 
-Number of nonzero links: 284 
-Percentage nonzero weights: 5.965133 
-Average number of links: 4.115942 
+Number of regions: 77 
+Number of nonzero links: 352 
+Percentage nonzero weights: 5.93692 
+Average number of links: 4.571429 
 1 region with no links:
-42
+48
 2 disjoint connected subgraphs
 Link number distribution:
 
- 0  1  2  3  4  5  6  7  9 
- 1  2  7 17 15 11 12  3  1 
-2 least connected regions:
-46 63 with 1 link
-1 most connected region:
-61 with 9 links</code></pre>
+ 0  1  2  3  4  5  6  7  8  9 
+ 1  1  5 17 15 17 10  5  4  2 
+1 least connected region:
+71 with 1 link
+2 most connected regions:
+17 69 with 9 links</code></pre>
 </div>
 </div>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>wm_q_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_q_pro_foreign"</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_q_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>wm_q_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_q_pro_foreign"</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_q_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
-Number of regions: 69 
-Number of nonzero links: 284 
-Percentage nonzero weights: 5.965133 
-Average number of links: 4.115942 
+Number of regions: 77 
+Number of nonzero links: 352 
+Percentage nonzero weights: 5.93692 
+Average number of links: 4.571429 
 1 region with no links:
-42
+48
 2 disjoint connected subgraphs
 Link number distribution:
 
- 0  1  2  3  4  5  6  7  9 
- 1  2  7 17 15 11 12  3  1 
-2 least connected regions:
-46 63 with 1 link
-1 most connected region:
-61 with 9 links</code></pre>
+ 0  1  2  3  4  5  6  7  8  9 
+ 1  1  5 17 15 17 10  5  4  2 
+1 least connected region:
+71 with 1 link
+2 most connected regions:
+17 69 with 9 links</code></pre>
 </div>
 </div>
 </div>
 </div>
 </div>
+<p>We now repeat the same steps for Domestic tourists.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>wm_r_pro_foreign<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_r_pro_foreign"</span>)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rook contiguity</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>wm_r <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_domestic, <span class="at">queen=</span><span class="cn">FALSE</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_r, <span class="st">'data/rds/wm_r_pro_dom'</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Queen Contiguity</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>wm_q <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(profit_domestic, <span class="at">queen=</span><span class="cn">TRUE</span>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(wm_q, <span class="st">'data/rds/wm_q_pro_dom'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now look at a summary of both using the code chunks below.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">Rook Contiguity</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Queen Contiguity</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>wm_r_pro_dom<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_r_pro_dom"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_r_pro_dom)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
 Number of regions: 69 
@@ -632,6 +721,33 @@ Link number distribution:
 46 63 with 1 link
 1 most connected region:
 61 with 9 links</code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>wm_q_pro_dom<span class="ot">=</span><span class="fu">read_rds</span>(<span class="st">"data/rds/wm_q_pro_dom"</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wm_q_pro_dom)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 69 
+Number of nonzero links: 284 
+Percentage nonzero weights: 5.965133 
+Average number of links: 4.115942 
+1 region with no links:
+42
+2 disjoint connected subgraphs
+Link number distribution:
+
+ 0  1  2  3  4  5  6  7  9 
+ 1  2  7 17 15 11 12  3  1 
+2 least connected regions:
+46 63 with 1 link
+1 most connected region:
+61 with 9 links</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </section>
@@ -644,67 +760,78 @@ Link number distribution:
 <p>The function that we implement in this situation will be st_centroid().</p>
 <p>We will be using the map_dbl variation of map from the purrr package.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">Longitude &amp; Latitude of Foreign Travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Longitude and Latitude of Domestic Travellers</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">Longitude &amp; Latitude of Foreign Travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Longitude and Latitude of Domestic Travellers</a></li></ul>
 <div class="tab-content">
-<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <p>We start by extracting the longitude and latitude values for foreign travellers.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>longitude_profit_foreign<span class="ot">=</span> <span class="fu">map_dbl</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">1</span>]])</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>latitude_profit_foreign<span class="ot">=</span> <span class="fu">map_dbl</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">2</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>longitude_profit_foreign<span class="ot">=</span> <span class="fu">map_dbl</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">1</span>]])</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>latitude_profit_foreign<span class="ot">=</span> <span class="fu">map_dbl</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="sc">~</span><span class="fu">st_centroid</span>(.x)[[<span class="dv">2</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now that we have the latitude and longitude values, we can use the cbind() function to put the longitude and latitude values into the same object,&nbsp;<code>coords</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>coords_profit_foreign <span class="ot">&lt;-</span> <span class="fu">cbind</span>(longitude_profit_foreign, latitude_profit_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>coords_profit_foreign <span class="ot">&lt;-</span> <span class="fu">cbind</span>(longitude_profit_foreign, latitude_profit_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We use the head() function to verify if&nbsp;<code>coords</code>&nbsp;is in the correct format.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(coords_profit_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(coords_profit_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     longitude_profit_foreign latitude_profit_foreign
 [1,]                 104.7414                15.89261
 [2,]                 100.3485                14.62354
 [3,]                 100.6235                13.77183
 [4,]                 103.7109                18.14879
-[5,]                 101.4254                13.60649
-[6,]                 101.8194                16.03212</code></pre>
+[5,]                 102.9567                14.81998
+[6,]                 101.4254                13.60649</code></pre>
 </div>
 </div>
 </div>
-<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>longitude_profit_domestic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>longitude_profit_domestic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>latitude_profit_domestic<span class="ot">=</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>latitude_profit_domestic<span class="ot">=</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We now create the coords object.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>coords_profit_domestic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>coords_profit_domestic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
 </div>
 <p>We can now visualize it using the plot() function as shown in the following code chunks.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">Profits from foreign travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Profits from domestic travellers</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">Profits from foreign travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Profits from domestic travellers</a></li></ul>
 <div class="tab-content">
-<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r_pro_foreign, coords_profit_foreign, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"purple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r_pro_foreign, coords_profit_foreign, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"purple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_q_pro_foreign, coords_profit_foreign, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"purple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 </div>
-<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_domestic<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r_pro_domestic, coords_profit_domestic, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"purple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_domestic<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_r_pro_domestic, coords_profit_domestic, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>, <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">"purple"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -725,22 +852,21 @@ Link number distribution:
 <li><p><strong>Flatten the List</strong>: Remove the list structure of the returned object using <strong><code>unlist()</code></strong></p></li>
 </ul>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">Profits from foreign travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Profits from domestic travellers</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true">Profits from foreign travellers</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false">Profits from domestic travellers</a></li></ul>
 <div class="tab-content">
-<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#coords &lt;- coordinates(hunan)</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>k1_pro_foreign <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(<span class="fu">knearneigh</span>(coords_profit_foreign))</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>k1dists_pro_foreign <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">nbdists</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">longlat =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(k1dists_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>k1_pro_foreign <span class="ot">&lt;-</span> <span class="fu">knn2nb</span>(<span class="fu">knearneigh</span>(coords_profit_foreign))</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>k1dists_pro_foreign <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">nbdists</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">longlat =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(k1dists_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  21.55   52.52   69.06   66.79   77.42  124.72 </code></pre>
+  21.55   51.92   64.33   63.24   76.77  110.94 </code></pre>
 </div>
 </div>
 <p>From the output above, we can infer that the largest first nearest neighbor distance is just under 125KM. Using this value, 125KM, as the upper threshold gives certainty that all units will have at least one neighbor.</p>
 </div>
-<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
 
 </div>
 </div>
@@ -750,14 +876,14 @@ Link number distribution:
 <h4 class="anchored" data-anchor-id="computing-distance-based-weight-matrix">2.4.1.3.2 Computing Distance Based Weight Matrix</h4>
 <p>We now implement the dnearneigh() function to compute the distance weight matrix.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>wm_d62_pro_foreign <span class="ot">&lt;-</span> <span class="fu">dnearneigh</span>(coords_profit_foreign, <span class="dv">0</span>, <span class="dv">125</span>, <span class="at">longlat =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>wm_d62_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>wm_d62_pro_foreign <span class="ot">&lt;-</span> <span class="fu">dnearneigh</span>(coords_profit_foreign, <span class="dv">0</span>, <span class="dv">111</span>, <span class="at">longlat =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>wm_d62_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Neighbour list object:
-Number of regions: 69 
-Number of nonzero links: 368 
-Percentage nonzero weights: 7.729469 
-Average number of links: 5.333333 
+Number of regions: 77 
+Number of nonzero links: 350 
+Percentage nonzero weights: 5.903188 
+Average number of links: 4.545455 
 2 disjoint connected subgraphs</code></pre>
 </div>
 </div>
@@ -766,79 +892,87 @@ Average number of links: 5.333333
 </div>
 <p>We now use the combination of table() and card() functions from the spdep package to display the structure of the weight matrix.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(profit_foreigners<span class="sc">$</span>province_eng, <span class="fu">card</span>(wm_d62_pro_foreign))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(profit_foreigners<span class="sc">$</span>province_eng, <span class="fu">card</span>(wm_d62_pro_foreign))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                          
                            1 2 3 4 5 6 7 8 9 10 11 12 13 14
   Amnat Charoen            0 0 0 1 0 0 0 0 0  0  0  0  0  0
-  Ang Thong                0 0 0 0 0 0 0 0 0  0  0  0  1  0
-  Bangkok                  0 0 0 0 0 0 0 0 0  0  0  0  1  0
-  Bueng Kan                0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Ang Thong                0 0 0 0 0 0 0 0 0  0  1  0  0  0
+  Bangkok                  0 0 0 0 0 0 0 0 0  0  0  1  0  0
+  Bueng Kan                0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Buri Ram                 0 1 0 0 0 0 0 0 0  0  0  0  0  0
   Chachoengsao             0 0 0 0 0 0 0 0 1  0  0  0  0  0
-  Chaiyaphum               0 0 1 0 0 0 0 0 0  0  0  0  0  0
-  Chanthaburi              0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Chai Nat                 0 0 0 0 0 0 1 0 0  0  0  0  0  0
+  Chaiyaphum               0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Chanthaburi              0 0 0 0 1 0 0 0 0  0  0  0  0  0
   Chiang Mai               0 0 1 0 0 0 0 0 0  0  0  0  0  0
   Chiang Rai               1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Chon Buri                0 0 0 0 0 1 0 0 0  0  0  0  0  0
   Chumphon                 1 0 0 0 0 0 0 0 0  0  0  0  0  0
-  Kalasin                  0 0 0 0 0 0 0 1 0  0  0  0  0  0
+  Kalasin                  0 0 0 1 0 0 0 0 0  0  0  0  0  0
   Kamphaeng Phet           0 0 0 0 1 0 0 0 0  0  0  0  0  0
   Kanchanaburi             0 1 0 0 0 0 0 0 0  0  0  0  0  0
-  Khon Kaen                0 0 0 1 0 0 0 0 0  0  0  0  0  0
-  Krabi                    0 0 0 1 0 0 0 0 0  0  0  0  0  0
-  Lampang                  0 0 0 0 0 1 0 0 0  0  0  0  0  0
-  Lamphun                  0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Khon Kaen                0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Krabi                    0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Lampang                  0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Lamphun                  0 1 0 0 0 0 0 0 0  0  0  0  0  0
   Loei                     1 0 0 0 0 0 0 0 0  0  0  0  0  0
-  Mae Hong Son             0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Lop Buri                 0 0 0 0 0 0 1 0 0  0  0  0  0  0
+  Mae Hong Son             1 0 0 0 0 0 0 0 0  0  0  0  0  0
   Maha Sarakham            0 0 1 0 0 0 0 0 0  0  0  0  0  0
-  Mukdahan                 0 0 0 0 0 1 0 0 0  0  0  0  0  0
+  Mukdahan                 0 0 0 0 1 0 0 0 0  0  0  0  0  0
   Nakhon Nayok             0 0 0 0 0 0 0 0 0  1  0  0  0  0
-  Nakhon Pathom            0 0 0 0 0 0 0 0 0  0  0  0  1  0
-  Nakhon Phanom            0 0 0 1 0 0 0 0 0  0  0  0  0  0
-  Nakhon Ratchasima        0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Nakhon Pathom            0 0 0 0 0 0 0 0 0  1  0  0  0  0
+  Nakhon Phanom            0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Nakhon Ratchasima        1 0 0 0 0 0 0 0 0  0  0  0  0  0
   Nakhon Sawan             0 0 0 0 0 1 0 0 0  0  0  0  0  0
   Nakhon Si Thammarat      0 0 0 1 0 0 0 0 0  0  0  0  0  0
   Nan                      0 1 0 0 0 0 0 0 0  0  0  0  0  0
   Narathiwat               0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Nong Bua Lam Phu         0 0 0 1 0 0 0 0 0  0  0  0  0  0
   Nong Khai                0 0 1 0 0 0 0 0 0  0  0  0  0  0
-  Nonthaburi               0 0 0 0 0 0 0 0 0  0  0  0  0  1
-  Pathum Thani             0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Nonthaburi               0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Pathum Thani             0 0 0 0 0 0 0 0 0  0  0  0  0  1
   Pattani                  0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Phangnga                 0 0 1 0 0 0 0 0 0  0  0  0  0  0
   Phatthalung              0 0 0 1 0 0 0 0 0  0  0  0  0  0
-  Phayao                   0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Phayao                   0 1 0 0 0 0 0 0 0  0  0  0  0  0
   Phetchabun               0 0 1 0 0 0 0 0 0  0  0  0  0  0
-  Phetchaburi              0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Phetchaburi              0 0 0 1 0 0 0 0 0  0  0  0  0  0
   Phichit                  0 0 0 1 0 0 0 0 0  0  0  0  0  0
   Phitsanulok              0 0 0 1 0 0 0 0 0  0  0  0  0  0
-  Phra Nakhon Si Ayutthaya 0 0 0 0 0 0 0 0 0  0  0  1  0  0
-  Phrae                    0 0 0 0 0 1 0 0 0  0  0  0  0  0
-  Phuket                   1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Phra Nakhon Si Ayutthaya 0 0 0 0 0 0 0 0 0  0  0  0  1  0
+  Phrae                    0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Phuket                   0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Prachin Buri             0 0 0 0 0 1 0 0 0  0  0  0  0  0
   Prachuap Khiri Khan      1 0 0 0 0 0 0 0 0  0  0  0  0  0
   Ranong                   0 1 0 0 0 0 0 0 0  0  0  0  0  0
-  Ratchaburi               0 0 0 0 0 0 0 1 0  0  0  0  0  0
+  Ratchaburi               0 0 0 0 1 0 0 0 0  0  0  0  0  0
   Rayong                   0 0 1 0 0 0 0 0 0  0  0  0  0  0
-  Roi Et                   0 0 0 0 0 1 0 0 0  0  0  0  0  0
-  Sa Kaeo                  0 1 0 0 0 0 0 0 0  0  0  0  0  0
-  Sakon Nakhon             0 0 0 0 0 1 0 0 0  0  0  0  0  0
-  Samut Prakan             0 0 0 0 0 0 0 0 0  0  0  0  1  0
-  Samut Sakhon             0 0 0 0 0 0 0 0 0  0  1  0  0  0
-  Samut Songkhram          0 0 0 0 0 0 0 0 1  0  0  0  0  0
-  Saraburi                 0 0 0 0 0 0 0 0 0  0  1  0  0  0
+  Roi Et                   0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Sa Kaeo                  0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Sakon Nakhon             0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Samut Prakan             0 0 0 0 0 0 0 0 0  1  0  0  0  0
+  Samut Sakhon             0 0 0 0 0 0 0 0 1  0  0  0  0  0
+  Samut Songkhram          0 0 0 0 0 0 0 1 0  0  0  0  0  0
+  Saraburi                 0 0 0 0 0 0 0 0 1  0  0  0  0  0
   Satun                    0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Si Sa Ket                0 1 0 0 0 0 0 0 0  0  0  0  0  0
   Sing Buri                0 0 0 0 0 0 0 0 0  1  0  0  0  0
-  Songkhla                 0 0 0 0 1 0 0 0 0  0  0  0  0  0
-  Sukhothai                0 0 0 0 0 0 1 0 0  0  0  0  0  0
-  Suphan Buri              0 0 0 0 0 0 0 0 0  0  0  0  1  0
-  Surat Thani              0 0 1 0 0 0 0 0 0  0  0  0  0  0
-  Surin                    1 0 0 0 0 0 0 0 0  0  0  0  0  0
-  Tak                      0 1 0 0 0 0 0 0 0  0  0  0  0  0
-  Trang                    0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Songkhla                 0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Sukhothai                0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Suphan Buri              0 0 0 0 0 0 0 0 1  0  0  0  0  0
+  Surat Thani              0 0 0 1 0 0 0 0 0  0  0  0  0  0
+  Surin                    0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Tak                      1 0 0 0 0 0 0 0 0  0  0  0  0  0
+  Trang                    0 0 0 1 0 0 0 0 0  0  0  0  0  0
   Trat                     1 0 0 0 0 0 0 0 0  0  0  0  0  0
   Ubon Ratchathani         0 1 0 0 0 0 0 0 0  0  0  0  0  0
-  Udon Thani               0 0 0 0 1 0 0 0 0  0  0  0  0  0
+  Udon Thani               0 0 1 0 0 0 0 0 0  0  0  0  0  0
   Uthai Thani              0 0 0 0 0 1 0 0 0  0  0  0  0  0
-  Uttaradit                0 0 0 0 1 0 0 0 0  0  0  0  0  0
-  Yala                     0 0 1 0 0 0 0 0 0  0  0  0  0  0
-  Yasothon                 0 0 0 0 1 0 0 0 0  0  0  0  0  0</code></pre>
+  Uttaradit                0 0 1 0 0 0 0 0 0  0  0  0  0  0
+  Yala                     0 1 0 0 0 0 0 0 0  0  0  0  0  0
+  Yasothon                 0 0 1 0 0 0 0 0 0  0  0  0  0  0</code></pre>
 </div>
 </div>
 <p>Next, we implement the n.comp.nb() function to identify the number of connected components in a neighbor list object of class nb.</p>
@@ -846,18 +980,18 @@ Average number of links: 5.333333
 <p>Note: A connected component is a subset of regions where each region is reachable from any other region within the same subset. The function returns an object that includes the number of connected components (<code>nc</code>) and a vector indicating the component membership for each region.</p>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>n_comp_pro_foreign <span class="ot">&lt;-</span> <span class="fu">n.comp.nb</span>(wm_d62_pro_foreign)</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>n_comp_pro_foreign<span class="sc">$</span>nc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>n_comp_pro_foreign <span class="ot">&lt;-</span> <span class="fu">n.comp.nb</span>(wm_d62_pro_foreign)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>n_comp_pro_foreign<span class="sc">$</span>nc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 2</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(n_comp_pro_foreign<span class="sc">$</span>comp.id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(n_comp_pro_foreign<span class="sc">$</span>comp.id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
  1  2 
-56 13 </code></pre>
+63 14 </code></pre>
 </div>
 </div>
 </section>
@@ -865,28 +999,28 @@ Average number of links: 5.333333
 <h4 class="anchored" data-anchor-id="plotting-fixed-distance-weight-matrix">2.4.1.3.3 <strong>Plotting fixed distance weight matrix</strong></h4>
 <p>We now plot the distance weight matrix using the plot() function.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_d62_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>)</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">col=</span><span class="st">"purple"</span>, <span class="at">length=</span><span class="fl">0.08</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_d62_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">col=</span><span class="st">"purple"</span>, <span class="at">length=</span><span class="fl">0.08</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-33-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>As identified earlier, we see two distinct groups. The upper 56 and the bottom 13.</p>
+<p>As identified earlier, we see two distinct groups. The upper 63 and the bottom 14.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"1st nearest neighbours"</span>)</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">col=</span><span class="st">"red"</span>, <span class="at">length=</span><span class="fl">0.08</span>)</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"Distance link"</span>)</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_d62_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"1st nearest neighbours"</span>)</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(k1_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">col=</span><span class="st">"red"</span>, <span class="at">length=</span><span class="fl">0.08</span>)</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profit_foreigners<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>, <span class="at">main=</span><span class="st">"Distance link"</span>)</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wm_d62_pro_foreign, coords_profit_foreign, <span class="at">add=</span><span class="cn">TRUE</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.6</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -897,15 +1031,15 @@ Average number of links: 5.333333
 <h3 class="anchored" data-anchor-id="weights-based-on-inversed-distance-weighting-idw">2.4.1.4 <strong>Weights based on Inversed Distance Weighting (IDW)</strong></h3>
 <p>We first compute the distances between areas by implementing the&nbsp;<strong>nbdists()</strong>&nbsp;function of the&nbsp;<strong>spdep</strong>&nbsp;package.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dist_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nbdists</span>(wm_r_pro_foreign, coords_profit_foreign, <span class="at">longlat =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>ids_pro_foreign <span class="ot">&lt;-</span> <span class="fu">lapply</span>(dist_pro_foreign, <span class="cf">function</span>(x) <span class="dv">1</span><span class="sc">/</span>(x))</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>ids_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>dist_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nbdists</span>(wm_q_pro_foreign, coords_profit_foreign, <span class="at">longlat =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>ids_pro_foreign <span class="ot">&lt;-</span> <span class="fu">lapply</span>(dist_pro_foreign, <span class="cf">function</span>(x) <span class="dv">1</span><span class="sc">/</span>(x))</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>ids_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
 [1] 0.01283122 0.01137165 0.02317374
 
 [[2]]
-[1] 0.02756509 0.03127482 0.02029286
+[1] 0.01242005 0.02756509 0.03127482 0.02029286
 
 [[3]]
 [1] 0.01128043 0.01701948 0.03322088 0.03024035 0.04641391 0.02007407
@@ -914,203 +1048,232 @@ Average number of links: 5.333333
 [1] 0.008785487 0.010451301 0.011784417
 
 [[5]]
-[1] 0.011280434 0.009026604 0.013713812 0.010525478 0.010089340 0.012920254
+[1] 0.005542535 0.007549986 0.010821690 0.007509592 0.013226931
 
 [[6]]
-[1] 0.010963897 0.008134706 0.013026280
+[1] 0.011280434 0.009026604 0.019262215 0.013713812 0.010525478 0.018323726
+[7] 0.010089340 0.012920254
 
 [[7]]
-[1] 0.009026604 0.013102472 0.009765844 0.013223766
+[1] 0.01608311 0.02368766 0.01681858 0.01570532
 
 [[8]]
-[1] 0.005984037 0.010253006 0.012763865 0.013589149 0.004349372
+[1] 0.010963897 0.007064074 0.008134706 0.013026280
 
 [[9]]
-[1] 0.005984037 0.005799456 0.013165076
+[1] 0.009026604 0.009398570 0.013102472 0.009765844 0.013223766
 
 [[10]]
-[1] 0.005327427 0.017306975 0.007000767
+[1] 0.005984037 0.010253006 0.012763865 0.013589149 0.004349372
 
 [[11]]
-[1] 0.008769672 0.011775171 0.010437208 0.012343675 0.011493123 0.008361253
+[1] 0.005984037 0.005799456 0.013165076
 
 [[12]]
-[1] 0.010254426 0.011527636 0.007714179 0.009533663 0.011111643
+[1] 0.01926221 0.00939857 0.02240885
 
 [[13]]
-[1] 0.007385957 0.007716901 0.010982604 0.004211749 0.010358229
+[1] 0.005327427 0.017306975 0.007000767
 
 [[14]]
-[1] 0.010963897 0.008769672 0.006691737 0.012916807 0.005943019 0.006514320
-[7] 0.008588872
+[1] 0.008769672 0.011775171 0.010437208 0.012343675 0.011493123 0.008361253
 
 [[15]]
-[1] 0.01132654 0.00997081 0.01085922
+[1] 0.010254426 0.011527636 0.007714179 0.009533663 0.011111643
 
 [[16]]
+[1] 0.007385957 0.007716901 0.010982604 0.004211749 0.010358229
+
+[[17]]
+[1] 0.005542535 0.010963897 0.008769672 0.006691737 0.012916807 0.005943019
+[7] 0.011054506 0.006514320 0.008588872
+
+[[18]]
+[1] 0.01132654 0.01135774 0.00997081 0.01085922
+
+[[19]]
 [1] 0.010253006 0.005799456 0.015806184 0.008104541 0.016638036 0.008359249
 [7] 0.005157708
 
-[[17]]
+[[20]]
 [1] 0.012763865 0.015806184 0.006403244
 
-[[18]]
-[1] 0.006691737 0.007140588 0.007375029 0.007976693 0.007671985
-
-[[19]]
-[1] 0.013589149 0.004073493
-
-[[20]]
-[1] 0.011775171 0.012916807 0.014293885 0.007462094
-
 [[21]]
-[1] 0.012831217 0.010437208 0.010934747 0.009660859 0.008504967 0.013119927
+[1] 0.006691737 0.013301389 0.007140588 0.007375029 0.007976693 0.007671985
 
 [[22]]
-[1] 0.013713812 0.007685469 0.018047546 0.020717010
+[1] 0.012420048 0.007064074 0.007670177 0.009705201 0.007575615 0.010664800
+[7] 0.018342110 0.015632633
 
 [[23]]
+[1] 0.013589149 0.004073493
+
+[[24]]
+[1] 0.007549986 0.011775171 0.012916807 0.014293885 0.007462094
+
+[[25]]
+[1] 0.012831217 0.010437208 0.010934747 0.009660859 0.008504967 0.013119927
+
+[[26]]
+[1] 0.013713812 0.007685469 0.018047546 0.018187683 0.020717010
+
+[[27]]
 [1] 0.017019481 0.007385957 0.031941419 0.015333035 0.014028638 0.024413177
 [7] 0.012579923
 
-[[24]]
+[[28]]
 [1] 0.008785487 0.010934747 0.015545066
 
-[[25]]
-[1] 0.008134706 0.005943019 0.007685469 0.007605151 0.008117703
-
-[[26]]
-[1] 0.010254426 0.007982010 0.014915995 0.011395871 0.005405036 0.012326369
-
-[[27]]
-[1] 0.011326537 0.009956219 0.005544296 0.009359481 0.010554311
-
-[[28]]
-[1] 0.012495409 0.009206376 0.007880812
-
 [[29]]
-[1] 0.01359979 0.01841909
+[1] 0.010821690 0.008134706 0.005943019 0.007670177 0.007685469 0.008917878
+[7] 0.007605151 0.008117703
 
 [[30]]
-[1] 0.010451301 0.007140588 0.008232097 0.017483864
+[1] 0.016083111 0.010254426 0.009705201 0.007982010 0.014915995 0.011395871
+[7] 0.005405036 0.012326369
 
 [[31]]
-[1] 0.03322088 0.03194142 0.02860548 0.02049667
+[1] 0.011326537 0.009956219 0.005544296 0.009359481 0.010554311
 
 [[32]]
-[1] 0.03024035 0.01052548 0.01804755 0.02860548 0.02835278 0.01391843
+[1] 0.012495409 0.009206376 0.007880812
 
 [[33]]
-[1] 0.01359979 0.01090219 0.01634790
+[1] 0.01359979 0.01841909
 
 [[34]]
-[1] 0.009956219 0.013192981 0.012040582 0.019039684
+[1] 0.01105451 0.01330139 0.01530233
 
 [[35]]
-[1] 0.013165076 0.008104541 0.012495409 0.008669969
+[1] 0.010451301 0.007140588 0.008232097 0.017483864
 
 [[36]]
-[1] 0.013026280 0.006514320 0.007375029 0.007982010 0.011614531 0.009899588
+[1] 0.03322088 0.03194142 0.02860548 0.02049667
 
 [[37]]
-[1] 0.009013905 0.015334899 0.016262271
+[1] 0.03024035 0.01052548 0.01804755 0.02860548 0.02835278 0.01391843
 
 [[38]]
-[1] 0.01152764 0.01491600 0.01161453 0.01209489
+[1] 0.01359979 0.01090219 0.01634790
 
 [[39]]
-[1] 0.007714179 0.007976693 0.009899588 0.012094889 0.010632695 0.011816759
+[1] 0.011357744 0.006830201 0.011741631
 
 [[40]]
-[1] 0.02756509 0.01533303 0.02049667 0.02835278 0.01630089 0.01339948
+[1] 0.009956219 0.013192981 0.012040582 0.019039684
 
 [[41]]
-[1] 0.016638036 0.009206376 0.008669969 0.009069811 0.014433186
+[1] 0.013165076 0.008104541 0.012495409 0.008669969
 
 [[42]]
-numeric(0)
+[1] 0.013026280 0.006514320 0.007375029 0.007575615 0.007982010 0.011614531
+[7] 0.009899588
 
 [[43]]
-[1] 0.005327427 0.009013905
+[1] 0.009013905 0.015334899 0.016262271
 
 [[44]]
-[1] 0.01730698 0.00908563
+[1] 0.01152764 0.01491600 0.01161453 0.01209489
 
 [[45]]
-[1] 0.007716901 0.014028638 0.015334899 0.014563573 0.023042875
+[1] 0.007714179 0.007976693 0.009899588 0.012094889 0.010632695 0.011816759
 
 [[46]]
-[1] 0.01310247
+[1] 0.02756509 0.01066480 0.01533303 0.02049667 0.02835278 0.01630089 0.01339948
 
 [[47]]
-[1] 0.012343675 0.014293885 0.009660859 0.008645806 0.017784128
+[1] 0.016638036 0.009206376 0.008669969 0.009069811 0.014433186
 
 [[48]]
-[1] 0.010089340 0.009765844 0.007605151
+numeric(0)
 
 [[49]]
-[1] 0.011784417 0.011493123 0.008504967 0.015545066 0.008232097 0.009781624
+[1] 0.018323726 0.018187683 0.008917878 0.012788384
 
 [[50]]
-[1] 0.04641391 0.01292025
+[1] 0.005327427 0.009013905
 
 [[51]]
-[1] 0.02007407 0.02441318 0.01456357 0.02941852
+[1] 0.017306975 0.006830201 0.009085630
 
 [[52]]
-[1] 0.01626227 0.02304288 0.02941852
+[1] 0.007716901 0.014028638 0.015334899 0.014563573 0.023042875
 
 [[53]]
-[1] 0.020717010 0.008117703 0.013918429 0.016300886
+[1] 0.01310247 0.02240885
 
 [[54]]
-[1] 0.01319298 0.01448029 0.01168217
+[1] 0.012343675 0.014293885 0.009660859 0.007581777 0.008645806 0.017784128
 
 [[55]]
-[1] 0.03127482 0.01139587 0.01688512
+[1] 0.007509592 0.010089340 0.009765844 0.007605151 0.012788384
 
 [[56]]
-[1] 0.005544296 0.010902192 0.012040582 0.014480293 0.008955556
+[1] 0.011784417 0.011493123 0.008504967 0.015545066 0.008232097 0.009781624
 
 [[57]]
-[1] 0.009533663 0.008359249 0.010632695 0.009069811 0.008697288 0.009934394
+[1] 0.04641391 0.01292025
 
 [[58]]
-[1] 0.02029286 0.01098260 0.01257992 0.01339948 0.01688512 0.01076819
+[1] 0.02007407 0.02441318 0.01456357 0.02941852
 
 [[59]]
-[1] 0.007000767 0.009970810 0.009359481 0.009085630
+[1] 0.01626227 0.02304288 0.02941852
 
 [[60]]
-[1] 0.007462094 0.008645806
+[1] 0.018342110 0.020717010 0.008117703 0.013918429 0.016300886
 
 [[61]]
+[1] 0.01319298 0.01448029 0.01168217
+
+[[62]]
+[1] 0.03127482 0.02368766 0.01563263 0.01139587 0.01688512
+
+[[63]]
+[1] 0.007581777 0.013015715 0.011409610 0.008690817
+
+[[64]]
+[1] 0.005544296 0.010902192 0.012040582 0.014480293 0.008955556
+
+[[65]]
+[1] 0.009533663 0.008359249 0.010632695 0.009069811 0.008697288 0.009934394
+
+[[66]]
+[1] 0.02029286 0.01681858 0.01098260 0.01257992 0.01339948 0.01688512 0.01076819
+
+[[67]]
+[1] 0.007000767 0.009970810 0.009359481 0.011741631 0.009085630
+
+[[68]]
+[1] 0.013226931 0.007462094 0.008645806 0.013015715
+
+[[69]]
 [1] 0.004349372 0.011111643 0.004211749 0.005157708 0.006403244 0.004073493
 [7] 0.005405036 0.008697288 0.005949594
 
-[[62]]
+[[70]]
 [1] 0.01085922 0.01055431 0.01903968 0.01168217
 
-[[63]]
+[[71]]
 [1] 0.01322377
 
-[[64]]
-[1] 0.011371651 0.008739397
+[[72]]
+[1] 0.011371651 0.011409610 0.008739397
 
-[[65]]
-[1] 0.008361253 0.008588872 0.007671985 0.017483864 0.009781624
+[[73]]
+[1] 0.008361253 0.008588872 0.007671985 0.015302325 0.017483864 0.009781624
 
-[[66]]
-[1] 0.010358229 0.012326369 0.010768191 0.005949594
+[[74]]
+[1] 0.015705321 0.010358229 0.012326369 0.010768191 0.005949594
 
-[[67]]
+[[75]]
 [1] 0.007880812 0.011816759 0.014433186 0.009934394
 
-[[68]]
+[[76]]
 [1] 0.018419095 0.016347902 0.008955556
 
-[[69]]
-[1] 0.023173744 0.013119927 0.017784128 0.008739397</code></pre>
+[[77]]
+[1] 0.023173744 0.013119927 0.017784128 0.008690817 0.008739397</code></pre>
 </div>
 </div>
 </section>
@@ -1123,32 +1286,46 @@ numeric(0)
 <p>Note: For simplicity, we’ll use the style=“W” option in this example, but be aware that more robust options, such as style=“B”, are available.</p>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>rswm_r_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_r_pro_foreign, <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>rswm_r_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>rswm_q_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q_pro_foreign, <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>rswm_q_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Characteristics of weights list object:
 Neighbour list object:
-Number of regions: 69 
-Number of nonzero links: 284 
-Percentage nonzero weights: 5.965133 
-Average number of links: 4.115942 
+Number of regions: 77 
+Number of nonzero links: 352 
+Percentage nonzero weights: 5.93692 
+Average number of links: 4.571429 
 1 region with no links:
-42
+48
 2 disjoint connected subgraphs
 
 Weights style: W 
 Weights constants summary:
-   n   nn S0       S1       S2
-W 68 4624 68 36.26116 284.0635</code></pre>
+   n   nn S0       S1      S2
+W 76 5776 76 36.26113 315.652</code></pre>
 </div>
 </div>
 <p>Setting the argument <code>zero.policy</code> to TRUE allows for lists of non-neighbors. This should be used with caution as users may not be aware of missing neighbors in their data however setting <code>zero,policy</code> to FALSE would return an error.</p>
+<div class="insights-box">
+<p>The <code>nb2listw()</code> function requires an input of class <code>nb</code>, representing a neighborhood object. The function’s two key arguments are <code>style</code> and <code>zero.policy</code>.</p>
+<ul>
+<li><p>The <code>style</code> argument defines how the weights are calculated. It can take several values:</p>
+<ul>
+<li><p><code>"B"</code>: Binary coding, where weights are either 0 or 1.</p></li>
+<li><p><code>"W"</code>: Row-standardized, where the sum of weights across all neighbors equals 1.</p></li>
+<li><p><code>"C"</code>: Globally standardized, where the sum of weights across all neighbors equals the total number of neighbors.</p></li>
+<li><p><code>"U"</code>: A variation of <code>"C"</code>, where weights are normalized by the number of neighbors.</p></li>
+<li><p><code>"S"</code>: A variance-stabilizing scheme proposed by Tiefelsdorf et al.&nbsp;(1999), which adjusts weights based on the number of neighbors.</p></li>
+</ul></li>
+<li><p>The <code>zero.policy</code> argument, when set to <code>TRUE</code>, handles regions with no neighbors by assigning them a weight vector of zero length. This results in a spatial lag value of zero for regions without neighbors, which may or may not be a suitable assumption depending on the context. For such regions, the spatially lagged value is computed as the sum of the products of a zero vector with any numerical vector <code>x</code>, effectively setting the lagged value to zero for those regions.</p></li>
+</ul>
+</div>
 <p>The code chunk below is implemented to check the weights of the first polygons three neighbors type:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>rswm_r_pro_foreign<span class="sc">$</span>weights[<span class="dv">10</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>rswm_q_pro_foreign<span class="sc">$</span>weights[<span class="dv">10</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
-[1] 0.3333333 0.3333333 0.3333333</code></pre>
+[1] 0.2 0.2 0.2 0.2 0.2</code></pre>
 </div>
 </div>
 <div class="insights-box">
@@ -1156,23 +1333,23 @@ W 68 4624 68 36.26116 284.0635</code></pre>
 </div>
 <p>Using the same method, we derive a row standardized distance weight matrix by using the code chunk below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>rswm_ids_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_r_pro_foreign, <span class="at">glist=</span>ids_pro_foreign, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>rswm_ids_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>rswm_ids_pro_foreign <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q_pro_foreign, <span class="at">glist=</span>ids_pro_foreign, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>rswm_ids_pro_foreign</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Characteristics of weights list object:
 Neighbour list object:
-Number of regions: 69 
-Number of nonzero links: 284 
-Percentage nonzero weights: 5.965133 
-Average number of links: 4.115942 
+Number of regions: 77 
+Number of nonzero links: 352 
+Percentage nonzero weights: 5.93692 
+Average number of links: 4.571429 
 1 region with no links:
-42
+48
 2 disjoint connected subgraphs
 
 Weights style: B 
 Weights constants summary:
-   n   nn       S0        S1        S2
-B 68 4624 3.603816 0.1156751 0.9708891</code></pre>
+   n   nn       S0        S1       S2
+B 76 5776 4.455002 0.1398557 1.277578</code></pre>
 </div>
 </div>
 </section>
@@ -1189,59 +1366,1201 @@ B 68 4624 3.603816 0.1156751 0.9708891</code></pre>
 <h4 class="anchored" data-anchor-id="spatial-lag-with-row-standardized-weights">2.4.1.6.1 <strong>Spatial Lag With Row-Standardized Weights</strong></h4>
 <p>We now compute the average neighbor profit value for each polygon. We often refer to these values as Spatially Lagged Values.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>pro_foreign.lag <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(rswm_r_pro_foreign, profit_foreigners<span class="sc">$</span>total_value)</span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>pro_foreign.lag</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>pro_foreign.lag <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(rswm_q_pro_foreign, profit_foreigners<span class="sc">$</span>total_value)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>pro_foreign.lag</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1]   8515.193  17968.737   9786.125   8146.420 134596.605  38955.723
- [7]  30027.315  25849.308  69950.727  49495.860  14466.082  12682.008
-[13]  12285.500  17722.284  32856.583  45153.527  74359.923  24181.276
-[19] 105254.185  13518.028   3746.675  23303.505 127335.297   5904.817
-[25]  18962.564   9199.730  41815.892   5435.180   3151.225  11707.842
-[31] 199104.537 139465.317  23475.267  34077.745  27604.423  16031.888
-[37]  38026.663  15162.938   9194.675  11038.343   7792.872      0.000
-[43]  46017.585  31137.765  36364.686  20841.120   4422.484  30034.113
-[49]   9350.865 377986.320 193862.645  30662.133  28195.245  29101.100
-[55]  10132.620  13507.610  11402.520  22217.052  32074.963   3159.425
-[61]  35931.461  33712.050  20841.120   1412.345  14707.668  30176.722
-[67]  11022.135  22918.337   7102.637</code></pre>
+<pre><code> [1]   8515.193  17115.122   9786.125   8146.420  23682.230 125379.236
+ [7]   8592.825  32855.363  60754.064  25849.308  69950.727  31920.867
+[13]  49495.860  14466.082  12682.008  12285.500  15514.671  28358.838
+[19]  45153.527  74359.923  20299.697  19047.053 105254.185  13751.272
+[25]   3746.675  21001.444 127335.297   5904.817  16980.569   9149.894
+[31]  41815.892   5435.180   3151.225  25886.787  11707.842 199104.537
+[37] 139465.317  23475.267  42985.720  34077.745  27604.423  15820.801
+[43]  38026.663  15162.938   9194.675  11540.620   7792.872      0.000
+[49]  25026.545  46017.585  25713.710  36364.686 102251.090   4483.118
+[55]  23315.958   9350.865 377986.320 193862.645  30662.133  25467.052
+[61]  29101.100   9679.726   7072.495  13507.610  11402.520  19535.543
+[67]  28633.090   6447.347  35931.461  33712.050  20841.120   2536.993
+[73]  12405.023  24830.676  11022.135  22918.337   6639.368</code></pre>
 </div>
 </div>
 <p>We can append the spatially lagged profit values onto our <code>profit_foreigners</code> sf data-frame by using the code chunk shown below.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>lag.list_pro_foreign <span class="ot">&lt;-</span> <span class="fu">list</span>(profit_foreigners<span class="sc">$</span>province_eng, <span class="fu">lag.listw</span>(rswm_r_pro_foreign, profit_foreigners<span class="sc">$</span>total_value))</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>lag.res_pro_foreign <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lag.list_pro_foreign)</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lag.res_pro_foreign) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"province_eng"</span>, <span class="st">"lag Profit"</span>)</span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners <span class="ot">&lt;-</span> <span class="fu">left_join</span>(profit_foreigners,lag.res_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>lag.list_pro_foreign <span class="ot">&lt;-</span> <span class="fu">list</span>(profit_foreigners<span class="sc">$</span>province_eng, <span class="fu">lag.listw</span>(rswm_q_pro_foreign, profit_foreigners<span class="sc">$</span>total_value))</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>lag.res_pro_foreign <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(lag.list_pro_foreign)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(lag.res_pro_foreign) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"province_eng"</span>, <span class="st">"lag Profit"</span>)</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>profit_foreigners <span class="ot">&lt;-</span> <span class="fu">left_join</span>(profit_foreigners,lag.res_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We now plot the actual profit and spatial lag profits side by side to facilitate comparison.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>pro_foreign <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_foreigners, <span class="st">"total_value"</span>)</span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>lag_pro_foreign <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_foreigners, <span class="st">"lag Profit"</span>)</span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(pro_foreign, lag_pro_foreign, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>pro_foreign <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_foreigners, <span class="st">"total_value"</span>)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>lag_pro_foreign <span class="ot">&lt;-</span> <span class="fu">qtm</span>(profit_foreigners, <span class="st">"lag Profit"</span>)</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(pro_foreign, lag_pro_foreign, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-41-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We see a difference in the surrounding regions of Bangkok as well as Mae Hong Son, all of which are in a higher band as compared to the non-spatially lagged values.</p>
 </section>
-<section id="spatial-lag-as-a-sum-of-neighboring-values" class="level4">
-<h4 class="anchored" data-anchor-id="spatial-lag-as-a-sum-of-neighboring-values">2.4.1.6.2 <strong>Spatial Lag as a sum of neighboring values</strong></h4>
-<p>We can calculate spatial lag as a sum of neighboring values by assigning binary weights. For this, we must apply a function that will assign binary weights to our neighbors list. We then use the <code>glist</code> argument in the nb2listw function to explicitly assign these weights.</p>
-<p>We first apply a function that assigns a value of 1 per neighbor. This is done with help of lapply(), which helps manipulate the neighbors structure. It basically applies a function across each value in the neighbors structure.</p>
+<section id="spatial-window-sum" class="level4">
+<h4 class="anchored" data-anchor-id="spatial-window-sum">2.4.1.6.2 <strong>Spatial Window Sum</strong></h4>
+<p>The spatial window sum is the counter part of the window average, but without using row-standardized weights.</p>
+<p>To add the diagonal element to the neighbour list, we just need to use <em>include.self()</em> from <strong>spdep</strong>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>b_weights <span class="ot">&lt;-</span> <span class="fu">lapply</span>(wm_r_pro_foreign, <span class="cf">function</span>(x) <span class="dv">0</span><span class="sc">*</span>x <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>b_weights2 <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_r_pro_foreign, </span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">glist =</span> b_weights, </span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">style =</span> <span class="st">"B"</span>)</span>
-<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>b_weights2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>wm_qs_profit <span class="ot">&lt;-</span> <span class="fu">include.self</span>(wm_q_pro_foreign)</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>wm_qs_profit</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Neighbour list object:
+Number of regions: 77 
+Number of nonzero links: 429 
+Percentage nonzero weights: 7.235622 
+Average number of links: 5.571429 
+2 disjoint connected subgraphs</code></pre>
 </div>
+</div>
+<p>We now assign binary weights to the neighbour structure that includes the diagonal element.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>b_weights <span class="ot">&lt;-</span> <span class="fu">lapply</span>(wm_qs_profit, <span class="cf">function</span>(x) <span class="dv">0</span><span class="sc">*</span>x <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>b_weights[<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] 1 1 1 1</code></pre>
+</div>
+</div>
+<p>Notice that now [1] has four neighbours instead of three.</p>
+<p>Again, we use <em>nb2listw()</em> and <em>glist()</em> to explicitly assign weight values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>b_weights2 <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_qs_profit, </span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">glist =</span> b_weights, </span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">style =</span> <span class="st">"B"</span>)</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>b_weights2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Characteristics of weights list object:
+Neighbour list object:
+Number of regions: 77 
+Number of nonzero links: 429 
+Percentage nonzero weights: 7.235622 
+Average number of links: 5.571429 
+2 disjoint connected subgraphs
 
+Weights style: B 
+Weights constants summary:
+   n   nn  S0  S1    S2
+B 77 5929 429 858 10572</code></pre>
+</div>
+</div>
+<p>With our newly obtained weight structure, we can compute the lag variable with&nbsp;<em>lag.listw()</em>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>w_sum_profit <span class="ot">&lt;-</span> <span class="fu">list</span>(profit_foreigners<span class="sc">$</span>province_eng, <span class="fu">lag.listw</span>(b_weights2, profit_foreigners<span class="sc">$</span>total_value))</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>w_sum_profit</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+ [1] "Amnat Charoen"            "Ang Thong"               
+ [3] "Bangkok"                  "Bueng Kan"               
+ [5] "Buri Ram"                 "Chachoengsao"            
+ [7] "Chai Nat"                 "Chaiyaphum"              
+ [9] "Chanthaburi"              "Chiang Mai"              
+[11] "Chiang Rai"               "Chon Buri"               
+[13] "Chumphon"                 "Kalasin"                 
+[15] "Kamphaeng Phet"           "Kanchanaburi"            
+[17] "Khon Kaen"                "Krabi"                   
+[19] "Lampang"                  "Lamphun"                 
+[21] "Loei"                     "Lop Buri"                
+[23] "Mae Hong Son"             "Maha Sarakham"           
+[25] "Mukdahan"                 "Nakhon Nayok"            
+[27] "Nakhon Pathom"            "Nakhon Phanom"           
+[29] "Nakhon Ratchasima"        "Nakhon Sawan"            
+[31] "Nakhon Si Thammarat"      "Nan"                     
+[33] "Narathiwat"               "Nong Bua Lam Phu"        
+[35] "Nong Khai"                "Nonthaburi"              
+[37] "Pathum Thani"             "Pattani"                 
+[39] "Phangnga"                 "Phatthalung"             
+[41] "Phayao"                   "Phetchabun"              
+[43] "Phetchaburi"              "Phichit"                 
+[45] "Phitsanulok"              "Phra Nakhon Si Ayutthaya"
+[47] "Phrae"                    "Phuket"                  
+[49] "Prachin Buri"             "Prachuap Khiri Khan"     
+[51] "Ranong"                   "Ratchaburi"              
+[53] "Rayong"                   "Roi Et"                  
+[55] "Sa Kaeo"                  "Sakon Nakhon"            
+[57] "Samut Prakan"             "Samut Sakhon"            
+[59] "Samut Songkhram"          "Saraburi"                
+[61] "Satun"                    "Sing Buri"               
+[63] "Si Sa Ket"                "Songkhla"                
+[65] "Sukhothai"                "Suphan Buri"             
+[67] "Surat Thani"              "Surin"                   
+[69] "Tak"                      "Trang"                   
+[71] "Trat"                     "Ubon Ratchathani"        
+[73] "Udon Thani"               "Uthai Thani"             
+[75] "Uttaradit"                "Yala"                    
+[77] "Yasothon"                
 
+[[2]]
+ [1]   26582.87   70969.97  799461.22   27377.55  133095.40 1018262.06
+ [7]   37817.79  136841.09  324611.44  321666.82  292685.82  279423.66
+[13]  162599.55   89580.76   67843.49  136157.92  180321.65  187047.95
+[19]  328646.09  227691.21  133757.06  166930.70  221650.34   71460.13
+[25]   30333.88  121850.61  905116.22   24048.13  189877.60   85395.80
+[31]  242473.74   25256.20    8564.20   78552.16   58014.62  806725.06
+[37]  842886.09   72741.63  143822.76  142424.94  115278.19  132890.12
+[43]  192003.19   64701.16   77045.19  116594.69   45026.35   99190.48
+[49]  111899.38  185178.19   84322.13  191623.18  264195.49   30513.79
+[55]  130581.36   63027.52  765027.53  779714.03  103123.62  145193.87
+[61]  109030.66   50802.76   33076.27  131715.48   75613.87  152440.53
+[67]  191329.01   32772.54  341471.24  151860.11   52027.33   23515.33
+[73]   99442.01  128232.17   49471.59   72741.63   34984.24</code></pre>
+</div>
+</div>
+<p>Next, we will convert the lag variable listw object into a data.frame by using&nbsp;<em>as.data.frame()</em>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>w_sum_profit.res <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(w_sum_profit)</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(w_sum_profit.res) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"province_eng"</span>, <span class="st">"w_sum Profit"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="note-box">
+<p>Do note that the second command line on the code chunk above renames the field names of&nbsp;<em>w_sum_profit.res</em>&nbsp;object into province_eng&nbsp;and&nbsp;<em>w_sum Profit</em>&nbsp;respectively.</p>
+</div>
+<p>Next, the code chunk below will be used to append&nbsp;w_sum&nbsp;<em>Profit</em> values onto&nbsp;our profit sf data.frame by using&nbsp;left_join()&nbsp;of&nbsp;<strong>dplyr</strong>&nbsp;package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>profit_foreigners <span class="ot">&lt;-</span> <span class="fu">left_join</span>(profit_foreigners, w_sum_profit.res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To compare the values of lag Profit and Spatial window average, the&nbsp;<code>kable()</code>&nbsp;function of the Knitr package is used to prepare a table using the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>profit_foreigners <span class="sc">%&gt;%</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="st">"province_eng"</span>, <span class="st">"total_value"</span>, <span class="st">"w_sum Profit"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 14%">
+<col style="width: 16%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">province_eng</th>
+<th style="text-align: right;">total_value</th>
+<th style="text-align: right;">w_sum Profit</th>
+<th style="text-align: left;">geometry</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Amnat Charoen</td>
+<td style="text-align: right;">1037.29</td>
+<td style="text-align: right;">26582.87</td>
+<td style="text-align: left;">MULTIPOLYGON (((104.9598 16…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ang Thong</td>
+<td style="text-align: right;">2509.48</td>
+<td style="text-align: right;">70969.97</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.3332 14…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Bangkok</td>
+<td style="text-align: right;">740744.47</td>
+<td style="text-align: right;">799461.22</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.6139 13…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bueng Kan</td>
+<td style="text-align: right;">2938.29</td>
+<td style="text-align: right;">27377.55</td>
+<td style="text-align: left;">MULTIPOLYGON (((103.405 18….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Buri Ram</td>
+<td style="text-align: right;">14684.25</td>
+<td style="text-align: right;">133095.40</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.9303 15…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Chachoengsao</td>
+<td style="text-align: right;">15228.17</td>
+<td style="text-align: right;">1018262.06</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.0612 13…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Chai Nat</td>
+<td style="text-align: right;">3446.49</td>
+<td style="text-align: right;">37817.79</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.1199 15…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Chaiyaphum</td>
+<td style="text-align: right;">5419.64</td>
+<td style="text-align: right;">136841.09</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.5603 16…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Chanthaburi</td>
+<td style="text-align: right;">20841.12</td>
+<td style="text-align: right;">324611.44</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.2517 12…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Chiang Mai</td>
+<td style="text-align: right;">192420.28</td>
+<td style="text-align: right;">321666.82</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.52512 20…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Chiang Rai</td>
+<td style="text-align: right;">82833.64</td>
+<td style="text-align: right;">292685.82</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.96093 20…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Chon Buri</td>
+<td style="text-align: right;">183661.06</td>
+<td style="text-align: right;">279423.66</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.9719 12…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Chumphon</td>
+<td style="text-align: right;">14111.97</td>
+<td style="text-align: right;">162599.55</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.19067 10…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Kalasin</td>
+<td style="text-align: right;">2784.27</td>
+<td style="text-align: right;">89580.76</td>
+<td style="text-align: left;">MULTIPOLYGON (((103.584 17….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Kamphaeng Phet</td>
+<td style="text-align: right;">4433.45</td>
+<td style="text-align: right;">67843.49</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.48875 16…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Kanchanaburi</td>
+<td style="text-align: right;">74730.42</td>
+<td style="text-align: right;">136157.92</td>
+<td style="text-align: left;">MULTIPOLYGON (((98.58631 15…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Khon Kaen</td>
+<td style="text-align: right;">40689.61</td>
+<td style="text-align: right;">180321.65</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.7072 17…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Krabi</td>
+<td style="text-align: right;">73612.60</td>
+<td style="text-align: right;">187047.95</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.11329 7….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Lampang</td>
+<td style="text-align: right;">12571.40</td>
+<td style="text-align: right;">328646.09</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.58445 19…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Lamphun</td>
+<td style="text-align: right;">4611.44</td>
+<td style="text-align: right;">227691.21</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.18821 18…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Loei</td>
+<td style="text-align: right;">11958.88</td>
+<td style="text-align: right;">133757.06</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.095 18….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Lop Buri</td>
+<td style="text-align: right;">14554.28</td>
+<td style="text-align: right;">166930.70</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.3453 15…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Mae Hong Son</td>
+<td style="text-align: right;">11141.97</td>
+<td style="text-align: right;">221650.34</td>
+<td style="text-align: left;">MULTIPOLYGON (((98.0591 19….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Maha Sarakham</td>
+<td style="text-align: right;">2703.77</td>
+<td style="text-align: right;">71460.13</td>
+<td style="text-align: left;">MULTIPOLYGON (((103.1562 16…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Mukdahan</td>
+<td style="text-align: right;">7853.83</td>
+<td style="text-align: right;">30333.88</td>
+<td style="text-align: left;">MULTIPOLYGON (((104.2527 16…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nakhon Nayok</td>
+<td style="text-align: right;">16843.39</td>
+<td style="text-align: right;">121850.61</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.2827 14…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nakhon Pathom</td>
+<td style="text-align: right;">13769.14</td>
+<td style="text-align: right;">905116.22</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.2231 14…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nakhon Phanom</td>
+<td style="text-align: right;">6333.68</td>
+<td style="text-align: right;">24048.13</td>
+<td style="text-align: left;">MULTIPOLYGON (((104.192 18….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nakhon Ratchasima</td>
+<td style="text-align: right;">54033.05</td>
+<td style="text-align: right;">189877.60</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.3144 15…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nakhon Sawan</td>
+<td style="text-align: right;">12196.65</td>
+<td style="text-align: right;">85395.80</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.0266 16…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nakhon Si Thammarat</td>
+<td style="text-align: right;">33394.28</td>
+<td style="text-align: right;">242473.74</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.77467 9….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nan</td>
+<td style="text-align: right;">8950.66</td>
+<td style="text-align: right;">25256.20</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.8948 19…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Narathiwat</td>
+<td style="text-align: right;">2261.75</td>
+<td style="text-align: right;">8564.20</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.6323 6….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nong Bua Lam Phu</td>
+<td style="text-align: right;">891.80</td>
+<td style="text-align: right;">78552.16</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.2866 17…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nong Khai</td>
+<td style="text-align: right;">11183.25</td>
+<td style="text-align: right;">58014.62</td>
+<td style="text-align: left;">MULTIPOLYGON (((103.2985 18…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nonthaburi</td>
+<td style="text-align: right;">10306.91</td>
+<td style="text-align: right;">806725.06</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.3415 14…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Pathum Thani</td>
+<td style="text-align: right;">6094.19</td>
+<td style="text-align: right;">842886.09</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.8916 14…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pattani</td>
+<td style="text-align: right;">2315.83</td>
+<td style="text-align: right;">72741.63</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.2827 6….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Phangnga</td>
+<td style="text-align: right;">14865.60</td>
+<td style="text-align: right;">143822.76</td>
+<td style="text-align: left;">MULTIPOLYGON (((98.61471 7….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Phatthalung</td>
+<td style="text-align: right;">6113.96</td>
+<td style="text-align: right;">142424.94</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.96416 7….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Phayao</td>
+<td style="text-align: right;">4860.50</td>
+<td style="text-align: right;">115278.19</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.4195 19…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Phetchabun</td>
+<td style="text-align: right;">22144.51</td>
+<td style="text-align: right;">132890.12</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.3987 17…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Phetchaburi</td>
+<td style="text-align: right;">77923.20</td>
+<td style="text-align: right;">192003.19</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.75869 13…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Phichit</td>
+<td style="text-align: right;">4049.41</td>
+<td style="text-align: right;">64701.16</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.2165 16…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Phitsanulok</td>
+<td style="text-align: right;">21877.14</td>
+<td style="text-align: right;">77045.19</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.0033 17…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Phra Nakhon Si Ayutthaya</td>
+<td style="text-align: right;">35810.35</td>
+<td style="text-align: right;">116594.69</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.5131 14…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Phrae</td>
+<td style="text-align: right;">6061.99</td>
+<td style="text-align: right;">45026.35</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.1597 18…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Phuket</td>
+<td style="text-align: right;">99190.48</td>
+<td style="text-align: right;">99190.48</td>
+<td style="text-align: left;">MULTIPOLYGON (((98.31437 7….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Prachin Buri</td>
+<td style="text-align: right;">11793.20</td>
+<td style="text-align: right;">111899.38</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.4881 14…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Prachuap Khiri Khan</td>
+<td style="text-align: right;">93143.02</td>
+<td style="text-align: right;">185178.19</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.56326 11…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ranong</td>
+<td style="text-align: right;">7181.00</td>
+<td style="text-align: right;">84322.13</td>
+<td style="text-align: left;">MULTIPOLYGON (((98.35294 9….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ratchaburi</td>
+<td style="text-align: right;">9799.75</td>
+<td style="text-align: right;">191623.18</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.8821 13….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Rayong</td>
+<td style="text-align: right;">59693.31</td>
+<td style="text-align: right;">264195.49</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.4421 12…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Roi Et</td>
+<td style="text-align: right;">3615.08</td>
+<td style="text-align: right;">30513.79</td>
+<td style="text-align: left;">MULTIPOLYGON (((104.314 16….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sa Kaeo</td>
+<td style="text-align: right;">14001.57</td>
+<td style="text-align: right;">130581.36</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.1877 14…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sakon Nakhon</td>
+<td style="text-align: right;">6922.33</td>
+<td style="text-align: right;">63027.52</td>
+<td style="text-align: left;">MULTIPOLYGON (((103.5404 18…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Samut Prakan</td>
+<td style="text-align: right;">9054.89</td>
+<td style="text-align: right;">765027.53</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.7306 13…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Samut Sakhon</td>
+<td style="text-align: right;">4263.45</td>
+<td style="text-align: right;">779714.03</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.3091 13…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Samut Songkhram</td>
+<td style="text-align: right;">11137.22</td>
+<td style="text-align: right;">103123.62</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.0116 13…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Saraburi</td>
+<td style="text-align: right;">17858.61</td>
+<td style="text-align: right;">145193.87</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.3994 15…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Satun</td>
+<td style="text-align: right;">21727.36</td>
+<td style="text-align: right;">109030.66</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.0903 6….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sing Buri</td>
+<td style="text-align: right;">2404.13</td>
+<td style="text-align: right;">50802.76</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.3691 15…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Si Sa Ket</td>
+<td style="text-align: right;">4786.29</td>
+<td style="text-align: right;">33076.27</td>
+<td style="text-align: left;">MULTIPOLYGON (((104.1052 15…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Songkhla</td>
+<td style="text-align: right;">64177.43</td>
+<td style="text-align: right;">131715.48</td>
+<td style="text-align: left;">MULTIPOLYGON (((100.5973 7….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sukhothai</td>
+<td style="text-align: right;">7198.75</td>
+<td style="text-align: right;">75613.87</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.60051 17…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Suphan Buri</td>
+<td style="text-align: right;">15691.73</td>
+<td style="text-align: right;">152440.53</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.37118 15…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Surat Thani</td>
+<td style="text-align: right;">48163.56</td>
+<td style="text-align: right;">191329.01</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.96396 9….</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Surin</td>
+<td style="text-align: right;">6983.15</td>
+<td style="text-align: right;">32772.54</td>
+<td style="text-align: left;">MULTIPOLYGON (((103.1336 15…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tak</td>
+<td style="text-align: right;">18088.09</td>
+<td style="text-align: right;">341471.24</td>
+<td style="text-align: left;">MULTIPOLYGON (((97.97318 17…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trang</td>
+<td style="text-align: right;">17011.91</td>
+<td style="text-align: right;">151860.11</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.47579 6….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Trat</td>
+<td style="text-align: right;">31186.21</td>
+<td style="text-align: right;">52027.33</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.5216 11…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ubon Ratchathani</td>
+<td style="text-align: right;">15904.35</td>
+<td style="text-align: right;">23515.33</td>
+<td style="text-align: left;">MULTIPOLYGON (((105.0633 16…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Udon Thani</td>
+<td style="text-align: right;">25011.87</td>
+<td style="text-align: right;">99442.01</td>
+<td style="text-align: left;">MULTIPOLYGON (((102.0581 18…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Uthai Thani</td>
+<td style="text-align: right;">4078.79</td>
+<td style="text-align: right;">128232.17</td>
+<td style="text-align: left;">MULTIPOLYGON (((99.13905 15…</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Uttaradit</td>
+<td style="text-align: right;">5383.05</td>
+<td style="text-align: right;">49471.59</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.0924 18…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Yala</td>
+<td style="text-align: right;">3986.62</td>
+<td style="text-align: right;">72741.63</td>
+<td style="text-align: left;">MULTIPOLYGON (((101.2927 6….</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Yasothon</td>
+<td style="text-align: right;">1787.40</td>
+<td style="text-align: right;">34984.24</td>
+<td style="text-align: left;">MULTIPOLYGON (((104.3952 16…</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>We now plot the actual profit and w_sum_profit maps next to each other using the qtm() function of the tmap package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the first map for 'total_value' using Jenks classification</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>profit_map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_foreigners) <span class="sc">+</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_polygons</span>(<span class="st">"total_value"</span>, <span class="at">style =</span> <span class="st">"jenks"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">title =</span> <span class="st">"Total Value"</span>) <span class="sc">+</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">tm_layout</span>(<span class="at">legend.outside =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the second map for 'w_sum Profit' using Jenks classification</span></span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>w_sum_profit_map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit_foreigners) <span class="sc">+</span></span>
+<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">tm_polygons</span>(<span class="st">"w_sum Profit"</span>, <span class="at">style =</span> <span class="st">"jenks"</span>, <span class="at">palette =</span> <span class="st">"Reds"</span>, <span class="at">title =</span> <span class="st">"W Sum Profit"</span>) <span class="sc">+</span></span>
+<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">tm_layout</span>(<span class="at">legend.outside =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb72-10"><a href="#cb72-10" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(profit_map, w_sum_profit_map, <span class="at">ncol =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-49-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
+</section>
+</section>
+<section id="global-measures-of-spatial-autocorrelation" class="level2">
+<h2 class="anchored" data-anchor-id="global-measures-of-spatial-autocorrelation">2.4.2 Global Measures of Spatial Autocorrelation</h2>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true">2.4.2.1 Maron’s I test</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false">2.4.2.2 Geary’s C</a></li></ul>
+<div class="tab-content">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<p>We now conduct Moran’s I statistics testing by using the&nbsp;<strong>moran.test()</strong>&nbsp;function of the&nbsp;<strong>spdep</strong>&nbsp;package.</p>
+<div class="note-box">
+<p>Statistical tests are conducted at a 5% significance level.</p>
+</div>
+<p>The hypotheses for the test are as follows:</p>
+<ul>
+<li><p>H0: Regions with similar levels of profit from tourism are randomly distributed.</p></li>
+<li><p>H1: Regions with similar levels of profit from tourism are not randomly distributed and exhibit spatial clustering.</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">moran.test</span>(profit_foreigners<span class="sc">$</span>total_value, </span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">listw=</span>rswm_q_pro_foreign, </span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">na.action=</span>na.omit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Moran I test under randomisation
+
+data:  profit_foreigners$total_value  
+weights: rswm_q_pro_foreign  
+n reduced by no-neighbour observations  
+
+Moran I statistic standard deviate = -0.59004, p-value = 0.7224
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation          Variance 
+     -0.037892905      -0.013333333       0.001732513 </code></pre>
+</div>
+</div>
+<p>From the output above, we can infer the following:</p>
+<ul>
+<li><p>The p-value 0.7224&gt;0.05, indicating that the observed spatial autocorrelation is not statistically significant.</p></li>
+<li><p>Moran’s I statistic: The observed value of -0.037 indicates <strong>no spatial autocorrelation</strong>, meaning that regions with similar levels of profit from tourism are randomly distributed.</p></li>
+</ul>
+<p>There isn’t sufficient evidence to reject H0 and we conclude that there is no spatial clustering with regards to profits from tourism in Thailand.</p>
+<div class="note-box">
+<p>If Morans I Statistic is = 0, there is Complete Random Spatial Distribution.</p>
+</div>
+<section id="monte-carlo-morans-i" class="level4">
+<h4 class="anchored" data-anchor-id="monte-carlo-morans-i">2.4.2.1.1 Monte Carlo Moran’s I</h4>
+<p>We now implement the moran.mc() function of the spdep package. In this scenario, we will run 1000 simulations.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>bperm<span class="ot">=</span> <span class="fu">moran.mc</span>(profit_foreigners<span class="sc">$</span>total_value, </span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">listw=</span>rswm_q_pro_foreign, </span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">nsim=</span><span class="dv">999</span>, </span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">na.action=</span>na.omit)</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>bperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Monte-Carlo simulation of Moran I
+
+data:  profit_foreigners$total_value 
+weights: rswm_q_pro_foreign  
+number of simulations + 1: 1000 
+
+statistic = -0.037893, observed rank = 326, p-value = 0.674
+alternative hypothesis: greater</code></pre>
+</div>
+</div>
+<div class="insights-box">
+<p>From the above output, notice that the observed rank is 326. This indicates that the observed Moran’s I value of -0.037893 is not ‘unusual’ compared to the distribution that was generated by the simulations run. This further supports the high p-value and reinforces our earlier conclusion that there is no significant spatial autocorrelation in the data.</p>
+</div>
+<p>We visualize the test statistics obtained from the above simulation by implementing the below code chunk.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true">Summary Statistics</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false">The plot</a></li></ul>
+<div class="tab-content">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mean</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -0.0148562</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variance</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.001610468</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(bperm<span class="sc">$</span>res[<span class="dv">1</span><span class="sc">:</span><span class="dv">999</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.103109 -0.044015 -0.024277 -0.014856  0.004573  0.163729 </code></pre>
+</div>
+</div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(bperm<span class="sc">$</span>res, </span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">freq=</span><span class="cn">TRUE</span>, </span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks=</span><span class="dv">20</span>, </span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Simulated Moran's I"</span>)</span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="dv">0</span>, </span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="st">"red"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-53-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<p>We now implement a further test to verify if our findings from the above test are indeed correct.</p>
+<p>The Geary’s C test for spatial autocorrelation is implemented by using the&nbsp;<strong>geary.test()</strong>&nbsp;function of the&nbsp;<strong>spdep</strong>&nbsp;package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">geary.test</span>(profit_foreigners<span class="sc">$</span>total_value, <span class="at">listw=</span>rswm_q_pro_foreign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Geary C test under randomisation
+
+data:  profit_foreigners$total_value 
+weights: rswm_q_pro_foreign  
+n reduced by no-neighbour observations 
+
+Geary C statistic standard deviate = -1.1668, p-value = 0.8784
+alternative hypothesis: Expectation greater than statistic
+sample estimates:
+Geary C statistic       Expectation          Variance 
+       1.19642838        1.00000000        0.02834019 </code></pre>
+</div>
+</div>
+<p>We once again see that the p-value (0.8784) is greater than 0.05. We do not have sufficient evidence to reject the null hypothesis. In fact, from the Geary C statistic value, we infer that there is actually <strong>negative</strong> spatial autocorrelation.</p>
+<section id="monte-carlo-gearys-c" class="level4">
+<h4 class="anchored" data-anchor-id="monte-carlo-gearys-c">2.4.2.2.1 Monte Carlo Geary’s C</h4>
+<p>We implement the the geary.mc() function of the spdep package to conduct 1000 simulations.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>bperm<span class="ot">=</span><span class="fu">geary.mc</span>(profit_foreigners<span class="sc">$</span>total_value, <span class="at">listw=</span>rswm_q_pro_foreign, </span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">nsim=</span><span class="dv">999</span>)</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>bperm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Monte-Carlo simulation of Geary C
+
+data:  profit_foreigners$total_value 
+weights: rswm_q_pro_foreign  
+number of simulations + 1: 1000 
+
+statistic = 1.1964, observed rank = 870, p-value = 0.87
+alternative hypothesis: greater</code></pre>
+</div>
+</div>
+<p>The simulations above reinforce our earlier conclusion.</p>
+</section>
+</div>
+</div>
+</div>
+<section id="spatial-correlogram" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-correlogram">2.4.2.3 Spatial Correlogram</h3>
+<p>Spatial correlograms are a powerful tool for analyzing patterns of spatial autocorrelation in your data or model residuals. They illustrate how the correlation between pairs of spatial observations changes as the distance (or lag) between them increases. Essentially, they plot an index of autocorrelation, such as Moran’s I or Geary’s C, against distance.</p>
+<p>While correlograms are not as central to geostatistics as variograms—an essential concept in that field—they offer valuable insights as an exploratory and descriptive tool. In fact, for examining spatial autocorrelation, correlograms often provide more detailed information than variograms, making them particularly useful for initial spatial data analysis.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true">Moran’s I Correlogram</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false">Geary’s C Correlogram</a></li></ul>
+<div class="tab-content">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<p>We implement the sp.correlogram() function of the spdep package to compute a 6-lag spatial correlogram of profit from tourism in Thailand. The global spatial autocorrelation used in Moran’s I.</p>
+<p>The <strong>plot()</strong> of base Graph is then used to plot the output.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>MI_corr <span class="ot">&lt;-</span> <span class="fu">sp.correlogram</span>(wm_q_pro_foreign, </span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>                          profit_foreigners<span class="sc">$</span>total_value, </span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">order=</span><span class="dv">6</span>, </span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">method=</span><span class="st">"I"</span>, </span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(MI_corr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-56-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The plot above may not allow us to provide complete interpretation. This is because not all autocorrelation values are statistically significant. Hence, it is important for us to examine the full analysis report by printing out the analysis results as in the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(MI_corr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Spatial correlogram for profit_foreigners$total_value 
+method: Moran's I
+          estimate expectation    variance standard deviate Pr(I) two sided
+1 (76) -0.03789290 -0.01333333  0.00173251          -0.5900          0.5552
+2 (76)  0.01980178 -0.01333333  0.00107233           1.0119          0.3116
+3 (76)  0.00549104 -0.01333333  0.00085342           0.6444          0.5193
+4 (76)  0.02193821 -0.01333333  0.00091591           1.1655          0.2438
+5 (76) -0.05085780 -0.01333333  0.00104621          -1.1601          0.2460
+6 (76) -0.04029150 -0.01333333  0.00152584          -0.6901          0.4901</code></pre>
+</div>
+</div>
+<p>From above, we can conclude that there is NO spatial autocorrelation.</p>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<p>We implement the&nbsp;<code>sp.correlogram()</code>&nbsp;of&nbsp;<strong>spdep</strong>&nbsp;package is used to compute a 6-lag spatial correlogram of total_value, profit. The global spatial autocorrelation used in Geary’s C. The&nbsp;<strong>plot()</strong>&nbsp;of base Graph is then used to plot the output.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>GC_corr <span class="ot">&lt;-</span> <span class="fu">sp.correlogram</span>(wm_q_pro_foreign, </span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>                          profit_foreigners<span class="sc">$</span>total_value, </span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">order=</span><span class="dv">6</span>, </span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">method=</span><span class="st">"C"</span>, </span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(GC_corr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-58-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Similar to the step done for Moran’s I, we will print out the analysis report by using the code chunk below.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(GC_corr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Spatial correlogram for profit_foreigners$total_value 
+method: Geary's C
+       estimate expectation variance standard deviate Pr(I) two sided
+1 (76) 1.196428    1.000000 0.028340           1.1668          0.2433
+2 (76) 1.059658    1.000000 0.024647           0.3800          0.7039
+3 (76) 0.920646    1.000000 0.026276          -0.4895          0.6245
+4 (76) 0.951389    1.000000 0.043070          -0.2342          0.8148
+5 (76) 1.100042    1.000000 0.092241           0.3294          0.7419
+6 (76) 0.977445    1.000000 0.188328          -0.0520          0.9585</code></pre>
+</div>
+</div>
+<p>Indeed, our findings are reinforced.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="local-indicators-of-spatial-association" class="level2">
+<h2 class="anchored" data-anchor-id="local-indicators-of-spatial-association">2.4.3 Local Indicators of Spatial Association</h2>
+<p>Local Indicators of Spatial Association or LISA are statistics that evaluate the existence of clusters and/or outliers in the spatial arrangement of a given variable. For instance if we are studying distribution of profits from tourism across Thailand, local clusters in profit mean that there are counties that have higher or lower rates than is to be expected by chance alone; that is, the values occurring are above or below those of a random distribution in space.</p>
+<section id="computing-local-morans-i" class="level3">
+<h3 class="anchored" data-anchor-id="computing-local-morans-i">2.4.3.1 Computing Local Moran’s I</h3>
+<p>We implement the localmoran() function of spdep compute the local Moran’s I statistic. This function helps us compute li values, given a set of zi values and a listw object providing neighbor weighting information for the polygon associated with the zi values.</p>
+<p>We compute Local Moran’s I for Profits from Tourism at the County Level</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>fips <span class="ot">&lt;-</span> <span class="fu">order</span>(profit_foreigners<span class="sc">$</span>province_eng)</span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>localMI <span class="ot">&lt;-</span> <span class="fu">localmoran</span>(profit_foreigners<span class="sc">$</span>total_value, rswm_q_pro_foreign)</span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(localMI)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           Ii          E.Ii      Var.Ii       Z.Ii Pr(z != E(Ii))
+1  0.10128684 -0.0017367418 0.043312316  0.4950293    0.620579423
+2  0.06295255 -0.0015813040 0.029176289  0.3778092    0.705572311
+3 -2.11461967 -0.8414740107 1.597781656 -1.0072085    0.313834595
+4  0.09672158 -0.0015373993 0.038348602  0.5017617    0.615835173
+5  0.02244758 -0.0005751189 0.008379645  0.2515031    0.801425166
+6 -0.21144795 -0.0005417941 0.004725495 -3.0680723    0.002154445</code></pre>
+</div>
+</div>
+<div class="insights-box">
+<p><em>localmoran()</em> function returns a matrix of values whose columns are:</p>
+<ul>
+<li><p>Ii: the local Moran’s I statistics</p></li>
+<li><p>E.Ii: the expectation of local moran statistic under the randomisation hypothesis</p></li>
+<li><p>Var.Ii: the variance of local moran statistic under the randomisation hypothesis</p></li>
+<li><p>Z.Ii:the standard deviate of local moran statistic</p></li>
+<li><p>Pr(): the p-value of local moran statistic</p></li>
+</ul>
+</div>
+<p>We now use the printCoefmat() to display the content of the local Moran matrix that we created.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printCoefmat</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>  localMI[fips,], </span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names=</span>profit_foreigners<span class="sc">$</span>province_eng[fips]),</span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                  Ii        E.Ii      Var.Ii        Z.Ii
+Amnat Charoen             1.0129e-01 -1.7367e-03  4.3312e-02  4.9503e-01
+Ang Thong                 6.2953e-02 -1.5813e-03  2.9176e-02  3.7781e-01
+Bangkok                  -2.1146e+00 -8.4147e-01  1.5978e+00 -1.0072e+00
+Bueng Kan                 9.6722e-02 -1.5374e-03  3.8349e-02  5.0176e-01
+Buri Ram                  2.2448e-02 -5.7512e-04  8.3796e-03  2.5150e-01
+Chachoengsao             -2.1145e-01 -5.4179e-04  4.7255e-03 -3.0681e+00
+Chai Nat                  9.3401e-02 -1.4862e-03  2.7424e-02  5.7299e-01
+Chaiyaphum                1.1590e-03 -1.2955e-03  2.3909e-02  1.5874e-02
+Chanthaburi              -4.3465e-02 -2.5599e-04  3.7310e-03 -7.0740e-01
+Chiang Mai               -1.4916e-01 -4.2619e-02  5.9485e-01 -1.3813e-01
+Chiang Rai                2.3320e-01 -4.1436e-03  1.0309e-01  7.3923e-01
+Chon Buri                -2.4245e-02 -3.8059e-02  9.1462e-01  1.4445e-02
+Chumphon                 -3.9740e-02 -6.1125e-04  1.5261e-02 -3.1674e-01
+Kalasin                   7.2675e-02 -1.5531e-03  1.8574e-02  5.4465e-01
+Kamphaeng Phet            7.5284e-02 -1.3891e-03  2.0224e-02  5.3915e-01
+Kanchanaburi             -1.1091e-01 -2.9015e-03  4.2177e-02 -5.2590e-01
+Khon Kaen                -1.6943e-02 -9.4731e-05  7.2396e-04 -6.2618e-01
+Krabi                    -2.4910e-02 -2.7474e-03  5.0633e-02 -9.8494e-02
+Lampang                  -3.1518e-02 -7.1400e-04  7.2206e-03 -3.6251e-01
+Lamphun                  -1.5028e-01 -1.3720e-03  3.4229e-02 -8.0488e-01
+Loei                      3.4925e-02 -7.5707e-04  9.0612e-03  3.7485e-01
+Lop Buri                  3.3635e-02 -5.8323e-04  5.0867e-03  4.7978e-01
+Mae Hong Son             -2.0291e-01 -8.1647e-04  3.0990e-02 -1.1480e+00
+Maha Sarakham             7.5650e-02 -1.5613e-03  2.2727e-02  5.1217e-01
+Mukdahan                  9.5236e-02 -1.0783e-03  1.2901e-02  8.4796e-01
+Nakhon Nayok              2.5423e-02 -4.4869e-04  6.5384e-03  3.1995e-01
+Nakhon Pathom            -2.3348e-01 -6.3343e-04  6.4062e-03 -2.9092e+00
+Nakhon Phanom             9.3551e-02 -1.2116e-03  3.0231e-02  5.4501e-01
+Nakhon Ratchasima        -4.3153e-02 -7.3073e-04  6.3722e-03 -5.3143e-01
+Nakhon Sawan              6.4423e-02 -7.4020e-04  6.4547e-03  8.1108e-01
+Nakhon Si Thammarat       2.3392e-04 -7.5612e-08  1.1023e-06  2.2287e-01
+Nan                       8.5886e-02 -9.8690e-04  2.4631e-02  5.5354e-01
+Narathiwat                1.1862e-01 -1.6070e-03  6.0945e-02  4.8699e-01
+Nong Bua Lam Phu          3.0092e-02 -1.7525e-03  4.3705e-02  1.5232e-01
+Nong Khai                 6.0346e-02 -8.1342e-04  1.5020e-02  4.9903e-01
+Nonthaburi               -4.8484e-01 -8.7952e-04  1.6239e-02 -3.7977e+00
+Pathum Thani             -3.6776e-01 -1.2333e-03  1.4754e-02 -3.0176e+00
+Pattani                   3.8273e-02 -1.6013e-03  3.9941e-02  1.9952e-01
+Phangnga                 -2.2938e-02 -5.6390e-04  1.4079e-02 -1.8856e-01
+Phatthalung              -3.0966e-03 -1.2315e-03  2.2730e-02 -1.2371e-02
+Phayao                    2.0179e-02 -1.3482e-03  2.4881e-02  1.3648e-01
+Phetchabun                2.4479e-02 -2.0477e-04  2.0718e-03  5.4228e-01
+Phetchaburi               2.7687e-02 -3.3645e-03  8.3770e-02  1.0729e-01
+Phichit                   6.7057e-02 -1.4265e-03  2.6324e-02  4.2209e-01
+Phitsanulok               3.4640e-02 -2.1481e-04  2.5724e-03  6.8722e-01
+Phra Nakhon Si Ayutthaya -7.2655e-03 -1.1610e-05  1.1749e-04 -6.6923e-01
+Phrae                     8.7957e-02 -1.2362e-03  1.8000e-02  6.6480e-01
+Phuket                    0.0000e+00  0.0000e+00  0.0000e+00         NaN
+Prachin Buri              2.2283e-02 -7.6894e-04  1.4199e-02  1.9345e-01
+Prachuap Khiri Khan       9.8311e-02 -6.0429e-03  2.2816e-01  2.1847e-01
+Ranong                    2.4806e-02 -1.1363e-03  2.8355e-02  1.5406e-01
+Ratchaburi               -9.5057e-03 -9.1895e-04  1.3385e-02 -7.4221e-02
+Rayong                    2.3390e-01 -1.1813e-03  4.4821e-02  1.1104e+00
+Roi Et                    1.0839e-01 -1.4694e-03  1.7574e-02  8.2874e-01
+Sa Kaeo                   2.4173e-02 -6.1835e-04  9.0092e-03  2.6120e-01
+Sakon Nakhon              7.9940e-02 -1.1590e-03  1.3867e-02  6.8870e-01
+Samut Prakan             -1.0627e+00 -9.7843e-04  3.7131e-02 -5.5098e+00
+Samut Sakhon             -5.9356e-01 -1.4056e-03  2.5939e-02 -3.6767e+00
+Samut Songkhram           7.0965e-03 -8.1683e-04  2.0389e-02  5.5419e-02
+Saraburi                  1.5102e-02 -3.9467e-04  5.7515e-03  2.0434e-01
+Satun                     5.9716e-03 -2.2054e-04  5.5084e-03  8.3431e-02
+Si Sa Ket                 9.4707e-02 -1.3553e-03  2.5011e-02  6.0741e-01
+Sing Buri                 9.2402e-02 -1.5922e-03  2.3175e-02  6.1743e-01
+Songkhla                 -7.7898e-02 -1.6147e-03  2.3503e-02 -4.9759e-01
+Sukhothai                 7.2289e-02 -1.1348e-03  1.3576e-02  6.3015e-01
+Suphan Buri               3.0490e-02 -5.1418e-04  5.2008e-03  4.2991e-01
+Surat Thani              -8.7057e-03 -3.7724e-04  5.4975e-03 -1.1233e-01
+Surin                     8.9472e-02 -1.1537e-03  2.1295e-02  6.2103e-01
+Tak                      -5.3009e-03 -3.8294e-04  2.9256e-03 -9.0924e-02
+Trang                    -1.0945e-03 -4.3949e-04  8.1181e-03 -7.2697e-03
+Trat                      3.1465e-03 -6.6961e-06  5.1559e-04  1.3887e-01
+Ubon Ratchathani          6.7636e-02 -5.0175e-04  1.2529e-02  6.0874e-01
+Udon Thani                2.1685e-02 -1.1220e-04  1.3437e-03  5.9461e-01
+Uthai Thani               3.1048e-02 -1.4236e-03  2.0725e-02  2.2556e-01
+Uttaradit                 7.8691e-02 -1.2989e-03  2.3972e-02  5.1663e-01
+Yala                      3.8278e-02 -1.4327e-03  3.5740e-02  2.1005e-01
+Yasothon                  1.0645e-01 -1.6566e-03  2.4111e-02  6.9618e-01
+                         Pr.z....E.Ii..
+Amnat Charoen                    0.6206
+Ang Thong                        0.7056
+Bangkok                          0.3138
+Bueng Kan                        0.6158
+Buri Ram                         0.8014
+Chachoengsao                     0.0022
+Chai Nat                         0.5667
+Chaiyaphum                       0.9873
+Chanthaburi                      0.4793
+Chiang Mai                       0.8901
+Chiang Rai                       0.4598
+Chon Buri                        0.9885
+Chumphon                         0.7514
+Kalasin                          0.5860
+Kamphaeng Phet                   0.5898
+Kanchanaburi                     0.5990
+Khon Kaen                        0.5312
+Krabi                            0.9215
+Lampang                          0.7170
+Lamphun                          0.4209
+Loei                             0.7078
+Lop Buri                         0.6314
+Mae Hong Son                     0.2510
+Maha Sarakham                    0.6085
+Mukdahan                         0.3965
+Nakhon Nayok                     0.7490
+Nakhon Pathom                    0.0036
+Nakhon Phanom                    0.5857
+Nakhon Ratchasima                0.5951
+Nakhon Sawan                     0.4173
+Nakhon Si Thammarat              0.8236
+Nan                              0.5799
+Narathiwat                       0.6263
+Nong Bua Lam Phu                 0.8789
+Nong Khai                        0.6178
+Nonthaburi                       0.0001
+Pathum Thani                     0.0025
+Pattani                          0.8419
+Phangnga                         0.8504
+Phatthalung                      0.9901
+Phayao                           0.8914
+Phetchabun                       0.5876
+Phetchaburi                      0.9146
+Phichit                          0.6730
+Phitsanulok                      0.4919
+Phra Nakhon Si Ayutthaya         0.5033
+Phrae                            0.5062
+Phuket                              NaN
+Prachin Buri                     0.8466
+Prachuap Khiri Khan              0.8271
+Ranong                           0.8776
+Ratchaburi                       0.9408
+Rayong                           0.2668
+Roi Et                           0.4073
+Sa Kaeo                          0.7939
+Sakon Nakhon                     0.4910
+Samut Prakan                     0.0000
+Samut Sakhon                     0.0002
+Samut Songkhram                  0.9558
+Saraburi                         0.8381
+Satun                            0.9335
+Si Sa Ket                        0.5436
+Sing Buri                        0.5369
+Songkhla                         0.6188
+Sukhothai                        0.5286
+Suphan Buri                      0.6673
+Surat Thani                      0.9106
+Surin                            0.5346
+Tak                              0.9276
+Trang                            0.9942
+Trat                             0.8896
+Ubon Ratchathani                 0.5427
+Udon Thani                       0.5521
+Uthai Thani                      0.8215
+Uttaradit                        0.6054
+Yala                             0.8336
+Yasothon                         0.4863</code></pre>
+</div>
+</div>
+<section id="mapping-the-local-morans-i" class="level4">
+<h4 class="anchored" data-anchor-id="mapping-the-local-morans-i">2.4.3.1.1 Mapping the Local Moran’s I</h4>
+<p>Before we map the local Moran’s I map, it is wise to append the local Moran’s data-frame (<code>localMI</code>) onto the profit SpatialPolygonDataFrame.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>profit.localMI <span class="ot">&lt;-</span> <span class="fu">cbind</span>(profit_foreigners,localMI) <span class="sc">%&gt;%</span></span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Pr.Ii =</span> Pr.z....E.Ii..)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true">Mapping the Local Moran’s I</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false">Mapping Local Moran’s P-values</a></li></ul>
+<div class="tab-content">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<p>We now make use of the tmap package and its choropleth mapping functions to plot the local Moran’s I values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(profit.localMI) <span class="sc">+</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Ii"</span>, </span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>,</span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette =</span> <span class="st">"RdBu"</span>,</span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local moran statistics"</span>) <span class="sc">+</span></span>
+<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-63-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<p>The Choropleth reveals the presence of both positive, as well as negative I values. This indicates that there are varying levels of spatial autocorrelation, however, we must examine the p-values for these I values to check for statistical significance.</p>
+<p>We use the tmap package to draw a choropleth map of Moran’s I p-values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(profit.localMI) <span class="sc">+</span></span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Pr.Ii"</span>, </span>
+<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span>),</span>
+<span id="cb100-4"><a href="#cb100-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-Blues"</span>, </span>
+<span id="cb100-5"><a href="#cb100-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Moran's I p-values"</span>) <span class="sc">+</span></span>
+<span id="cb100-6"><a href="#cb100-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-64-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>We map both of the above plots side by side for comparison.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>localMI.map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit.localMI) <span class="sc">+</span></span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Ii"</span>, </span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">style =</span> <span class="st">"pretty"</span>, </span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local moran statistics"</span>) <span class="sc">+</span></span>
+<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
+<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a>pvalue.map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(profit.localMI) <span class="sc">+</span></span>
+<span id="cb101-8"><a href="#cb101-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Pr.Ii"</span>, </span>
+<span id="cb101-9"><a href="#cb101-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="cn">Inf</span>),</span>
+<span id="cb101-10"><a href="#cb101-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">palette=</span><span class="st">"-Blues"</span>, </span>
+<span id="cb101-11"><a href="#cb101-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">title =</span> <span class="st">"local Moran's I p-values"</span>) <span class="sc">+</span></span>
+<span id="cb101-12"><a href="#cb101-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
+<span id="cb101-13"><a href="#cb101-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb101-14"><a href="#cb101-14" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_arrange</span>(localMI.map, pvalue.map, <span class="at">asp=</span><span class="dv">1</span>, <span class="at">ncol=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Take-home_Ex02_files/figure-html/unnamed-chunk-65-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="creating-a-lisa-cluster-map" class="level3">
+<h3 class="anchored" data-anchor-id="creating-a-lisa-cluster-map">2.4.3.2 Creating a LISA Cluster Map</h3>
+</section>
+<section id="hot-and-cold-spot-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="hot-and-cold-spot-analysis">2.4.3.3 Hot and Cold Spot Analysis</h3>
+<section id="emerging-hot-spot-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="emerging-hot-spot-analysis">2.4.3.3.1 Emerging Hot-Spot Analysis</h4>
+</section>
+</section>
+<section id="gi-statistics" class="level3">
+<h3 class="anchored" data-anchor-id="gi-statistics">2.4.4 Gi Statistics</h3>
+
+
 </section>
 </section>
 </section>
