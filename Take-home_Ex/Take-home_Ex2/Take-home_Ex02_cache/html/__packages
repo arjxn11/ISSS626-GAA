@@ -13,3 +13,6 @@ stringr
 forcats
 lubridate
 knitr
+plotly
+Kendall
+sfdep

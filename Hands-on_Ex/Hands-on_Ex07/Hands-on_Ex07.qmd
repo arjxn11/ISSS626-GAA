@@ -1,0 +1,147 @@
+---
+title: "Hands On Exercise 7- Geographically Weighted Explanatory Models"
+author: "Arjun Singh"
+date: 2024-10-09
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css 
+---
+
+# 7 Introduction
+
+**Geographically weighted regression (GWR)** is a spatial statistical technique that takes non-stationary variables into consideration (e.g., climate; demographic factors; physical environment characteristics) and models the local relationships between these independent variables and an outcome of interest (also known as dependent variable). In this hands-on exercise, we will build [hedonic pricing](https://www.investopedia.com/terms/h/hedonicpricing.asp) models using GWR methods.
+
+The **dependent** variable is the resale prices of condominium in 2015. The **independent** variables are divided into either structural and locational.
+
+# 7.1 Data and Packages
+
+We use the following two datasets for this exercise:
+
+-   URA Master Plan subzone boundary in shapefile format (i.e. *MP14_SUBZONE_WEB_PL*)
+
+-   condo_resale_2015 in csv format (i.e. *condo_resale_2015.csv*)
+
+The following packages are imported into our environment to facilitate analysis.
+
+1.  **olsrr**: Provides tools for building and evaluating Ordinary Least Squares (OLS) regression models, including diagnostic and selection methods.
+2.  **corrplot**: A package for visualizing correlation matrices using different methods, such as color-coded heatmaps and circles.
+3.  **ggpubr**: Facilitates easy creation of publication-ready plots based on ggplot2, with additional features for customization and statistical annotations.
+4.  **sf**: Stands for Simple Features, providing support for handling, analyzing, and visualizing spatial data within R.
+5.  **spdep**: Specializes in spatial dependence modeling and analysis, including spatial autocorrelation, spatial regression, and spatial weights generation.
+6.  **GWmodel**: A package that implements Geographically Weighted Regression (GWR) and other geographically weighted models for spatial data analysis.
+7.  **tmap**: Provides an intuitive syntax for creating thematic maps and handling spatial data, supporting both static and interactive maps.
+8.  **tidyverse**: A collection of R packages designed for data science that share a common philosophy, including data manipulation (dplyr), visualization (ggplot2), and more.
+9.  **gtsummary**: Simplifies the process of creating summary tables for statistical analyses, particularly useful for regression models and descriptive statistics.
+
+The p_load() function of the pacman package is used as shown in the code chunk below.
+
+```{r}
+pacman::p_load(olsrr, corrplot, ggpubr, sf, spdep, GWmodel, tmap, tidyverse, gtsummary)
+```
+
+# 7.2 Importing the data
+
+## 7.2.1 Importing the geospatial data
+
+We start off by importing the geospatial data into our environment. We use the st_read() function of the sf package for this.
+
+```{r}
+mpsz = st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
+```
+
+This dataset is in ESRI shapefile format. The shapefile consists of URA Master Plan 2014’s planning subzone boundaries. Polygon features are used to represent these geographic boundaries. The GIS data is in svy21 projected coordinates systems. The geometry type is multipolygon.
+
+We will now check the CRS information and update it if required.
+
+::: note-box
+EPSG code for Singapore is 3414.
+:::
+
+::: panel-tabset
+## Checking CRS
+
+We implement the st_crs() function of the sf package as shown in the code chunk below.
+
+```{r}
+st_crs(mpsz)
+```
+
+## Updating CRS
+
+We note that the current EPSG code is 9001, which is inaccurate. We must update this to 3414. The st_transform() function of the sf package will be implemented.
+
+```{r}
+mpsz_svy21=st_transform(mpsz, 3414)
+st_crs(mpsz_svy21)
+```
+:::
+
+We now implement the st_bbox() function to identify the 'bounding box' of our data.
+
+```{r}
+st_bbox(mpsz_svy21) 
+```
+
+## 7.2.2 Importing and wrangling the Aspatial Data
+
+Since this is in CSV format, we implement read_csv() of the readr package to import it.
+
+```{r}
+condo_resale = read_csv("data/aspatial/Condo_resale_2015.csv")
+```
+
+After importing the data file into R, it is important for us to examine if the data file has been imported correctly.
+
+The codes chunks below uses `glimpse()` to display the data structure.
+
+```{r}
+glimpse(condo_resale)
+```
+
+::: panel-tabset
+## XCOORD Column
+
+```{r}
+head(condo_resale$LONGITUDE) #see the data in XCOORD column
+```
+
+## YCOORD Column
+
+```{r}
+head(condo_resale$LATITUDE) #see the data in YCOORD column
+```
+:::
+
+We now implement the summary() function of base R to condo_resale.
+
+```{r}
+summary(condo_resale)
+```
+
+### 7.2.2.1 **Converting aspatial data frame into a sf object**
+
+Currently, the *condo_resale* data frame is aspatial. We will convert it to a **sf** object. The code chunk below converts condo_resale data frame into a simple feature data frame by using `st_as_sf()` function of **sf** package.
+
+```{r}
+condo_resale.sf <- st_as_sf(condo_resale,
+                            coords = c("LONGITUDE", "LATITUDE"),
+                            crs=4326) %>%
+  st_transform(crs=3414)
+```
+
+Notice that `st_transform()` of **sf** package is used to convert the coordinates from wgs84 (i.e. crs:4326) to svy21 (i.e. crs=3414).
+
+Next, `head()` is used to list the content of *condo_resale.sf* object.
+
+```{r}
+head(condo_resale.sf)
+```
+
+Notice that the output is in point feature data frame.
