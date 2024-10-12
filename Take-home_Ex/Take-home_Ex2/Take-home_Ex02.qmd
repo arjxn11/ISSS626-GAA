@@ -120,18 +120,18 @@ province=st_read(dsn = "data/geospatial",
 
 We now check the CRS information using the st_crs() function of the sf package and transform the EPSG code using the st_transform() function if it is not 32647, the EPSG code of Thailand.
 
-::: panel-tabset 
+::: panel-tabset
+## Check CRS
 
-## Check CRS 
 ```{r}
 st_crs(province)
 ```
 
 ## Transform CRS
+
 ```{r}
 st_transform(province, 32647)
 ```
-
 :::
 
 ### 2.1.3 Performing relational join
@@ -164,8 +164,8 @@ After successfully completing the relational join, we can now plot a choropleth 
 ### 2.3.1.1 Number of tourists
 
 ::: panel-tabset
-
 ## Number of Foreign Tourists
+
 We first take a look at the number of tourists, both foreign and domestic, across all provinces in Thailand.
 
 ```{r}
@@ -285,23 +285,21 @@ basemap3 <- tm_shape(profit_all) +
 # Display the interactive map
 basemap3
 ```
-
 :::
 
 Bangkok seems to be the most lucrative province overall.
 
 #### 2.3.1.3 Occupancy Rate by Year. The impact of Covid.
 
-We will now look at the occupancy rates, namely the ratio_tourist_stay variable. This is derived by the following formula: 
+We will now look at the occupancy rates, namely the ratio_tourist_stay variable. This is derived by the following formula:
 
-Total Rooms Booked
-----------------------
+## Total Rooms Booked
+
 Total Rooms Available
 
 We do this year by year.
 
 ::: panel-tabset
-
 ## 2019
 
 ```{r}
@@ -325,7 +323,6 @@ tm_shape(occupancy_2019_avg) +
   tm_text("province_eng", size = 0.5)
 ```
 
-
 ## 2020
 
 ```{r}
@@ -345,6 +342,7 @@ tm_shape(occupancy_2020_avg) +
 ```
 
 ## 2021
+
 ```{r}
 # 2021 data
 occupancy_2021_avg = tourists_temporal %>%
@@ -360,7 +358,9 @@ tm_shape(occupancy_2021_avg) +
   tm_text("province_eng", size = 0.5)
 
 ```
+
 ## 2022
+
 ```{r}
 # 2022 data
 occupancy_2022_avg = tourists_temporal %>%
@@ -376,22 +376,21 @@ tm_shape(occupancy_2022_avg) +
   tm_text("province_eng", size = 0.5)
 
 ```
-
 :::
 
 We immediately see a big difference based on the year. There was a far lesser occupancy rate during the covid years as we can see from the above choropleth maps.
 
-Occupancy rates peaked in 2019 and dropped in 2020 and 2021. The occupancy rate has started to rebound and return to higher levels in 'post-covid'. 
+Occupancy rates peaked in 2019 and dropped in 2020 and 2021. The occupancy rate has started to rebound and return to higher levels in 'post-covid'.
 
 #### 2.3.1.4 Seasonal Data
 
 ##### 2.3.1.4.1 Number of tourists by season
 
-We will now analyse how revenue is distributed based on the month of the year. 
+We will now analyse how revenue is distributed based on the month of the year.
 
 For this, we first aggregate data based on certain features such as holiday periods and seasons.
 
-We determine that there are three distinct seasons in Thailand from the ['UK Meteorological Office'](https://www.metoffice.gov.uk/weather/travel/holiday-weather/asia/thailand#:~:text=Part%20of%20Thailand's%20appeal%20is,season%20(March%20to%20May).  
+We determine that there are three distinct seasons in Thailand from the \['UK Meteorological Office'\](https://www.metoffice.gov.uk/weather/travel/holiday-weather/asia/thailand#:\~:text=Part%20of%20Thailand's%20appeal%20is,season%20(March%20to%20May).
 
 ```{r}
 tourists_temporal$province_eng <- gsub("Nong Bua Lamphu", "Nong Bua Lam Phu", tourists_temporal$province_eng)
@@ -460,10 +459,10 @@ hot_sum= hot_season_df %>%
 hot_sum=left_join(hot_sum, province, by=c('province_eng'='ADM1_EN'))
 
 ```
+
 We now create choropleth maps for each by implementing functions of the tmap packages.
 
 ::: panel-tabset
-
 ## Wet Season
 
 ```{r}
@@ -485,10 +484,10 @@ basemap12<- tm_shape(wet_tourism_thai) +
 tmap_arrange(basemap11, basemap12)
 
 ```
-There are far more domestic travellers in the rainy season compared to foreign travellers. 
 
+There are far more domestic travellers in the rainy season compared to foreign travellers.
 
-## Hot season 
+## Hot season
 
 ```{r}
 hot_sum=st_as_sf(hot_sum)
@@ -508,6 +507,7 @@ basemap14<- tm_shape(hot_tourism_thai) +
 
 tmap_arrange(basemap13, basemap14)
 ```
+
 ## Cool season
 
 ```{r}
@@ -528,16 +528,13 @@ basemap16<- tm_shape(cool_tourism_thai) +
 
 tmap_arrange(basemap15, basemap16)
 ```
-
 :::
 
 We see clear differences in number of tourists across regions based on the season, indicating to us that tourism is not independent from temporal factors such as time of the year.
 
-
 ##### 2.3.1.4.2 Profit from tourists by season
 
 ::: panel-tabset
-
 ## Wet Season
 
 ```{r}
@@ -559,7 +556,6 @@ basemap22<- tm_shape(wet_profit_thai) +
 tmap_arrange(basemap21, basemap22)
 
 ```
-
 
 ## Hot season
 
@@ -602,7 +598,6 @@ basemap26<- tm_shape(cool_profit_thai) +
 
 tmap_arrange(basemap25, basemap26)
 ```
-
 :::
 
 We notice that while for the most part, there are significantly more domestic travellers, more profit is earned from foreign travellers throughout the year.
@@ -673,7 +668,6 @@ write_rds(wm_q, 'data/rds/wm_q_pro_dom')
 We now look at a summary of both using the code chunks below.
 
 ::: panel-tabset
-
 ## Rook Contiguity
 
 ```{r}
@@ -705,7 +699,6 @@ write_rds(wm_q, 'data/rds/wm_q_pro_all')
 ```
 
 ::: panel-tabset
-
 ## Rook Contiguity
 
 ```{r}
@@ -719,9 +712,28 @@ summary(wm_r_pro_all)
 wm_q_pro_all=read_rds("data/rds/wm_q_pro_all")
 summary(wm_q_pro_all)
 ```
+:::
+:::
 
-:::
-:::
+
+We now load the Queen Contiguity data for each individual year.
+
+```{r}
+## 2019
+wm_q_2019=read_rds('data/rds/wm_q_2019')
+
+## 2020
+wm_q_2020=read_rds('data/rds/wm_q_2020')
+
+
+## 2021
+wm_q_2021=read_rds('data/rds/wm_q_2021')
+
+## 2022
+wm_q_2022=read_rds('data/rds/wm_q_2022')
+
+```
+
 
 ### 2.4.1.2 Visualizing Contiguity Spatial Weights
 
@@ -867,7 +879,6 @@ You could also do the below if you are interested in singling them out based on 
 :::
 
 ::: panel-tabset
-
 ## Profits from foreign travellers
 
 ```{r}
@@ -965,10 +976,48 @@ While this method is intuitive for summarizing neighbors’ values, it has a dra
 Note: For simplicity, we’ll use the style=“W” option in this example, but be aware that more robust options, such as style=“B”, are available.
 :::
 
+::: panel-tabset
+
+## Profits 
+
 ```{r}
 rswm_q_pro_all <- nb2listw(wm_q_pro_all, style="W", zero.policy = TRUE)
 rswm_q_pro_all
 ```
+
+## Occupancy
+
+::: panel-tabset
+
+## 2019
+```{r}
+rswm_q_2019 <- nb2listw(wm_q_2019, style="W", zero.policy = TRUE)
+rswm_q_2019
+```
+
+## 2020
+
+```{r}
+rswm_q_2020 <- nb2listw(wm_q_2020, style="W", zero.policy = TRUE)
+rswm_q_2020
+```
+
+## 2021
+
+```{r}
+rswm_q_2021 <- nb2listw(wm_q_2021, style="W", zero.policy = TRUE)
+rswm_q_2021
+```
+
+## 2022
+
+```{r}
+rswm_q_2022 <- nb2listw(wm_q_2022, style="W", zero.policy = TRUE)
+rswm_q_2022
+```
+
+:::
+:::
 
 Setting the argument `zero.policy` to TRUE allows for lists of non-neighbors. This should be used with caution as users may not be aware of missing neighbors in their data however setting `zero,policy` to FALSE would return an error.
 
@@ -1020,7 +1069,7 @@ We now create four different spatial lagged variables:
 
 -   spatial window sum
 
-#### 2.4.1.6.1 **Spatial Lag With Row-Standardized Weights**
+#### 2.4.1.6.1 Spatial Lag With Row-Standardized Weights
 
 We now compute the average neighbor profit value for each polygon. We often refer to these values as Spatially Lagged Values.
 
@@ -1048,7 +1097,7 @@ tmap_arrange(pro_all, lag_pro_all, asp=1, ncol=2)
 
 We see a difference in the surrounding regions of Bangkok as well as Mae Hong Son, all of which are in a higher band as compared to the non-spatially lagged values.
 
-#### 2.4.1.6.2 **Spatial Window Sum**
+#### 2.4.1.6.2 Spatial Window Sum
 
 The spatial window sum is the counter part of the window average, but without using row-standardized weights.
 
@@ -1149,6 +1198,49 @@ moran.test(profit_all$total_value,
            na.action=na.omit)
 ```
 
+We now implement the Moran's Test for **Occupancy Rate** across the 4 years of our data.
+
+::: panel-tabset
+
+## 2019
+
+```{r}
+moran.test(occupancy_2019_avg$avg_occupancy, 
+           listw=rswm_q_2019, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+## 2020
+
+```{r}
+moran.test(occupancy_2020_avg$avg_occupancy, 
+           listw=rswm_q_2020, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+## 2021
+
+```{r}
+moran.test(occupancy_2021_avg$avg_occupancy, 
+           listw=rswm_q_2021, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+## 2022
+
+```{r}
+moran.test(occupancy_2022_avg$avg_occupancy, 
+           listw=rswm_q_2022, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+:::
+
+
 From the output above, we can infer the following:
 
 -   The p-value 0.7224\>0.05, indicating that the observed spatial autocorrelation is not statistically significant.
@@ -1165,6 +1257,10 @@ If Morans I Statistic is = 0, there is Complete Random Spatial Distribution.
 
 We now implement the moran.mc() function of the spdep package. In this scenario, we will run 1000 simulations.
 
+::: panel-tabset
+
+## Profit
+
 ```{r}
 bperm= moran.mc(profit_all$total_value, 
            listw=rswm_q_pro_all, 
@@ -1173,6 +1269,57 @@ bperm= moran.mc(profit_all$total_value,
                 na.action=na.omit)
 bperm
 ```
+
+## Occupancy 
+
+::: panel-tabset
+
+## 2019
+
+```{r}
+bperm= moran.mc(occupancy_2019_avg$avg_occupancy, 
+           listw=rswm_q_pro_all, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+
+## 2020
+
+```{r}
+bperm2020= moran.mc(occupancy_2020_avg$avg_occupancy, 
+           listw=rswm_q_2020, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm2020
+```
+
+## 2021
+
+```{r}
+bperm2021= moran.mc(occupancy_2021_avg$avg_occupancy, 
+           listw=rswm_q_2021, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm2021
+```
+
+## 2022
+
+
+```{r}
+bperm2022= moran.mc(occupancy_2022_avg$avg_occupancy, 
+           listw=rswm_q_2022, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm
+```
+:::
+:::
 
 ::: insights-box
 From the above output, notice that the observed rank is 326. This indicates that the observed Moran's I value of -0.037893 is not 'unusual' compared to the distribution that was generated by the simulations run. This further supports the high p-value and reinforces our earlier conclusion that there is no significant spatial autocorrelation in the data.
@@ -1212,15 +1359,55 @@ We now implement a further test to verify if our findings from the above test ar
 
 The Geary’s C test for spatial autocorrelation is implemented by using the **geary.test()** function of the **spdep** package.
 
+::: panel-tabset
+
+## Profit
+
 ```{r}
 geary.test(profit_all$total_value, listw=rswm_q_pro_all)
 ```
+
+## Occupancy Rate
+
+::: panel-tabset
+
+## 2019
+
+```{r}
+geary.test(occupancy_2019_avg$avg_occupancy, listw=rswm_q_2019)
+```
+
+
+## 2020
+
+```{r}
+geary.test(occupancy_2020_avg$avg_occupancy, listw=rswm_q_2020)
+```
+
+## 2021
+
+```{r}
+geary.test(occupancy_2021_avg$avg_occupancy, listw=rswm_q_2021)
+```
+
+## 2022
+
+```{r}
+geary.test(occupancy_2022_avg$avg_occupancy, listw=rswm_q_2022)
+```
+
+:::
+:::
 
 We once again see that the p-value (0.8784) is greater than 0.05. We do not have sufficient evidence to reject the null hypothesis. In fact, from the Geary C statistic value, we infer that there is actually **negative** spatial autocorrelation.
 
 #### 2.4.2.2.1 Monte Carlo Geary's C
 
 We implement the the geary.mc() function of the spdep package to conduct 1000 simulations.
+
+::: panel-tabset
+
+## Profit
 
 ```{r}
 bperm=geary.mc(profit_all$total_value, listw=rswm_q_pro_all, 
@@ -1229,6 +1416,47 @@ bperm
 ```
 
 The simulations above reinforce our earlier conclusion.
+
+## Occupancy Rate
+
+::: panel-tabset
+
+## 2019
+
+```{r}
+bperm2019_geary=geary.mc(occupancy_2019_avg$avg_occupancy, listw=rswm_q_2019, 
+               nsim=999)
+bperm2019_geary
+```
+
+## 2020
+
+```{r}
+bperm2020_geary=geary.mc(occupancy_2020_avg$avg_occupancy, listw=rswm_q_2020, 
+               nsim=999)
+bperm2020_geary
+```
+
+
+## 2021
+
+```{r}
+bperm2021_geary=geary.mc(occupancy_2021_avg$avg_occupancy, listw=rswm_q_2021, 
+               nsim=999)
+bperm2021_geary
+```
+
+## 2022
+
+```{r}
+bperm2022_geary=geary.mc(occupancy_2022_avg$avg_occupancy, listw=rswm_q_2022, 
+               nsim=999)
+bperm2022_geary
+```
+
+
+:::
+
 :::
 
 ### 2.4.2.3 Spatial Correlogram
@@ -1515,8 +1743,6 @@ We now use localized spatial statistics to detect hot and cold spot areas.
 “Hot Spot’ is generally used across various disciplines to describe a region or value that is higher relative to its surroundings.
 :::
 
-
-
 #### 2.4.3.3.1 Getis and Ord’s G-Statistics
 
 An alternative spatial statistic used to detect spatial anomalies is the Getis-Ord G-statistic (Getis and Ord, 1972; Ord and Getis, 1995). This method examines spatial relationships within a defined proximity to identify clusters of high or low values. Statistically significant hotspots are areas where high values are spatially clustered, meaning that not only do these areas have high values, but their neighboring areas also exhibit similarly high values.
@@ -1602,14 +1828,10 @@ Emerging Hot Spot Analysis (EHSA) is a spatio-temporal analysis method for revea
 
 We now use the [`spacetime()`](https://sfdep.josiahparry.com/reference/spacetime.html) function of the sfdep package to create a spatio-temporal cube.
 
-<details>
+We will do this for profits as well as occupancy rate.
 
-<summary>Click to show/hide code</summary>
-
-
-
-</details>
-
+::: panel-tabset
+## Profits
 
 ```{r}
 profit_all_temporal=tourists_temporal%>%filter(variable=='revenue_all')
@@ -1629,12 +1851,40 @@ To verify if the cube has been create, we implement the is_spacetime_cube() func
 ```{r}
 is_spacetime_cube(profits_st)
 ```
+
 Based on the above output, we can confirm that it has been created as intended.
 
+## Occupancy Rates
+
+```{r}
+occupancy_temporal=tourists_temporal%>%filter(variable=='ratio_tourist_stay')
+
+# Rename province_eng to ADM1_EN using base R in order to facilitate the creation of the spacetime cube.
+names(occupancy_temporal)[names(occupancy_temporal) == "province_eng"] <- "ADM1_EN"
+
+# Space-time by month
+occupancy_st <- spacetime(occupancy_temporal, province,
+                      .loc_col = "ADM1_EN",
+                      .time_col = "date")
+
+```
+
+To verify if the cube has been create, we implement the is_spacetime_cube() function of the sfdep package as shown in the code chunk below.
+
+```{r}
+is_spacetime_cube(occupancy_st)
+```
+
+Based on the above output, we can confirm that it has been created as intended.
+:::
 
 ##### 2.4.3.3.2.2 Deriving Spatial Weights
 
 We implement the below code chunk to identify neighbors and calculate the inverse-distance weights.
+
+::: panel-tabset
+
+## Profits 
 
 ```{r}
 profits_nb <- profits_st %>%
@@ -1650,6 +1900,27 @@ profits_nb <- profits_st %>%
   set_wts("wt")
 ```
 
+
+
+
+## Occupancy Rate
+
+```{r}
+occupancy_nb <- occupancy_st %>%
+  activate("geometry") %>%
+  mutate(nb = include_self(
+    st_contiguity(geometry)),
+    wt = st_inverse_distance(nb, 
+                             geometry, 
+                             scale = 1,
+                             alpha = 1),
+    .before = 1) %>%
+  set_nbs("nb") %>%
+  set_wts("wt")
+```
+
+:::
+
 ::: insights-box
 -   `activate()` of dplyr package is used to activate the geometry context
 
@@ -1664,9 +1935,13 @@ profits_nb <- profits_st %>%
 
 We can use these new columns to manually calculate the local Gi for each location. We do this by grouping by *Year* and using the `local_gstar_perm()` function of the sfdep package. After this, we use the `unnest()` function to unnest the *gi_star* column of the newly created *gi_starts* data.frame.
 
+::: panel-tabset
+
+## Profits
+
 ```{r}
 # Calculate the local G* statistics
-gi_stars <- profits_nb %>%
+gi_stars_profit <- profits_nb %>%
   group_by(date) %>%
   mutate(gi_star = local_gstar_perm(
     value,  # Make sure it's numeric
@@ -1677,6 +1952,25 @@ gi_stars <- profits_nb %>%
 
 ```
 
+
+## Occupancy Rate 
+
+
+```{r}
+# Calculate the local G* statistics
+gi_stars_occ <- occupancy_nb %>%
+  group_by(date) %>%
+  mutate(gi_star = local_gstar_perm(
+    value,  # Make sure it's numeric
+    nb,                   # Neighbors
+    wt                    # Weights
+  )) %>%
+  tidyr::unnest(gi_star)
+
+```
+
+:::
+
 ##### 2.4.3.3.4 **Mann-Kendall Test**
 
 With the above Gi calculations, we can now conduct the Mann-Kendall test to evaluate selected locations, the top 5 most lucrative regions, for a trend.
@@ -1685,8 +1979,12 @@ With the above Gi calculations, we can now conduct the Mann-Kendall test to eval
 
 ## Bangkok
 
+::: panel-tabset
+
+## Profit
+
 ```{r}
-bkk <- gi_stars %>% 
+bkk <- gi_stars_profit %>% 
   ungroup() %>% 
   filter(ADM1_EN == "Bangkok") %>% 
   select(ADM1_EN, date, gi_star)
@@ -1701,10 +1999,36 @@ ggplot(data = bkk,
   geom_line() +
   theme_light()
 ```
-## Krabi
+
+## Occupancy Rate
 
 ```{r}
-kra <- gi_stars %>% 
+bkk_occ <- gi_stars_occ %>% 
+  ungroup() %>% 
+  filter(ADM1_EN == "Bangkok") %>% 
+  select(ADM1_EN, date, gi_star)
+```
+
+We can now produce a plot by using the ggplot package.
+
+```{r}
+ggplot(data = bkk_occ, 
+       aes(x = date, 
+           y = gi_star)) +
+  geom_line() +
+  theme_light()
+```
+
+:::
+
+## Krabi
+
+::: panel-tabset
+
+## Profit
+
+```{r}
+kra <- gi_stars_profit %>% 
   ungroup() %>% 
   filter(ADM1_EN == "Krabi") %>% 
   select(ADM1_EN, date, gi_star)
@@ -1720,10 +2044,39 @@ ggplot(data = kra,
   theme_light()
 
 ```
-## Phuket
+
+
+## Occupancy Rate
 
 ```{r}
-phk<- gi_stars %>% 
+kra_occ <- gi_stars_occ %>% 
+  ungroup() %>% 
+  filter(ADM1_EN == "Krabi") %>% 
+  select(ADM1_EN, date, gi_star)
+```
+
+We can now produce a plot by using the ggplot package.
+
+```{r}
+ggplot(data = bkk_occ, 
+       aes(x = date, 
+           y = gi_star)) +
+  geom_line() +
+  theme_light()
+```
+
+
+::: 
+
+## Phuket
+
+::: panel-tabset
+
+## Profit
+
+
+```{r}
+phk<- gi_stars_profit %>% 
   ungroup() %>% 
   filter(ADM1_EN == "Phuket") %>% 
   select(ADM1_EN, date, gi_star)
@@ -1738,14 +2091,40 @@ ggplot(data = phk,
   geom_line() +
   theme_light()
 ```
-## Chon Buri
+
+## Occupancy Rate
 
 ```{r}
-cbr<- gi_stars %>% 
+phk_occ <- gi_stars_occ %>% 
+  ungroup() %>% 
+  filter(ADM1_EN == "Phuket") %>% 
+  select(ADM1_EN, date, gi_star)
+```
+
+We can now produce a plot by using the ggplot package.
+
+```{r}
+ggplot(data = bkk_occ, 
+       aes(x = date, 
+           y = gi_star)) +
+  geom_line() +
+  theme_light()
+```
+
+:::
+
+## Chon Buri
+
+::: panel-tabset
+
+## Profit
+```{r}
+cbr<- gi_stars_profit %>% 
   ungroup() %>% 
   filter(ADM1_EN == "Chon Buri") %>% 
   select(ADM1_EN, date, gi_star)
 ```
+
 We now produce a plot for the same
 
 ```{r}
@@ -1755,10 +2134,38 @@ ggplot(data = cbr,
   geom_line() +
   theme_light()
 ```
-## Chiang Mai
+
+
+## Occupancy Rate
+
 
 ```{r}
-chm<- gi_stars %>% 
+cbr_occ <- gi_stars_occ%>% 
+  ungroup() %>% 
+  filter(ADM1_EN == "Chon Buri") %>% 
+  select(ADM1_EN, date, gi_star)
+```
+
+We can now produce a plot by using the ggplot package.
+
+```{r}
+ggplot(data = bkk_occ, 
+       aes(x = date, 
+           y = gi_star)) +
+  geom_line() +
+  theme_light()
+```
+
+:::
+
+## Chiang Mai
+
+::: panel-tabset
+
+## Profit
+
+```{r}
+chm<- gi_stars_profit %>% 
   ungroup() %>% 
   filter(ADM1_EN == "Chiang Mai") %>% 
   select(ADM1_EN, date, gi_star)
@@ -1773,6 +2180,29 @@ ggplot(data = chm,
   geom_line() +
   theme_light()
 ```
+
+## Occupancy Rate
+
+```{r}
+chm_occ <- gi_stars_occ %>% 
+  ungroup() %>% 
+  filter(ADM1_EN == "Chiang Mai") %>% 
+  select(ADM1_EN, date, gi_star)
+```
+
+We can now produce a plot by using the ggplot package.
+
+```{r}
+ggplot(data = chm_occ, 
+       aes(x = date, 
+           y = gi_star)) +
+  geom_line() +
+  theme_light()
+```
+
+
+:::
+
 :::
 
 For all of these regions, besides Chiang Mai, we see a sharp drop between 2021 and 2022 however for the most part none of these regions reach their peaks between 2020 and 2022, which was when the world was hit by a global pandemic.
@@ -1816,7 +2246,6 @@ Tau ranges between -1 and 1 where:
 We implement the below code chunk to obtain the required report.
 
 ::: panel-tabset
-
 ## Bangkok
 
 ```{r}
@@ -1837,7 +2266,7 @@ kra %>%
   tidyr::unnest_wider(mk)
 ```
 
-## Chiang Mai 
+## Chiang Mai
 
 ```{r}
 chm %>%
@@ -1847,7 +2276,7 @@ chm %>%
   tidyr::unnest_wider(mk)
 ```
 
-## Chon Buri 
+## Chon Buri
 
 ```{r}
 cbr %>%
@@ -1856,8 +2285,8 @@ cbr %>%
       Kendall::MannKendall(gi_star)))) %>% 
   tidyr::unnest_wider(mk)
 ```
- 
-## Phuket 
+
+## Phuket
 
 ```{r}
 phk %>%
@@ -1866,14 +2295,13 @@ phk %>%
       Kendall::MannKendall(gi_star)))) %>% 
   tidyr::unnest_wider(mk)
 ```
-
 :::
 
 ::: note-box
 Note that `sl`in the output above is the p-value in this situation.
 :::
 
-##### 2.4.3.3.5 **Mann-Kendall Test Data-Frame**
+##### 2.4.3.3.5 Mann-Kendall Test Data-Frame
 
 We can perform the above steps for every location by using the group_by() function of the dplyr package.
 
@@ -1905,6 +2333,10 @@ It takes a spacetime object x (i.e: profit_st), and the quoted name of the varia
 The `k` argument is used to specify the number of time lags which is set to 1 by default.
 
 `nsim` is number of simulations to be performed.
+
+::: panel-tabset
+
+## Profit
 
 ```{r}
 ehsa <- emerging_hotspot_analysis(
@@ -1946,4 +2378,50 @@ tm_shape(ehsa_sig) +
   tm_text('ADM1_EN', size=0.3)
 ```
 
-We can further look at this in greater detail by each location as well if required.
+
+## Occupancy Rate
+
+
+```{r}
+ehsa_occ <- emerging_hotspot_analysis(
+  x = occupancy_st, 
+  .var = "value", 
+  k = 1, 
+  nsim = 99
+)
+```
+
+We now implement various ggplot2 functions to reveal the distributions of EHSA classes as a bar chart.
+
+```{r}
+ggplot(data = ehsa_occ,
+       aes(x = classification)) +
+  geom_bar()
+```
+
+We can proceed with Visualizing EHSA.
+
+```{r}
+thai_ehsa_occ <- province %>%
+  left_join(ehsa_occ,
+            by = join_by(ADM1_EN == location))
+```
+
+We can now implement functions of the tmap package to produce a visualization for the above.
+
+```{r}
+ehsa_sig_occ <- thai_ehsa_occ  %>%
+  filter(p_value < 0.1)
+tmap_mode("plot")
+tm_shape(thai_ehsa_occ) +
+  tm_polygons() +
+  tm_borders(alpha = 0.5) +
+tm_shape(ehsa_sig_occ) +
+  tm_fill("classification") + 
+  tm_borders(alpha = 0.4)+
+  tm_text('ADM1_EN', size=0.3)
+```
+
+We see a majority of the northern part of Thailand, including Chiang Mai, are oscillating hotspots. Whereas, there are oscillating cold spots scattered across the nation.
+
+::: 
