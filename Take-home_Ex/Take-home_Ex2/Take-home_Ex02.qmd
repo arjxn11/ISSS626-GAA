@@ -536,7 +536,7 @@ tmap_arrange(basemap15, basemap16)
 ```
 :::
 
-We see clear differences in number of tourists across regions based on the season, indicating to us that tourism is not independent from temporal factors such as time of the year.
+We see clear differences in number of tourists across regions based on the season, indicating to us that tourism is **not** independent from temporal factors such as time of the year.
 
 ##### 2.3.1.4.2 Profit from tourists by season
 
@@ -729,6 +729,9 @@ wm_q_tour= poly2nb(tourist_all, queen=TRUE)
 
 We now generate the Queen Contiguity data for each individual year.
 
+::: panel-tabset
+
+## Queen Contiguity Computation
 ```{r}
 #| eval: false
 wm_q_2019=poly2nb(occupancy_2019_avg, queen=TRUE)
@@ -739,6 +742,8 @@ wm_q_2020=poly2nb(occupancy_2021_avg, queen=TRUE)
 
 wm_q_2021=poly2nb(occupancy_2022_avg, queen=TRUE)
 ```
+
+## Reading RDS files 
 We created an RDS file using the write_rds() function for the above and load them into our environment using the read_rds() function as shown in the code chunk below.
 ```{r}
 ## 2019
@@ -756,6 +761,7 @@ wm_q_2022=read_rds('data/rds/wm_q_2022')
 
 ```
 
+:::
 
 ### 2.4.1.2 Visualizing Contiguity Spatial Weights
 
@@ -1088,13 +1094,9 @@ rswm_ids_pro_all
 
 ### 2.4.1.6 Application of Spatial Weight Matrix
 
-We now create four different spatial lagged variables:
+We now create two different spatial lagged variables:
 
 -   spatial lag with row-standardized weights
-
--   spatial lag as a sum of neighbouring values
-
--   spatial window average
 
 -   spatial window sum
 
