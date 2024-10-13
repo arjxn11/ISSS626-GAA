@@ -1566,6 +1566,7 @@ print(GC_corr)
 
 Indeed, our findings are reinforced.
 :::
+:::
 
 ::: insights-box
 Generally, using one of the Geary or Moran Test is enough in terms of deriving insights. However, we apply both in our case to have more evidence to support our claims of the spatial clustering exhibited in certain aspects, and the lack thereof in certain aspects.
