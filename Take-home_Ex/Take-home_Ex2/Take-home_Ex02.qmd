@@ -2207,7 +2207,11 @@ gi_stars_occ <- occupancy_nb %>%
 With the above Gi calculations, we can now conduct the Mann-Kendall test to evaluate selected locations, the top 5 most lucrative regions, for a trend.
 
 Follow this ['link'](https://www.epa.gov/sites/default/files/2016-05/documents/tech_notes_6_dec2013_trend.pdf) to learn about the Mann-Kendall test and how it helps detects trends over a period of time.
+
+
+
 ::: panel-tabset
+
 
 ## Bangkok
 
@@ -2250,7 +2254,6 @@ ggplot(data = bkk_occ,
   geom_line() +
   theme_light()
 ```
-
 :::
 
 ## Krabi
@@ -2431,11 +2434,10 @@ ggplot(data = chm_occ,
   geom_line() +
   theme_light()
 ```
-
-
 :::
 
 :::
+
 
 For all of these regions, besides Chiang Mai, we see a sharp drop between 2021 and 2022 however for the most part none of these regions reach their peaks between 2020 and 2022, which was when the world was hit by a global pandemic.
 
