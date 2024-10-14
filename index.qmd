@@ -1,5 +1,29 @@
 ---
 title: "ISSS626-GAA"
+about:
+  template: jolla
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/arjxn11
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/arjvn/
+    - icon: envelope-fill
+      text: Email
+      href: mailto:arjun.singh.2023@mitb.smu.edu.sg
+listing:
+  type: grid
+  max-items: 24
+  page-size: 6
+  grid-item-align: center
+  max-description-length: 130
+  contents:
+    - "In-class_Ex/*/*.qmd"
+    - "Hands-on_Ex/*/*.qmd"
+    - "Take-home_Ex/*/*.qmd"
+  sort: 
+    - "date desc"
 ---
 
 # Introduction
