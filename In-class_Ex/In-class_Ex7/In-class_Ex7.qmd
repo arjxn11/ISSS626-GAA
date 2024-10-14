@@ -1,0 +1,19 @@
+---
+title: "In Class Exercise 7"
+author: "Arjun Singh"
+date: 2024-10-14
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css 
+---
+
+# 7 Introduction
+
+In this exercise, we will work on reinforcing our learning from Hands-on Exercise 7 with further exercises.
