@@ -250,7 +250,7 @@ We change `tmap_mode` back to plot before proceeding.
 tmap_mode('plot')
 ```
 
-# 7.4 Hedonic Pricing Modelling 
+# 7.4 Hedonic Pricing Modelling
 
 Hedonic pricing modeling is an econometric technique used to estimate the value of a good or service by breaking down the price into its component attributes. Commonly applied in real estate, it involves analyzing how individual factors such as location, size, amenities, or proximity to schools influence the overall market price of a property. This model helps in understanding how much each characteristic contributes to the price, separating the effect of specific features from the overall value.
 
@@ -491,7 +491,7 @@ There are two possible approaches can be used to determine the stopping rule.
 
 -   CV cross-validation approach
 
--    AIC corrected (AICc) approach.
+-   AIC corrected (AICc) approach.
 
 We define the stopping rule using ***approach*** argeement.
 
@@ -534,7 +534,7 @@ gwr.fixed
 
 The report shows that the AICc of the gwr is 42263.61 which is significantly smaller than the globel multiple linear regression model of 42967.1.
 
-## 7.5.2 **Building Adaptive Bandwidth GWR Model**
+## 7.5.2 Building Adaptive Bandwidth GWR Model
 
 ### 7.5.2.1 Computing the adaptive bandwidth
 
