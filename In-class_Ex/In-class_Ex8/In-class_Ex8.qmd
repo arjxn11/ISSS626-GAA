@@ -1,0 +1,19 @@
+---
+title: "In Class Exercise 8"
+author: "Arjun Singh"
+date: 2024-10-21
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css 
+---
+
+# 8 Introduction
+
+In this exercise, we work on reinforcing our learning from hands-on exercise 8 by conducting various tests.
