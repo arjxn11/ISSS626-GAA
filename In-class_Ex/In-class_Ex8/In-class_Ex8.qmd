@@ -539,7 +539,7 @@ We now implement the `predict.grf()` function of the spatialML package to pred
 ```{r}
 #| eval: false
 gwRF_pred <- predict.grf(gwRF_adaptive, 
-                           test_data, 
+                           test_data_nogeom, 
                            x.var.name="X",
                            y.var.name="Y", 
                            local.w=1,
