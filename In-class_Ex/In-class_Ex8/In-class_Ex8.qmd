@@ -525,7 +525,7 @@ The code chunk below will be used to combine the test data with its correspondin
 
 ```{r}
 
-test_data <- cbind(test_data, coords_test) %>%
+test_data_nogeom <- cbind(test_data, coords_test) %>%
   st_drop_geometry()
 ```
 
