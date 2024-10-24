@@ -1,0 +1,107 @@
+---
+title: "Hands On Exercise 9- Modelling Geographical Accessibility"
+author: "Arjun Singh"
+date: 2024-10-21
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css 
+---
+
+# 9 Introduction
+
+In this hands-on exercise, we will apply various geospatial techniques to model geographical accessibility.
+
+Modeling geographical accessibility using R, especially with techniques like Hansen's (Gravity Model) and SAM (Spatial Accessibility Models), serves a critical role in spatial analysis and urban planning for various sectors, including healthcare, transportation, and urban services. Here’s why it's important:
+
+1\. **Understanding Service Accessibility**
+
+-   **Hansen’s Gravity Model** helps measure how accessible services (e.g., hospitals, schools, markets) are to people based on the distance from population centers and the capacity of those services. It assumes accessibility decreases with distance and that larger facilities attract more people.
+-   **SAM (Spatial Accessibility Models)** can integrate various factors like population density, facility capacity, and road networks to calculate accessibility indices. This makes it easier to assess disparities in access to essential services.
+
+2\. **Data-Driven Decision Making**
+
+-   Accessibility models in R are useful for governments and planners to make **data-driven decisions** about resource allocation, such as where to build new hospitals, roads, or schools, and how to improve existing infrastructure.
+-   They help identify **underserved areas** that need attention by visualizing disparities in accessibility across different regions.
+
+3\. **Transportation and Mobility Planning**
+
+-   **Transportation networks** and travel time are critical elements of accessibility. Modeling in R allows you to consider different transport modes (car, bus, walking) and factors like congestion or road conditions.
+-   These models help optimize **transportation routes** and plan public transit systems by analyzing travel times and service efficiency across geographical areas.
+
+4\. **Equity and Social Justice**
+
+-   By analyzing accessibility, you can address **inequities in access to services** based on geographical location, helping improve conditions for marginalized or rural populations.
+-   It’s valuable in identifying **geographical barriers** that contribute to social and economic disparities.
+
+5\. **Predictive and Scenario-Based Analysis**
+
+-   These models allow for **what-if scenarios**, where you can test the impact of new infrastructure projects (like roads or metro systems) or changes in population distribution.
+-   You can forecast how accessibility will change over time, especially with urbanization and migration trends.
+
+6\. **Integration with GIS and Spatial Data**
+
+-   R is excellent for handling **large spatial datasets** and integrating it with GIS data. You can use shapefiles for mapping, analyze raster data (e.g., elevation), and overlay different spatial layers for in-depth analysis.
+
+Basically, modelling geographical accessibility using R enables us to understand spatial dynamics better, helping us improve the distribution of resources and services, optimize transportation networks, and ensure equitable access for all populations.
+
+# 9.1 Data and Packages
+
+Four data sets will be used in this hands-on exercise, they are:
+
+-   `MP14_SUBZONE_NO_SEA_PL`: URA Master Plan 2014 subzone boundary GIS data. This data set is downloaded from data.gov.sg.
+
+-   `hexagons`: A 250m radius hexagons GIS data. This data set was created by using [*st_make_grid()*](https://r-spatial.github.io/sf/reference/st_make_grid.html) of sf package. It is in ESRI shapefile format.
+
+-   `ELDERCARE`: GIS data showing location of eldercare service. [This data](https://data.gov.sg/dataset/eldercare-services) is downloaded from data.gov.sg. There are two versions. One in ESRI shapefile format. The other one in Google kml file format. For the purpose of this hands-on exercise, ESRI shapefile format is provided.
+
+-   `OD_Matrix`: a distance matrix in csv format. There are six fields in the data file. They are:
+
+    -   `origin_id`: the unique id values of the origin (i.e. `fid` of hexagon data set.),
+
+    -   `destination_id`: the unique id values of the destination (i.e. `fid` of `ELDERCARE` data set.),
+
+    -   `entry_cost`: the perpendicular distance between the origins and the nearest road),
+
+    -   `network_cost`: the actual network distance from the origin and destination,
+
+    -   `exit_cost`: the perpendicular distance between the destination and the nearest road), and
+
+    -   `total_cost`: the summation of `entry_cost`, `network_cost` and `exit_cost`.
+
+All the values of the cost related fields are in **metres**.
+
+::: note-box
+Do note that aside from `ELDERCARE` and `MP14_SUBZONE_NO_SEA_PL`, the datasets have been prepared by Professor Kam Tin Seong from Singapore Management University for the purpose of learning. You are required to solicit **explicit approval** from Prof. Kam should you want to use these datasets for your own study.
+:::
+
+The following R packages are used for our study:
+
+-   **tmap**: A powerful R package for creating thematic maps, offering both static and interactive visualizations. It integrates well with spatial data formats like `sf` and `sp`.
+
+-   **tidyverse**: A collection of R packages (e.g., `ggplot2`, `dplyr`, `tibble`) designed for data manipulation, visualization, and analysis, emphasizing a consistent and user-friendly syntax.
+
+-   **SpatialAcc**: An R package used to compute spatial accessibility measures (e.g., Hansen’s accessibility), providing various methods to quantify how accessible services are across geographical spaces.
+
+-   **sf**: The "simple features" package in R, used for handling spatial vector data (points, lines, polygons) with a tidy approach, making it easier to integrate with data manipulation tools.
+
+-   **ggstatsplot**: A package that extends `ggplot2` by adding statistical tests directly onto plots, allowing for quick and interpretable data visualization with embedded statistical analysis.
+
+-   **reshape2**: A package used for reshaping data, transforming data frames between wide and long formats (pivoting), which is useful for preparing data for analysis or visualization.
+
+We load them into our environment by using the p_load() function of the pacman package.
+
+```{r}
+pacman::p_load(tmap, SpatialAcc, sf, 
+               ggstatsplot, reshape2,
+               tidyverse)
+set.seed(123)
+```
+
+## 9.1.2 Importing the data
