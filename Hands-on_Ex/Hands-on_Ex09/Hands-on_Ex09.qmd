@@ -106,7 +106,7 @@ set.seed(123)
 
 ## 9.1.2 Importing the data
 
-## **9.1.2.1 Geospatial Data Importing and Wrangling**
+## 9.1.2.1 Geospatial Data Importing and Wrangling
 
 Three geospatial data will be imported from the *data/geospatial* sub-folder. They are MP14_SUBZONE_NO_SEA_PL, hexagons and ELDERCARE.
 
@@ -233,9 +233,9 @@ Currently, the distance is measured in metres because the SVY21 projected coordi
 distmat_km <- as.matrix(distmat/1000)
 ```
 
-# 9.2 **Modelling and Visualizing Accessibility using Hansen Method**
+# 9.2 Modelling and Visualizing Accessibility using Hansen Method
 
-## **9.2.1 Computing Hansen’s accessibility**
+## 9.2.1 Computing Hansen’s accessibility
 
 We can now compute Hansen’s accessibility by using the *ac()* function of the [**SpatialAcc**](https://cran.r-project.org/web/packages/SpatialAcc/index.html) package. Do refer to the documentation attached on the link above to gain a better understanding of the SpatialAcc package and its functions.
 
@@ -246,7 +246,7 @@ Hansen's accessibility model, often called the **Gravity Model of Accessibility*
 
 The accessibility AiA_iAi​ for a given location iii is calculated as:
 
-Ai=∑jWjf(dij)A_i = \sum_j \frac{W_j}{f(d_{ij})}Ai​=j∑​f(dij​)Wj​​
+Ai=∑jWjf(dij)A_i = \sum\_j \frac{W_j}{f(d_{ij})}Ai​=j∑​f(dij​)Wj​​
 
 Where:
 
@@ -254,9 +254,9 @@ Where:
 
 -   WjW_jWj​ = Weight of the destination jjj (e.g., number of jobs, capacity of hospitals)
 
--   f(dij)f(d_{ij})f(dij​) = Distance decay function, often inversely proportional to distance or travel time between location iii and destination jjj
+-   f(dij)f(d\_{ij})f(dij​) = Distance decay function, often inversely proportional to distance or travel time between location iii and destination jjj
 
--   dijd_{ij}dij​ = Distance or travel time between locations iii and jjj
+-   dijd\_{ij}dij​ = Distance or travel time between locations iii and jjj
 
 ### Key Components:
 
@@ -365,9 +365,9 @@ ggplot(data=hexagon_Hansen,
              size=2)
 ```
 
-# 9.3 **Modelling and Visualizing Accessibility using KD2SFCA Method**
+# 9.3 Modelling and Visualizing Accessibility using KD2SFCA Method
 
-## 9.3.1 **Computing KD2SFCA’s accessibility**
+## 9.3.1 Computing KD2SFCA’s accessibility
 
 In this section, we repeat most of the steps from the previous section to perform the analysis. However, some of the codes will be combined into one code chunk.
 
@@ -378,7 +378,7 @@ The **Kernel Density Two-Step Floating Catchment Area (KD2SFCA)** method is a sp
 
 The basic accessibility score at location iii is given by:
 
-Ai=∑jSjK(dij)A_i = \sum_j S_j K(d_{ij})Ai​=j∑​Sj​K(dij​)
+Ai=∑jSjK(dij)A_i = \sum*j S_j K(d*{ij})Ai​=j∑​Sj​K(dij​)
 
 Where:
 
@@ -386,7 +386,7 @@ Where:
 
 -   SjS_jSj​ = Supply-to-demand ratio at service location jjj, calculated in Step 1
 
--   K(dij)K(d_{ij})K(dij​) = Kernel weight based on the distance between iii and jjj, decreasing with distance
+-   K(dij)K(d\_{ij})K(dij​) = Kernel weight based on the distance between iii and jjj, decreasing with distance
 
 KD2SFCA improves upon traditional accessibility models by using kernel density functions to provide more realistic, continuous measures of accessibility based on both supply and demand, accounting for the decreasing influence of distance.
 :::
@@ -406,7 +406,7 @@ acc_KD2SFCA <- tbl_df(acc_KD2SFCA)
 hexagon_KD2SFCA <- bind_cols(hexagons, acc_KD2SFCA)
 ```
 
-## 9.3.2 **Visualizing KD2SFCA’s accessibility**
+## 9.3.2 Visualizing KD2SFCA’s accessibility
 
 The code chunk below uses a collection of mapping functions of the tmap package to create a highly cartographic depiction of accessibility to eldercare centres in Singapore.
 
@@ -437,7 +437,7 @@ tm_shape(eldercare) +
   tm_grid(lwd = 0.1, alpha = 0.5)
 ```
 
-## 9.3.3 **Statistical graphic visualisation**
+## 9.3.3 Statistical graphic visualisation
 
 We now compare the distribution of KD2CFA accessibility values by URA Planning Region.
 
@@ -461,9 +461,9 @@ ggplot(data=hexagon_KD2SFCA,
              size=2)
 ```
 
-# 9.4 **Modelling and Visualising Accessibility using Spatial Accessibility Measure (SAM) Method**
+# 9.4 Modelling and Visualising Accessibility using Spatial Accessibility Measure (SAM) Method
 
-## 9.4.1 **Computing SAM accessibility**
+## 9.4.1 Computing SAM accessibility
 
 In this section, you are going to repeat most of the steps you had learned in previous section to perform the analysis. However, some of the codes will be combined into one code chunk.
 
@@ -472,7 +472,7 @@ In this section, you are going to repeat most of the steps you had learned in pr
 
 The formula for a basic **Spatial Accessibility Model (SAM)**, often similar to **gravity-based models** like Hansen's, can be expressed as:
 
-Ai=∑jSjf(dij)A_i = \sum_j \frac{S_j}{f(d_{ij})}Ai​=j∑​f(dij​)Sj​​
+Ai=∑jSjf(dij)A_i = \sum\_j \frac{S_j}{f(d_{ij})}Ai​=j∑​f(dij​)Sj​​
 
 Where:
 
@@ -480,9 +480,9 @@ Where:
 
 -   SjS_jSj​: Supply or service capacity at location jjj (e.g., the number of hospital beds, jobs, or services).
 
--   dijd_{ij}dij​: Distance or travel time between location iii and service point jjj.
+-   dijd\_{ij}dij​: Distance or travel time between location iii and service point jjj.
 
--   f(dij)f(d_{ij})f(dij​): Distance decay function, which reduces the impact of service jjj based on the distance dijd_{ij}dij​. A common form of the distance decay function is f(dij)=dij−bf(d_{ij}) = d_{ij}^{-b}f(dij​)=dij−b​, where bbb is a decay parameter that controls how rapidly accessibility decreases with distance.
+-   f(dij)f(d\_{ij})f(dij​): Distance decay function, which reduces the impact of service jjj based on the distance dijd\_{ij}dij​. A common form of the distance decay function is f(dij)=dij−bf(d\_{ij}) = d\_{ij}\^{-b}f(dij​)=dij−b​, where bbb is a decay parameter that controls how rapidly accessibility decreases with distance.
 
 SAMs offer a comprehensive approach to measuring and understanding the spatial distribution of services in relation to population needs, playing a key role in optimizing service delivery and improving equity in access across different geographic areas.
 :::
@@ -502,7 +502,7 @@ acc_SAM <- tbl_df(acc_SAM)
 hexagon_SAM <- bind_cols(hexagons, acc_SAM)
 ```
 
-## 9.4.2 **Visualizing SAM’s accessibility**
+## 9.4.2 Visualizing SAM’s accessibility
 
 The code chunk below uses a collection of mapping functions of the tmap package to create a high cartographic depiction of accessibility to eldercare centres in Singapore.
 
@@ -533,7 +533,7 @@ tm_shape(eldercare) +
   tm_grid(lwd = 0.1, alpha = 0.5)
 ```
 
-## 9.4.3 **Statistical graphic visualisation**
+## 9.4.3 Statistical graphic visualisation
 
 We now compare the distribution of SAM accessibility values by URA Planning Region.
 
