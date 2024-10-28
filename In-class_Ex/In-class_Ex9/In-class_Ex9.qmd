@@ -21,12 +21,164 @@ In this exercise, we will perform a variety of exercises to reinforce our learni
 We also discussed further data preparation and wrangling techniques for take-home exercise 3, similar to how we did in In-class Exercise 8.
 
 ```{r}
-pacman::p_load(sf, spdep, GWmodel, SpatialML, tmap, rsample, Metrics, tidyverse)
+pacman::p_load(tmap, SpatialAcc, sf, 
+               ggstatsplot, reshape2,
+               tidyverse)
 set.seed(1234)
 ```
 
+Hexagons are always preferred to squares as they're better in reducing the sampling bias, due to the low perimeter-to-area ratio. That is why when building a so called 'artificial boundary', we prefer to use hexagons.
+
+There is 'no good size' however you can set it based on the local context of your study area. Using this method allows you to avoid revealing confidential information, especially with regards to low rise buildings for example,
+
+## 9.1.2 Importing the data
+
+## 9.1.2.1 Geospatial Data Importing and Wrangling
+
+Three geospatial data will be imported from the *data/geospatial* sub-folder. They are MP14_SUBZONE_NO_SEA_PL, hexagons and ELDERCARE.
+
+The code chunk below is used to import these three data sets shapefile by using *st_read()* of **sf** packages.
+
+::: panel-tabset
+
+## MPSZ
+
 ```{r}
-mdata=read_rds('data/mdata.rds')%>%
-  st_jitter(amount=2)
-view(mdata)
+mpsz <- st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_NO_SEA_PL")%>%
+  st_transform(crs=3414)
+```
+
+## Hexagons
+
+```{r}
+hexagons <- st_read(dsn = "data/geospatial", layer = "hexagons")%>%
+  st_transform(crs=3414)
+
+```
+
+## Eldercare
+
+```{r}
+eldercare <- st_read(dsn = "data/geospatial", layer = "ELDERCARE")%>%
+  st_transform(crs=3414) 
+
+```
+
+:::
+
+
+::: note-box
+Notice how we transform the EPSG code above using the st_transform() function. This is Singapores EPSG code and also ensures consistency during Analysis. 
+:::
+
+## 9.1.2.2 Aspatial Data Importing
+
+```{r}
+ODMatrix=read_csv('data/aspatial/OD_Matrix.csv', 
+                  skip=0)
+```
+::: panel-tabset
+
+## Supply
+
+```{r}
+eldercare= eldercare%>%
+  select(OBJECTID, ADDRESSPOS)%>%
+  mutate(capacity=100)
+```
+
+## Demand
+
+```{r}
+hexagons <- hexagons %>%
+  select(fid) %>%
+  mutate(demand = 100)
+```
+
+## OD Matrix
+
+```{r}
+distmat <- ODMatrix %>%
+  select(origin_id, destination_id, total_cost) %>%
+  spread(destination_id, total_cost)%>%
+  select(c(-c('origin_id')))
+```
+
+```{r}
+distmat_km=as.matrix(distmat/1000)
+
+```
+:::
+
+
+```{r}
+acc_Hansen= data.frame(ac(hexagons$demand,
+                          eldercare$capacity,
+                          distmat_km,
+                          d0=50,
+                          power=2,
+                          family='Hansen'))
+
+```
+
+We now tidy the output.
+
+
+::: panel-tabset
+
+## Code
+
+```{r}
+colnames(acc_Hansen)='accHansen'
+acc_hansen=as_tibble(acc_Hansen)
+hexagon_Hansen <- bind_cols(hexagons, acc_Hansen)
+```
+
+:::
+
+
+# 9.1.3 Hansen method: The Map
+
+We can now plot a highly cartographic map using functions of the tmap package.
+
+```{r}
+mapex <- st_bbox(hexagons)
+
+tmap_mode("plot")
+tm_shape(hexagon_Hansen,
+         bbox = mapex) + 
+  tm_fill(col = "accHansen",
+          n = 10,
+          style = "quantile",
+          border.col = "black",
+          border.lwd = 1) +
+tm_shape(eldercare) +
+  tm_symbols(size = 0.1) +
+  tm_layout(main.title = "Accessibility to eldercare: Hansen method",
+            main.title.position = "center",
+            main.title.size = 2,
+            legend.outside = FALSE,
+            legend.height = 0.45, 
+            legend.width = 3.0,
+            legend.format = list(digits = 6),
+            legend.position = c("right", "top"),
+            frame = TRUE) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_grid(lwd = 0.1, alpha = 0.5)
+
+
+
+```
+
+
+We can also use the ggbetweenstats() function of the ggstatsplot package. This gives us a more analytical plot to provide a better perspective.
+
+```{r}
+
+hexagon_Hansen=st_join(hexagon_Hansen, mpsz, join=st_intersects)
+ggbetweenstats(data=hexagon_Hansen,
+  x= REGION_N,
+  y= accHansen,
+  type='p')
 ```
