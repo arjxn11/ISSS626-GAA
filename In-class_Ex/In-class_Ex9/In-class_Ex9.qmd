@@ -1,0 +1,32 @@
+---
+title: "In Class Exercise 9"
+author: "Arjun Singh"
+date: 2024-10-28
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css 
+---
+
+# 9 Introduction
+
+In this exercise, we will perform a variety of exercises to reinforce our learning from Hands-on Exercise 9.
+
+We also discussed further data preparation and wrangling techniques for take-home exercise 3, similar to how we did in In-class Exercise 8.
+
+```{r}
+pacman::p_load(sf, spdep, GWmodel, SpatialML, tmap, rsample, Metrics, tidyverse)
+set.seed(1234)
+```
+
+```{r}
+mdata=read_rds('data/mdata.rds')%>%
+  st_jitter(amount=2)
+view(mdata)
+```

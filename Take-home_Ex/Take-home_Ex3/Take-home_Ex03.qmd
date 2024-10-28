@@ -1,0 +1,187 @@
+---
+title: "Take Home Exercise 3"
+author: "Arjun Singh"
+date: 2024-10-28
+date-modified: "last-modified"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  freeze: true
+  warning: false
+format:
+  html:
+    css: styles.css 
+---
+
+```{r}
+pacman::p_load(sf, spdep, GWmodel, SpatialML, tmap, rsample, Metrics, tidyverse)
+set.seed(1234)
+```
+
+```{r}
+resale <- read_csv("data/aspatial/resale.csv") %>%
+  filter(month >= "2023-01" & month <= "2024-09")
+```
+
+```{r}
+eldercare= st_read(dsn='data/locational_factors', layer='ELDERCARE')%>%
+  st_transform(crs=3414)
+```
+
+```{r}
+CHAS=st_read('data/locational_factors/CHASClinics.kml')%>%
+               st_transform(crs=3414)
+```
+
+COmputing points within a distance
+
+```{r}
+# We first create a 1KM buffer
+buffer_1km=st_buffer(eldercare, dist=1000)
+
+# 
+tmap_mode('view')
+tm_shape(buffer_1km)+
+  tm_polygons()+
+  tm_shape(CHAS)+
+  tm_dots()
+```
+
+```{r}
+buffer_1km$pts_count= lengths(
+  st_intersects(buffer_1km, CHAS)
+)
+```
+
+Check out portal that shows all retail malls in Singapore and use the data scrape technique.
+
+## 8.2.2 Data Preparation (Pre-Take Home Exercise 3)
+
+The below code chunk tidies the data by combining the data accurately to form the entire address.
+
+```{r}
+resale_tidy <- resale %>%
+  mutate(address = paste(block,street_name)) %>%
+  mutate(remaining_lease_yr = as.integer(
+    str_sub(remaining_lease, 0, 2)))%>%
+  mutate(remaining_lease_mth = as.integer(
+    str_sub(remaining_lease, 9, 11)))
+```
+
+We now narrow the dataset down further to only include data from September 2024 using the below code chunk.This is done to facilitate time efficiency and speed for this In-Class Exercise.
+
+```{r}
+resale_selected <- resale_tidy %>%
+  filter(month == "2024-09")
+```
+
+The code chunk below creates a list of **unique** addresses in order to avoid having the same street and area being geocoded multiple times. Geocoding is usually 'first come, first serve', so sorting actually makes the code chunk more efficient.
+
+```{r}
+add_list <- sort(unique(resale_selected$address))
+```
+
+The code chunk below is used in order to acquire the postal codes of the required addresses with the help of geocoding. The jsonlite and rvest packages are important for this.
+
+**The OneMap API is used for reverse geocoding.**
+
+::: panel-tabset
+## Reverse Geocoding
+
+We start by defining a function `get_coords`.
+
+```{r}
+get_coords <- function(add_list){
+  
+  # Create a data frame to store all retrieved coordinates
+  postal_coords <- data.frame()
+    
+  for (i in add_list){
+    #print(i)
+
+    r <- GET('https://www.onemap.gov.sg/api/common/elastic/search?',
+           query=list(searchVal=i,
+                     returnGeom='Y',
+                     getAddrDetails='Y'))
+    data <- fromJSON(rawToChar(r$content))
+    found <- data$found
+    res <- data$results
+    
+    # Create a new data frame for each address
+    new_row <- data.frame()
+    
+    # If single result, append 
+    if (found == 1){
+      postal <- res$POSTAL 
+      lat <- res$LATITUDE
+      lng <- res$LONGITUDE
+      new_row <- data.frame(address= i, 
+                            postal = postal, 
+                            latitude = lat, 
+                            longitude = lng)
+    }
+    
+    # If multiple results, drop NIL and append top 1
+    else if (found > 1){
+      # Remove those with NIL as postal
+      res_sub <- res[res$POSTAL != "NIL", ]
+      
+      # Set as NA first if no Postal
+      if (nrow(res_sub) == 0) {
+          new_row <- data.frame(address= i, 
+                                postal = NA, 
+                                latitude = NA, 
+                                longitude = NA)
+      }
+      
+      else{
+        top1 <- head(res_sub, n = 1)
+        postal <- top1$POSTAL 
+        lat <- top1$LATITUDE
+        lng <- top1$LONGITUDE
+        new_row <- data.frame(address= i, 
+                              postal = postal, 
+                              latitude = lat, 
+                              longitude = lng)
+      }
+    }
+
+    else {
+      new_row <- data.frame(address= i, 
+                            postal = NA, 
+                            latitude = NA, 
+                            longitude = NA)
+    }
+    
+    # Add the row
+    postal_coords <- rbind(postal_coords, new_row)
+  }
+  return(postal_coords)
+}
+```
+
+## Obtain Coordinates and Postal Code
+
+```{r}
+#| eval: false 
+coords <- get_coords(add_list)
+```
+
+## RDS File Creation
+
+```{r}
+#| eval: false 
+write_rds(coords, "data/rds/coords.rds")
+```
+
+## Reading RDS File
+
+```{r}
+coords=read_rds('data/rds/coords.rds') 
+```
+:::
+
+Be sure to go through and verify that there are no null values with regards to coordinates. If there are, then remove those columns.
+
+Do refer to Hands-on exercise 1 to calculate the 'direct flying distance' between HDB block and locational factors such as CHAS clinics.

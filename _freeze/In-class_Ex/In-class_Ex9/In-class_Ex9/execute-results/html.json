@@ -1,0 +1,15 @@
+{
+  "hash": "3537869cfcad6f0432dd58d1ad210082",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"In Class Exercise 9\"\nauthor: \"Arjun Singh\"\ndate: 2024-10-28\ndate-modified: \"last-modified\"\nexecute: \n  eval: true\n  echo: true\n  message: false\n  freeze: true\n  warning: false\nformat:\n  html:\n    css: styles.css \n---\n\n\n\n\n\n# 9 Introduction\n\nIn this exercise, we will perform a variety of exercises to reinforce our learning from Hands-on Exercise 9.\n\nWe also discussed further data preparation and wrangling techniques for take-home exercise 3, similar to how we did in In-class Exercise 8.\n\n\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\npacman::p_load(sf, spdep, GWmodel, SpatialML, tmap, rsample, Metrics, tidyverse)\nset.seed(1234)\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\nmdata=read_rds('data/mdata.rds')%>%\n  st_jitter(amount=2)\nview(mdata)\n```\n:::",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

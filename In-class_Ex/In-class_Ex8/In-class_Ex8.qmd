@@ -337,7 +337,7 @@ price_mlr <- lm(resale_price ~ floor_area_sqm +
 olsrr::ols_regress(price_mlr)
 ```
 
-# 8.5 Multicollinearity check with VIF 
+# 8.5 Multicollinearity check with VIF
 
 Do refer to the [Performance documentation](https://cran.r-project.org/web/packages/performance/index.html) to gain a better understanding of the package.
 
@@ -621,3 +621,14 @@ ggplot(data = test_data_p,
            y = resale_price)) +
   geom_point()
 ```
+
+::: note-box
+Note also that you can jitter using the following code chunk.
+
+```{r}
+
+mdata=read_rds('data/mdata.rds')%>%
+  st_jitter(amount=2)
+view(mdata)
+```
+:::
