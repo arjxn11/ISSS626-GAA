@@ -1,0 +1,15 @@
+{
+  "hash": "fa3355f9d87d99f8a3c4b9beb2419c48",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"In Class Exercise 10\"\nauthor: \"Arjun Singh\"\ndate: 2024-11-4\ndate-modified: \"last-modified\"\nexecute: \n  eval: true\n  echo: true\n  message: false\n  freeze: true\n  warning: false\nformat:\n  html:\n    css: styles.css \n---\n\n\n\nThe below code chunk facilitates geocoding.\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\npostcode={}\nurl='https://onemap.gov.sg/api/common/elastic/search'\nfound=data.frame()\nnot_found=data.frame()\n\nfor (postcode in postcode){\n  query=list('searchVal'=postcode, 'returnGeom'='Y',\n             'getAddrDetails'='Y', 'pageNum'='1')\n  res=GET(url, query=query)\n  if((content(res)$found)!=0){\n    found=rbind(found, data.frame(content(res))[4:13])\n  } else{not_found=data.frame(postcode)\n  }\n}\n```\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

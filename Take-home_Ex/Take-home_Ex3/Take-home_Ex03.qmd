@@ -14,6 +14,64 @@ format:
     css: styles.css 
 ---
 
+# 3 Introduction
+
+Housing is a critical component of household wealth across the globe, and purchasing a home represents one of the most significant investments for many individuals. Housing prices are influenced by various factors, some of which are global—such as a country’s economic conditions and inflation rates—while others are specific to the properties themselves. These factors can be broadly categorized into structural and locational aspects.
+
+Structural factors are attributes directly related to the property, such as its size, features, and ownership tenure. In contrast, locational factors pertain to the surrounding neighborhood and accessibility, including proximity to childcare centers, public transportation, and shopping facilities.
+
+Traditionally, predictive models for housing resale prices have relied on the Ordinary Least Squares (OLS) method. However, OLS does not account for spatial autocorrelation and spatial heterogeneity—two common characteristics in geographical data like housing transactions. Ignoring spatial autocorrelation can lead to biased, inconsistent, or inefficient results in predictive housing pricing models (Anselin, 1998). To address this limitation, Geographically Weighted Models (GWMs) have been introduced, offering a more accurate approach to calibrating predictive models for housing resale prices by accounting for spatial variability.
+
+# 3.1 Data and Packages
+
+For this exercise, we use **HDB Resale Flat Prices** provided by [**Data.gov.sg**](https://isss626-ay2024-25aug.netlify.app/take-home_ex03b) should be used as the core data set. The study should focus on either three-room, four-room or five-room flat.
+
+![](images/clipboard-1921776033.png)
+
+The following data-sets are used to incorporate locational factors:
+
+-   CHAS Clinics
+
+-   Eldercare
+
+-   Supermarkets
+
+-   Hawkers
+
+-   Kindergartens
+
+-   Parks
+
+-   Childcare
+
+All of the above have been acquired from [data.gov.sg](https://data.gov.sg/). The below have been acquired from [LTADataMall](https://datamall.lta.gov.sg/content/datamall/en.html).
+
+-   MRTs
+
+-   Bus Stops
+
+All the above datasets are downloaded from two main data sources- [data.gov.sg](https://data.gov.sg/) and [LTADataMall](https://datamall.lta.gov.sg/content/datamall/en.html).
+
+We will use the following packages for our analysis:
+
+-   **sf**: R package for handling, analyzing, and visualizing spatial data using simple features.
+
+-   **spdep**: R package for spatial dependence modeling, including spatial autocorrelation and regression analysis.
+
+-   **GWmodel**: R package for geographically weighted regression (GWR) and other localized spatial models.
+
+-   **SpatialML**: R package for spatial machine learning, offering tools for spatially explicit predictive modeling.
+
+-   **tmap**: R package for creating thematic maps, offering a flexible and layered approach for spatial visualization.
+
+-   **rsample**: R package for resampling datasets, facilitating model training and evaluation with various sampling methods.
+
+-   **Metrics**: R package for calculating common metrics for regression and classification models, such as RMSE and accuracy.
+
+-   **tidyverse**: A collection of R packages designed for data manipulation, analysis, and visualization in a consistent and coherent syntax.
+
+We use the p_load() function of the pacman package to load these packages into our environment.
+
 ```{r}
 pacman::p_load(sf, spdep, GWmodel, SpatialML, tmap, rsample, Metrics, tidyverse)
 set.seed(1234)
@@ -24,17 +82,119 @@ resale <- read_csv("data/aspatial/resale.csv") %>%
   filter(month >= "2023-01" & month <= "2024-09")
 ```
 
+## 3.1.2 Importing the data
+
+### 3.1.2.1 Geospatial Data
+
+We first import the URA Master Plan data by implementing the st_read() function of the sf package.
+
+Additionally, we ensure that the CRS information is consistent with that of Singapore to facilitate the creation of our predictive model. The st_transform() function of the sf package is implemented for this.
+
+```{r}
+mpsz=st_read(dsn = 'data/geospatial', layer='MP14_SUBZONE_WEB_PL')%>%
+  st_transform(crs=3414)
+```
+
+::: note-box
+The EPSG code of Singapore is 3414.
+:::
+
+#### 3.1.2.1.1 Extracting the CBD
+
+::: panel-tabset
+## CBD Planning Areas
+
+```{r}
+cbd_spots=c('ORCHARD', 'SINGAPORE RIVER', 'DOWNTOWN CORE', 'MUSUEM')
+```
+
+## CBD Data
+
+```{r}
+cbd=mpsz%>%
+  filter(PLN_AREA_N %in% cbd_spots)%>%
+  st_transform(crs=3414)
+```
+:::
+
+### 3.1.2.2 Locational Factors (Geospatial)
+
+We will now import a number of data-sets that carry the data necessary for us to measure the impact of proximity to these facilities on housing prices.
+
+Additionally, we ensure that the CRS information is consistent with that of Singapore to facilitate the creation of our predictive model. The st_transform() function of the sf package is implemented for this.
+
+::: panel-tabset
+## Eldercare
+
 ```{r}
 eldercare= st_read(dsn='data/locational_factors', layer='ELDERCARE')%>%
   st_transform(crs=3414)
 ```
+
+## CHAS Clinics
 
 ```{r}
 CHAS=st_read('data/locational_factors/CHASClinics.kml')%>%
                st_transform(crs=3414)
 ```
 
-COmputing points within a distance
+## Supermarkets
+
+```{r}
+supermarket=st_read('data/locational_factors/SupermarketsKML.kml')%>%
+  st_transform(crs=3414)
+```
+
+## MRT
+
+```{r}
+mrt=st_read(dsn='data/locational_factors', layer='RapidTransitSystemStation')%>%
+  st_transform(crs=3414)
+```
+
+## Bus Stops
+
+```{r}
+bus=st_read(dsn='data/locational_factors', layer='BusStop')%>%
+  st_transform(crs=3414)
+```
+
+## Hawkers
+
+```{r}
+hawkers=st_read('data/locational_factors/HawkerCentresGEOJSON.geojson')%>%
+  st_transform(crs=3414)
+```
+
+## Kindgergartens
+
+```{r}
+kindergartens=st_read('data/locational_factors/Kindergartens.geojson')%>%
+  st_transform(crs=3414)
+```
+
+## Parks
+
+```{r}
+parks=st_read('data/locational_factors/Parks.geojson')%>%
+  st_transform(crs=3414)
+```
+
+## Childcare
+
+```{r}
+childcare=st_read(dsn='data/locational_factors', layer='CHILDCARE')%>%
+  st_transform(crs=3414)
+```
+:::
+
+# 3.2 Data Wrangling and Manipulation
+
+We calculate the number of data points within a distance. We will use the st_buffer() function of the sf package for this.
+
+::: note-box
+if we set the `dist` argument to 1000, we create a buffer of 1KM aroudn each point in the eldercare data-set.This allows us to determine the number of data-points of other Points of Interest within this zone.
+:::
 
 ```{r}
 # We first create a 1KM buffer
@@ -178,10 +338,14 @@ write_rds(coords, "data/rds/coords.rds")
 ## Reading RDS File
 
 ```{r}
-coords=read_rds('data/rds/coords.rds') 
+coords=read_rds('data/rds/coords.rds')
 ```
 :::
 
 Be sure to go through and verify that there are no null values with regards to coordinates. If there are, then remove those columns.
 
-Do refer to Hands-on exercise 1 to calculate the 'direct flying distance' between HDB block and locational factors such as CHAS clinics.
+Do refer to Hands-on exercise 1 to calculate the 'direct flying distance' between HDB block and locational factors such as CHAS clinics
+
+```{r}
+mdata=read_rds('data/rds/mdata.rds')
+```
