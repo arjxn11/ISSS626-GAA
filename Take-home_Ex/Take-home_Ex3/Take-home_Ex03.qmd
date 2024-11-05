@@ -24,7 +24,7 @@ Traditionally, predictive models for housing resale prices have relied on the Or
 
 # 3.1 Data and Packages
 
-For this exercise, we use **HDB Resale Flat Prices** provided by [**Data.gov.sg**](https://isss626-ay2024-25aug.netlify.app/take-home_ex03b) should be used as the core data set. The study should focus on either three-room, four-room or five-room flat.
+For this exercise, we use **HDB Resale Flat Prices** provided by [**Data.gov.sg**](https://data.gov.sg/) should be used as the core data set. The study should focus on either three-room, four-room or five-room flat.
 
 ![](images/clipboard-1921776033.png)
 
