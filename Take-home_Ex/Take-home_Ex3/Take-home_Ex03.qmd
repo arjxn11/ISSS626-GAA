@@ -356,7 +356,7 @@ cbd=mpsz%>%
 We verify if it has been extracted as expected by plotting a highly cartographic map using the tmap package.
 
 ```{r}
-tmap_mode('view')
+tmap_mode('plot')
 tm_shape(cbd)+
   tm_polygons(col = 'green')
 ```
@@ -762,7 +762,7 @@ Punggol appears the region with the most sales at just over 3400 sales in the se
 We implement the **tmap** package to generate a map to help us visualize the sales count across all towns.
 
 ```{r}
-tmap_mode('view')
+tmap_mode('plot')
 tm_shape(town_sales_count) +
   tm_polygons("sales_count", 
               title = "Sales Count",
@@ -790,8 +790,8 @@ town_avg <- resale_data %>%
 Now that this has been computed, we can join it back with `resale_data` so that we can map it using the **tmap** package.
 
 ```{r}
-tmap_mode('view')
-# Create the choropleth map
+tmap_mode('plot')
+
 tm_shape(town_avg) +
   tm_polygons("avg_resale_price", 
               title = "Average Resale Price",
@@ -814,9 +814,21 @@ Do note that we are focusing on 3/4/5 room flats and hence there are a few empty
 We are interested to determine whether or not the level impacts floor pricing, that is whether an apartment on level 13 is more expensive than an apartment on level 5.
 
 ```{r}
+ggplot(resale_data, aes(x = factor(storey_scale), y = resale_price)) +
+  geom_boxplot(fill = "lightblue", color = "black", outlier.color = "red") +
+  labs(
+    title = "Resale Price Variation by Storey Scale",
+    x = "Storey Scale",
+    y = "Resale Price"
+  ) +
+  theme_minimal()
 
 
 ```
+
+We see a clear rise in flat prices they higher the level the flat is on, a pretty significant increase at every level.
+
+We will keep an eye on this when creating the predictive model,
 
 # 3.4 Predictive Models
 
@@ -976,7 +988,7 @@ hdb_resale.sp
 Next, we will use tmap package to display the distribution of the residuals on an interactive map.
 
 ```{r}
-tmap_mode("view")
+tmap_mode("plot")
 tm_shape(mpsz)+
   tmap_options(check.and.fix = TRUE) +
   tm_polygons(alpha = 0.4) +
@@ -1000,11 +1012,31 @@ There appears to be some clustering. In order to definitively determine whether 
 
 First, we will compute the distance-based weight matrix by using dnearneigh() function of spdep.
 
+::: panel-tabset
+## Computation
+
 ```{r}
+#| eval: false
 nb <- dnearneigh(coordinates(hdb_resale.sp), 0, 1500, longlat = FALSE)
 summary(nb)
 
 ```
+
+## RDS File Creation
+
+```{r}
+#| eval: false
+write_rds(nb, 'data/rds/nb.rds')
+
+```
+
+## Read RDS Files
+
+```{r}
+nb=read_rds('data/rds/nb.rds')
+
+```
+:::
 
 Next, the nb2listw() function of the spdep packge will be used to convert the output neighbours lists (i.e. nb) into a spatial weights.
 
@@ -1026,8 +1058,11 @@ summary(nb_lw)
 Next, lm.morantest() of spdep package will be used to perform Moran’s I test for residual spatial autocorrelation
 
 ```{r}
+#| eval: false
 lm.morantest(hdb.mlr1, nb_lw)
 ```
+
+![](images/Screenshot 2024-11-09 160250.png)
 
 From the above output, we can infer that the spatial autocorrelation is statistically significant at the 5% significance level. We have sufficient evidence to reject the null hypothesis and conclude that there indeed signs of spatial clustering.
 
@@ -1142,6 +1177,9 @@ We now visualize Local R2 by URA planning regions from the `mpsz` data-frame as 
 ## Central Region
 
 ```{r}
+tmap_mode(
+  'plot'
+)
 tm_shape(mpsz[mpsz$REGION_N=="CENTRAL REGION", ])+
   tm_polygons()+
 tm_shape(hdb_resale.sf.adaptive) + 
@@ -1239,18 +1277,20 @@ After splitting the data, we will store them as RDS files. We use the write_rds(
 
 resale_2023=resale_2023%>%
   st_centroid()%>%
-  st_jitter(amount=5)
+  st_jitter(amount=10)
 
 ## 2024
 resale_2024=resale_2024%>%
   st_centroid()%>%
-  st_jitter(amount=5)
+  st_jitter(amount=10)
 
 ## Creating traing and test splits to calibrate models
 resale_split <- initial_split(resale_2023, 
                               prop = 6.5/10,)
-train_data <- training(resale_split)
-test_data <- testing(resale_split)
+train_data <- training(resale_split)%>%
+  sample_n(3000)
+test_data <- testing(resale_split)%>%
+  sample_n(1500)
 
 ```
 
@@ -1357,6 +1397,7 @@ gwr_adaptive=read_rds('data/rds/gwr_adapt_hed.rds')
 ## Computation
 
 ```{r}
+#| eval: false
 gwr_bw_test_adaptive <- bw.gwr(resale_price ~ total_remaining_lease + storey_scale + floor_area_sqm  + nearest_kindergarten_dist + nearest_park_dist + nearest_chas_dist + nearest_cbd_dist + nearest_bus_dist + nearest_mrt_dist + nearest_childcare_dist + nearest_eldercare_dist + supermarket_pts_count + hawker_pts_count + mrt_pts_count + gym_pts_count + park_pts_count + eldercare_pts_count + chas_pts_count + bus_pts_count,
                   data=test_data_sp,
                   approach="CV",
@@ -1369,6 +1410,7 @@ gwr_bw_test_adaptive <- bw.gwr(resale_price ~ total_remaining_lease + storey_sca
 ## RDS File Creation
 
 ```{r}
+#| eval: false
 write_rds(gwr_bw_test_adaptive, 'data/rds/gwr_bw_test_hed.rds')
 
 ```
@@ -1376,6 +1418,7 @@ write_rds(gwr_bw_test_adaptive, 'data/rds/gwr_bw_test_hed.rds')
 ## Reading RDS File
 
 ```{r}
+
 gwr_bw_test_adaptive= read_rds('data/rds/gwr_bw_test_hed.rds')
 
 ```
@@ -1384,16 +1427,17 @@ gwr_bw_test_adaptive= read_rds('data/rds/gwr_bw_test_hed.rds')
 
 ### 3.4.3.3 Prediction
 
-The compute the predicted values using `test_data`, we implement the gwr.predict() function.
+To compute the predicted values using `test_data`, we implement the gwr.predict() function.
 
 ::: panel-tabset
 ## Computation
 
 ```{r}
-gwr_pred <- gwr.predict(formula = resale_price ~ total_remaining_lease + storey_scale + floor_area_sqm  + nearest_kindergarten_dist + nearest_park_dist + nearest_chas_dist + nearest_cbd_dist + nearest_bus_dist + nearest_mrt_dist + nearest_childcare_dist + nearest_eldercare_dist + supermarket_pts_count + hawker_pts_count + mrt_pts_count + gym_pts_count + park_pts_count + eldercare_pts_count + chas_pts_count + bus_pts_count, 
+#| eval: false
+gwr_pred <- gwr.predict(formula = resale_price ~ total_remaining_lease + storey_scale + floor_area_sqm  + nearest_kindergarten_dist + nearest_park_dist + nearest_chas_dist + nearest_cbd_dist + nearest_mrt_dist + nearest_bus_dist + nearest_childcare_dist + nearest_eldercare_dist + supermarket_pts_count + hawker_pts_count + mrt_pts_count + gym_pts_count + park_pts_count + eldercare_pts_count + chas_pts_count + bus_pts_count, 
                         data=train_data_sp, 
                         predictdata = test_data_sp, 
-                        bw= gwr_bw_test_adaptive, 
+                        bw= 50, 
                         kernel = 'gaussian', 
                         adaptive=TRUE, 
                         longlat = FALSE,
@@ -1403,6 +1447,7 @@ gwr_pred <- gwr.predict(formula = resale_price ~ total_remaining_lease + storey_
 ## RDS File Creation
 
 ```{r}
+#| eval: false
 write_rds(gwr_pred, 'data/gwr_pred.rds')
 ```
 
@@ -1412,6 +1457,23 @@ write_rds(gwr_pred, 'data/gwr_pred.rds')
 gwr_pred=read_rds('data/gwr_pred.rds')
 ```
 :::
+
+We can view the model output using the below code chunk.
+
+```{R}
+gwr_pred
+```
+
+The above output allows us to make several inferences.
+
+We can infer each variable’s influence on resale price how it varies geographically, as shown by the range of the coefficient values.
+
+-   total_remaining_lease_coef: Positive across locations, suggesting that higher remaining lease durations consistently increase resale prices.
+-   storey_scale_coef and floor_area_sqm_coef: Positive across all observations, indicating that higher floors and larger areas increase resale prices.
+-   Distance to facilities and parks (e.g., kindergarten, park, MRT) often shows both positive and negative coefficients. For instance, nearest_mrt_dist_coef tends to be negative, implying that closer proximity to MRT stations generally increases property values, but there are locations where it has a positive coefficient as well.
+-   Points of Interest (POI) Counts: Some POIs (e.g., supermarkets, hawkers, MRT stations) show mixed impacts, likely indicating that their effect on price varies with local context (positive in some areas and negative in others).
+
+The model predicts that the price would range between a minimum of SGD 243,929 SGD 1,226,903. The median price is just over SGD 550,000.
 
 #### 3.4.4.3.1 Calibrating Random Forest Model
 
@@ -1434,7 +1496,7 @@ train_data <- train_data %>%
 
 ```
 
-We will use the **[ranger](https://cran.r-project.org/web/packages/ranger/index.html)** package to do this. 
+We will use the [**ranger**](https://cran.r-project.org/web/packages/ranger/index.html) package to do this.
 
 ```{r}
 rf <- ranger(resale_price ~ total_remaining_lease + storey_scale + floor_area_sqm  + nearest_kindergarten_dist + nearest_park_dist + nearest_chas_dist + nearest_cbd_dist + nearest_bus_dist + nearest_mrt_dist + nearest_childcare_dist + nearest_eldercare_dist + supermarket_pts_count + hawker_pts_count + mrt_pts_count + gym_pts_count + park_pts_count + eldercare_pts_count + chas_pts_count + bus_pts_count,
@@ -1448,13 +1510,13 @@ We now use the [SpatialML](https://cran.r-project.org/web/packages/SpatialML/ind
 
 ## 3.4.5.1 Calibrating using training data
 
-The code chunk below is used to calibrate a geographic ranform forest model by using the `grf()` function of the **SpatialML** package.
+The code chunk below is used to calibrate a geographic rand om forest model by using the `grf()` function of the **SpatialML** package.
 
 ```{r}
 #| eval: false
 gwRF_adaptive <- grf(formula = resale_price ~ total_remaining_lease + storey_scale + floor_area_sqm  + nearest_kindergarten_dist + nearest_park_dist + nearest_chas_dist + nearest_cbd_dist + nearest_bus_dist + nearest_mrt_dist + nearest_childcare_dist + nearest_eldercare_dist + supermarket_pts_count + hawker_pts_count + mrt_pts_count + gym_pts_count + park_pts_count + eldercare_pts_count + chas_pts_count + bus_pts_count,
                      dframe=train_data, 
-                     bw=55,
+                     bw=40,
                      kernel="adaptive",
                      coords=coords_train)
 write_rds(gwRF_adaptive, "data/gwRF_adaptive.rds")
@@ -1479,7 +1541,6 @@ test_data <- cbind(test_data, coords_test) %>%
 We now implement the `predict.grf()` function of the spatialML package to predict the resale value by using the test data and gwRF_adaptive model calibrated earlier.
 
 ::: panel-tabset
-
 ## Calibration
 
 ```{r}
@@ -1511,7 +1572,7 @@ GRF_pred <- read_rds("data/GRF_pred.rds")
 
 ### 3.5.1.2 Converting the output into a data-frame
 
-We implement the as.data.frame() function to convert `GRF_pred` to a data-frame as shown in the code chunk below. 
+We implement the as.data.frame() function to convert `GRF_pred` to a data-frame as shown in the code chunk below.
 
 ```{r}
 GRF_pred_df <- as.data.frame(GRF_pred)
@@ -1520,7 +1581,6 @@ GRF_pred_df <- as.data.frame(GRF_pred)
 We now use the `cbind()` function to append the predicted values onto the test_data data-frame for further work.
 
 ::: panel-tabset
-
 ## Computation
 
 ```{r}
@@ -1532,9 +1592,7 @@ test_data_p <- cbind(test_data, GRF_pred_df)
 ## RDS File Creation
 
 ```{r}
-
 #| eval: false
-
 write_rds(test_data_p, "data/test_data_p.rds")
 ```
 
@@ -1558,6 +1616,8 @@ rmse(test_data_p$resale_price,
 
 ```
 
+The RMSE value is relatively low and indicates good model performance. This must be compared with the upcoming model to determine how the model performs in comparison.
+
 ### 3.5.1.4 Visualizing the predicted values
 
 Alternatively, we can use a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.
@@ -1569,7 +1629,6 @@ ggplot(data = test_data_p,
            y = resale_price)) +
   geom_point()
 ```
-
 
 ::: insights-box
 A better predictive model would have the scattered points close to the diagonal line. The scatter plot can be also used to detect if any outliers in the model.
@@ -1588,7 +1647,6 @@ resale_2024 <- cbind(resale_2024, coords_2024) %>%
 We now implement the `predict.grf()` function of the spatialML package to predict the resale value by using the test data and gwRF_adaptive model calibrated earlier.
 
 ::: panel-tabset
-
 ## Calibration
 
 ```{r}
@@ -1620,7 +1678,7 @@ GRF_pred_2024 <- read_rds("data/GRF_pred_2024.rds")
 
 ### 3.5.2.2 Converting the output into a data-frame
 
-We implement the as.data.frame() function to convert `GRF_pred` to a data-frame as shown in the code chunk below. 
+We implement the as.data.frame() function to convert `GRF_pred` to a data-frame as shown in the code chunk below.
 
 ```{r}
 GRF_pred_df_2024 <- as.data.frame(GRF_pred_2024)
@@ -1629,7 +1687,6 @@ GRF_pred_df_2024 <- as.data.frame(GRF_pred_2024)
 We now use the `cbind()` function to append the predicted values onto the test_data data-frame for further work.
 
 ::: panel-tabset
-
 ## Computation
 
 ```{r}
@@ -1641,7 +1698,6 @@ resale_2024_p <- cbind(resale_2024, GRF_pred_df_2024)
 ## RDS File Creation
 
 ```{r}
-
 #| eval: false
 
 write_rds(resale_2024_p, "data/rds/resale_2024_p.rds")
@@ -1667,6 +1723,8 @@ rmse(resale_2024_p$resale_price,
 
 ```
 
+The RMSE is higher than it is for when this model was applied on the test data from 2023, indicating worse performance however the model is still highly viable as shown in the plot below.
+
 ### 3.5.2.4 Visualizing the predicted values
 
 Alternatively, we can use a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.
@@ -1679,3 +1737,26 @@ ggplot(data = resale_2024_p,
   geom_point()
 ```
 
+```{r}
+resale_2024_p
+```
+
+# 3.6 Model Comparison
+
+From the above models and predictions created, we infer that the model performs better on the test data from 2023 compared to predicting prices for July to September 2024, however the model is viable in both cases, as shown by the plot in 3.5.1.4 and 3.5.2.4.
+
+Flat prices lately have been trending differently to how they were over 2023 for several reasons.
+
+| Test Data                      | July to September 2024                                      |
+|--------------------------------|-------------------------------------------------------------|
+| Lower RMSE at 66000            | Higher RMSE at just over 100000                             |
+| Fewer Data Points to test with | More data points used                                       |
+| Same year as training data     | Over half a year, minimum, later than training points used. |
+
+There has been increasing demand due to a wide variety of reasons:
+
+-   The pandemic resulted in significant delays in Build-To-Order (BTO) projects, which has now caused a backlog of demand for new flats. Many buyers who were initially planning to purchase BTO flats changed their minds and have started to look to the resale market, driving up resale prices as a result due to increased demand.
+
+-   Global supply chain disruptions and inflation have only gotten worse over the past year causing construction costs to rise. Key factors of production such as raw materials, labor, and shipping are all more expensive, which has affected both new developments and resale prices, as buyers account for the higher replacement cost of newer units.
+
+There are several other reasons that can be looked at such as more demand from foreign buyers as investment holds however the two reasons above are key in the trend we are seeing of late.
