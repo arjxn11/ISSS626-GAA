@@ -261,11 +261,10 @@ Now, we can generate numeric values instead. This is done in the below code chun
 ```{r}
 resale_tidy <- resale_tidy %>%
   mutate(
-    min_storey = as.numeric(str_extract(storey_range, "^[0-9]+")),  # Extract minimum value in each range
-    storey_scale = ((min_storey - 1) %/% 3) + 1               # Convert to scale: 1 for 1-3, 2 for 4-6, etc.
+    min_storey = as.numeric(str_extract(storey_range, "^[0-9]+")),  
+    storey_scale = ((min_storey - 1) %/% 3) + 1               
   ) %>%
-  select(-min_storey)  # Optional: Drop min_storey if not needed
-
+  select(-min_storey)  
 ```
 
 ## Verification
@@ -1062,7 +1061,7 @@ Next, lm.morantest() of spdep package will be used to perform Moran’s I test f
 lm.morantest(hdb.mlr1, nb_lw)
 ```
 
-![](images/Screenshot 2024-11-09 160250.png)
+![](images/Screenshot%202024-11-09%20160250.png)
 
 From the above output, we can infer that the spatial autocorrelation is statistically significant at the 5% significance level. We have sufficient evidence to reject the null hypothesis and conclude that there indeed signs of spatial clustering.
 
@@ -1748,7 +1747,7 @@ From the above models and predictions created, we infer that the model performs 
 Flat prices lately have been trending differently to how they were over 2023 for several reasons.
 
 | Test Data                      | July to September 2024                                      |
-|--------------------------------|-------------------------------------------------------------|
+|-------------------------|-----------------------------------------------|
 | Lower RMSE at 66000            | Higher RMSE at just over 100000                             |
 | Fewer Data Points to test with | More data points used                                       |
 | Same year as training data     | Over half a year, minimum, later than training points used. |
