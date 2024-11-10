@@ -1748,10 +1748,6 @@ ggplot(data = resale_2024_p,
   geom_point()
 ```
 
-```{r}
-resale_2024_p
-```
-
 As mentioned earlier, a better model would have points scattered around the diagonal from the origin. That being said, we infer that our model performs well.
 
 # 3.6 Model Comparison
