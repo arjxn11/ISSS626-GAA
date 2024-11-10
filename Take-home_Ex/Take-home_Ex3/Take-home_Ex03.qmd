@@ -321,18 +321,6 @@ head(resale_tidy)
 ```
 :::
 
-#### 3.1.2.1.1 Relational Joins
-
-We will now join our `resale_sf` data
-
-```{r}
-#| eval: false
-resale_sf= resale_geom %>%
-  left_join(resale_tidy, by = "address")
-
-
-```
-
 ### 3.1.2.2 Geospatial Data
 
 We first import the URA Master Plan data by implementing the st_read() function of the sf package.
@@ -568,7 +556,7 @@ The steps are as follows:
 
 -   The first step is to drop the geometry for a data-frame to facilitate the join. As seen below, we do it first for `buffer_1000m` and then combine it with `buffer_200m`. We use the st_drop_geometry() function for this. We select the columns we want to extract from buffer_1000m using the select function as well.
 
--   Second, we use the left_join function and join `buffer_200m` with `buffer_1000m_no_geom` by using the common keys.
+-   Second, we use the left_join() function of dplyr and join `buffer_200m` with `buffer_1000m_no_geom` by using the common keys.
 
 ::: note-box
 Do note that the bind_rows() simply stacks these data-frames.
@@ -601,6 +589,8 @@ points_count <- combined_sf %>%
 ## 3.2.2 Distance Matrix
 
 The next step of our analysis is to determine the proximity of each location to the closest locational factor. The distance will denoted in metres, as Singapores coordinates are projected in SVY21.
+
+The st_distance() function is applied to determines pairwise distances between points in the two data-frames. After that, we use the apply() function to obtain the minimum distance. This allows us to determine the closest facility to each respective house in our data-frame.
 
 ::: panel-tabset
 ## Eldercare
@@ -1771,7 +1761,7 @@ Over this exercise, we created a few models in order to predict flat-resale pric
 We first compare the Hedonic Pricing Model and the Random Forest Model.
 
 | Hedonic Pricing Model                                | Random Forest                                 |
-|------------------------------------------------------|-----------------------------------------------|
+|--------------------------------------|----------------------------------|
 | Higher (Adjusted) R-Squared Value                    | Lower (Adjusted) R-Squared Value              |
 | More observations used to calibrate model            | Fewer observations used to calibrate model    |
 | Does not handle non-linear relationships effectively | Handles non-linear relationships effectively. |
@@ -1783,7 +1773,7 @@ With regards to the Random Forest Model, we infer that the model performs better
 Flat prices lately have been trending differently to how they were over 2023 for several reasons.
 
 | Test Data                      | July to September 2024                                      |
-|-------------------------|----------------------------------------------|
+|--------------------------|----------------------------------------------|
 | Lower RMSE at 66000            | Higher RMSE at just over 100000                             |
 | Fewer Data Points to test with | More data points used                                       |
 | Same year as training data     | Over half a year, minimum, later than training points used. |
