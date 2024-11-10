@@ -50,25 +50,39 @@ All of the above have been acquired from [data.gov.sg](https://data.gov.sg/). Th
 
 -   Bus Stops
 
+![](images/clipboard-2079193661.png)
+
+![](images/clipboard-3240590388.png)
+
 All the above datasets are downloaded from two main data sources- [data.gov.sg](https://data.gov.sg/) and [LTADataMall](https://datamall.lta.gov.sg/content/datamall/en.html).
 
 We will use the following packages for our analysis:
 
--   **sf**: R package for handling, analyzing, and visualizing spatial data using simple features.
+-   [**sf**](https://cran.r-project.org/web/packages/sf/sf.pdf): R package for handling, analyzing, and visualizing spatial data using simple features.
 
--   **spdep**: R package for spatial dependence modeling, including spatial autocorrelation and regression analysis.
+-   [**spdep**](https://cran.r-project.org/web/packages/spdep/spdep.pdf): R package for spatial dependence modeling, including spatial autocorrelation and regression analysis.
 
--   **GWmodel**: R package for geographically weighted regression (GWR) and other localized spatial models.
+-   [**GWmodel**](https://cran.r-project.org/web/packages/GWmodel/GWmodel.pdf): R package for geographically weighted regression (GWR) and other localized spatial models.
 
--   **SpatialML**: R package for spatial machine learning, offering tools for spatially explicit predictive modeling.
+-   [**SpatialML**](https://cran.r-project.org/web/packages/SpatialML/SpatialML.pdf): R package for spatial machine learning, offering tools for spatially explicit predictive modeling.
 
--   **tmap**: R package for creating thematic maps, offering a flexible and layered approach for spatial visualization.
+-   [**tmap**](https://cran.r-project.org/web/packages/tmap/tmap.pdf): R package for creating thematic maps, offering a flexible and layered approach for spatial visualization.
 
--   **rsample**: R package for resampling datasets, facilitating model training and evaluation with various sampling methods.
+-   [**rsample**](https://cran.r-project.org/web/packages/rsample/rsample.pdf): R package for resampling datasets, facilitating model training and evaluation with various sampling methods.
 
--   **Metrics**: R package for calculating common metrics for regression and classification models, such as RMSE and accuracy.
+-   [**Metrics**](https://cran.r-project.org/web/packages/Metrics/Metrics.pdf): R package for calculating common metrics for regression and classification models, such as RMSE and accuracy.
 
--   **tidyverse**: A collection of R packages designed for data manipulation, analysis, and visualization in a consistent and coherent syntax.
+-   [**tidyverse**](https://cran.r-project.org/web/packages/tidyverse/tidyverse.pdf): A collection of R packages designed for data manipulation, analysis, and visualization in a consistent and coherent syntax.
+
+-   [**spatstat**](https://cran.r-project.org/web/packages/spatstat/spatstat.pdf): A package for spatial data analysis, particularly focused on point pattern analysis. It provides tools for modeling, simulation, and visualization of spatial point patterns on various geometries.
+
+-   [**httr**](https://cran.r-project.org/web/packages/httr/httr.pdf): A package for working with HTTP requests in R, facilitating interactions with web APIs by simplifying the process of sending requests (GET, POST, etc.), handling responses, and managing authentication.
+
+-   [**jsonlite**](https://cran.r-project.org/web/packages/jsonlite/jsonlite.pdf): A package for parsing and generating JSON data in R, known for its simple, reliable conversion between R objects and JSON, making it essential for data exchange with web services.
+
+-   [**rvest**](https://cran.r-project.org/web/packages/rvest/rvest.pdf): A web scraping package that allows users to easily harvest data from HTML web pages. It simplifies navigating, parsing, and extracting structured data from websites.
+
+Please click the link and refer to the documentation for any packages that you are interested to know more about.
 
 We use the p_load() function of the pacman package to load these packages into our environment.
 
@@ -877,7 +891,7 @@ resale_data=st_centroid(resale_data)
 
 We start off by filtering the data to include only the relevant columns for our analysis, including filtering out all data for the year 2024 as we are to train the model using 2023 data.
 
-We will change the order of columns in the resulting dataset, `resale_regression` to make it easier to read too.
+We will change the order of columns in the resulting data-sets too to facilitate easier reading.
 
 ::: panel-tabset
 ## 2023
@@ -1267,6 +1281,8 @@ The first step is to ensure that there are no overlapping point features. To do 
 
 After splitting the data, we will store them as RDS files. We use the write_rds() function to create the RDS file and the read_rds() function to load the RDS file into our environment. This facilitates computational efficiency.
 
+Additionally, we implement the sample_n() function of the dplyr package to take a sample of 3000 observations for the training data and 1500 observations for test data. This is done as having too many observations can result in hours, sometimes more, of time taken for every computation.
+
 ::: panel-tabset
 ## Data Sampling
 
@@ -1346,7 +1362,13 @@ bw_adaptive=read_rds('data/rds/bw_adapt_rf.rds')
 ```
 :::
 
-From the above, we infer that the optimal bandwidth that we must use to create this model is .
+From the above, we infer that the optimal bandwidth that we must use to create this model is 61.
+
+::: insights-box
+`The bw.gwr()` function aims to find the best bandwidth that minimizes a specified criterion, such as AIC or CV, balancing the model’s bias and variance.
+
+The bandwidth controls how much data around each location is included in its local model, impacting the "localized" nature of GWR.
+:::
 
 We repeat the same step for `test_data`, in that we convert it to a spatial object as well.
 
@@ -1619,7 +1641,7 @@ The RMSE value is relatively low and indicates good model performance. This must
 
 ### 3.5.1.4 Visualizing the predicted values
 
-Alternatively, we can use a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.
+We create a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.
 
 ```{r}
 
@@ -1726,7 +1748,7 @@ The RMSE is higher than it is for when this model was applied on the test data f
 
 ### 3.5.2.4 Visualizing the predicted values
 
-Alternatively, we can use a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.
+We create a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.
 
 ```{r}
 
@@ -1740,19 +1762,33 @@ ggplot(data = resale_2024_p,
 resale_2024_p
 ```
 
+As mentioned earlier, a better model would have points scattered around the diagonal from the origin. That being said, we infer that our model performs well.
+
 # 3.6 Model Comparison
 
-From the above models and predictions created, we infer that the model performs better on the test data from 2023 compared to predicting prices for July to September 2024, however the model is viable in both cases, as shown by the plot in 3.5.1.4 and 3.5.2.4.
+Over this exercise, we created a few models in order to predict flat-resale prices. Each of them come with their own pros and cons.
+
+We first compare the Hedonic Pricing Model and the Random Forest Model.
+
+| Hedonic Pricing Model                                | Random Forest                                 |
+|------------------------------------------------------|-----------------------------------------------|
+| Higher (Adjusted) R-Squared Value                    | Lower (Adjusted) R-Squared Value              |
+| More observations used to calibrate model            | Fewer observations used to calibrate model    |
+| Does not handle non-linear relationships effectively | Handles non-linear relationships effectively. |
+
+When it comes down to choice of model, it is up to personal preference however when dealing with Spatial Data, it is recommended to incorporate Random Forest Modelling as it is better suited to deal with high-dimensional data and has the ability to not get impacted as much by outliers.
+
+With regards to the Random Forest Model, we infer that the model performs better on the test data from 2023 compared to predicting prices for July to September 2024, however the model is viable in both cases, as shown by the plot in 3.5.1.4 and 3.5.2.4.
 
 Flat prices lately have been trending differently to how they were over 2023 for several reasons.
 
 | Test Data                      | July to September 2024                                      |
-|-------------------------|-----------------------------------------------|
+|-------------------------|----------------------------------------------|
 | Lower RMSE at 66000            | Higher RMSE at just over 100000                             |
 | Fewer Data Points to test with | More data points used                                       |
 | Same year as training data     | Over half a year, minimum, later than training points used. |
 
-There has been increasing demand due to a wide variety of reasons:
+There has been increasing demand for flats on the resale market due to a wide variety of reasons:
 
 -   The pandemic resulted in significant delays in Build-To-Order (BTO) projects, which has now caused a backlog of demand for new flats. Many buyers who were initially planning to purchase BTO flats changed their minds and have started to look to the resale market, driving up resale prices as a result due to increased demand.
 

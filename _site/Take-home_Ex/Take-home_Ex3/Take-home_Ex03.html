@@ -364,7 +364,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">November 9, 2024</p>
+      <p class="date-modified">November 10, 2024</p>
     </div>
   </div>
     
@@ -400,18 +400,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><p>MRTs</p></li>
 <li><p>Bus Stops</p></li>
 </ul>
+<p><img src="images/clipboard-2079193661.png" class="img-fluid"></p>
+<p><img src="images/clipboard-3240590388.png" class="img-fluid"></p>
 <p>All the above datasets are downloaded from two main data sources- <a href="https://data.gov.sg/">data.gov.sg</a> and <a href="https://datamall.lta.gov.sg/content/datamall/en.html">LTADataMall</a>.</p>
 <p>We will use the following packages for our analysis:</p>
 <ul>
-<li><p><strong>sf</strong>: R package for handling, analyzing, and visualizing spatial data using simple features.</p></li>
-<li><p><strong>spdep</strong>: R package for spatial dependence modeling, including spatial autocorrelation and regression analysis.</p></li>
-<li><p><strong>GWmodel</strong>: R package for geographically weighted regression (GWR) and other localized spatial models.</p></li>
-<li><p><strong>SpatialML</strong>: R package for spatial machine learning, offering tools for spatially explicit predictive modeling.</p></li>
-<li><p><strong>tmap</strong>: R package for creating thematic maps, offering a flexible and layered approach for spatial visualization.</p></li>
-<li><p><strong>rsample</strong>: R package for resampling datasets, facilitating model training and evaluation with various sampling methods.</p></li>
-<li><p><strong>Metrics</strong>: R package for calculating common metrics for regression and classification models, such as RMSE and accuracy.</p></li>
-<li><p><strong>tidyverse</strong>: A collection of R packages designed for data manipulation, analysis, and visualization in a consistent and coherent syntax.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/sf/sf.pdf"><strong>sf</strong></a>: R package for handling, analyzing, and visualizing spatial data using simple features.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/spdep/spdep.pdf"><strong>spdep</strong></a>: R package for spatial dependence modeling, including spatial autocorrelation and regression analysis.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/GWmodel/GWmodel.pdf"><strong>GWmodel</strong></a>: R package for geographically weighted regression (GWR) and other localized spatial models.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/SpatialML/SpatialML.pdf"><strong>SpatialML</strong></a>: R package for spatial machine learning, offering tools for spatially explicit predictive modeling.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/tmap/tmap.pdf"><strong>tmap</strong></a>: R package for creating thematic maps, offering a flexible and layered approach for spatial visualization.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/rsample/rsample.pdf"><strong>rsample</strong></a>: R package for resampling datasets, facilitating model training and evaluation with various sampling methods.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/Metrics/Metrics.pdf"><strong>Metrics</strong></a>: R package for calculating common metrics for regression and classification models, such as RMSE and accuracy.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/tidyverse/tidyverse.pdf"><strong>tidyverse</strong></a>: A collection of R packages designed for data manipulation, analysis, and visualization in a consistent and coherent syntax.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/spatstat/spatstat.pdf"><strong>spatstat</strong></a>: A package for spatial data analysis, particularly focused on point pattern analysis. It provides tools for modeling, simulation, and visualization of spatial point patterns on various geometries.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/httr/httr.pdf"><strong>httr</strong></a>: A package for working with HTTP requests in R, facilitating interactions with web APIs by simplifying the process of sending requests (GET, POST, etc.), handling responses, and managing authentication.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/jsonlite/jsonlite.pdf"><strong>jsonlite</strong></a>: A package for parsing and generating JSON data in R, known for its simple, reliable conversion between R objects and JSON, making it essential for data exchange with web services.</p></li>
+<li><p><a href="https://cran.r-project.org/web/packages/rvest/rvest.pdf"><strong>rvest</strong></a>: A web scraping package that allows users to easily harvest data from HTML web pages. It simplifies navigating, parsing, and extracting structured data from websites.</p></li>
 </ul>
+<p>Please click the link and refer to the documentation for any packages that you are interested to know more about.</p>
 <p>We use the p_load() function of the pacman package to load these packages into our environment.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, spdep, GWmodel, SpatialML, tmap, rsample, Metrics, tidyverse, spatstat, httr, jsonlite, rvest)</span>
@@ -1372,7 +1379,7 @@ nearest_eldercare_dist nearest_childcare_dist       nearest_mrt_dist
 <div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>resale_data<span class="ot">=</span><span class="fu">st_centroid</span>(resale_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We start off by filtering the data to include only the relevant columns for our analysis, including filtering out all data for the year 2024 as we are to train the model using 2023 data.</p>
-<p>We will change the order of columns in the resulting dataset, <code>resale_regression</code> to make it easier to read too.</p>
+<p>We will change the order of columns in the resulting data-sets too to facilitate easier reading.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true">2023</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false">2024</a></li></ul>
 <div class="tab-content">
@@ -2303,6 +2310,7 @@ $ geometry                     &lt;POLYGON [m]&gt; POLYGON ((31667.83 31778.89..
 <p>The entire data-set is split into training and test data sets with 65% and 35% respectively by using the initial_split() function of the rsample package.</p>
 <p>The first step is to ensure that there are no overlapping point features. To do this we first implement the st_jitter() function of the sf package. The st_centroid() function is used to convert the polygon geometries to point form.</p>
 <p>After splitting the data, we will store them as RDS files. We use the write_rds() function to create the RDS file and the read_rds() function to load the RDS file into our environment. This facilitates computational efficiency.</p>
+<p>Additionally, we implement the sample_n() function of the dplyr package to take a sample of 3000 observations for the training data and 1500 observations for test data. This is done as having too many observations can result in hours, sometimes more, of time taken for every computation.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-15-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-1" role="tab" aria-controls="tabset-15-1" aria-selected="true">Data Sampling</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-2" role="tab" aria-controls="tabset-15-2" aria-selected="false">RDS File Creation</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-3" role="tab" aria-controls="tabset-15-3" aria-selected="false">Reading RDS Files</a></li></ul>
 <div class="tab-content">
@@ -2385,7 +2393,11 @@ max values  :                  1145,           16,      1420000,            149,
 </div>
 </div>
 </div>
-<p>From the above, we infer that the optimal bandwidth that we must use to create this model is .</p>
+<p>From the above, we infer that the optimal bandwidth that we must use to create this model is 61.</p>
+<div class="insights-box">
+<p><code>The bw.gwr()</code> function aims to find the best bandwidth that minimizes a specified criterion, such as AIC or CV, balancing the model’s bias and variance.</p>
+<p>The bandwidth controls how much data around each location is included in its local model, impacting the “localized” nature of GWR.</p>
+</div>
 <p>We repeat the same step for <code>test_data</code>, in that we convert it to a spatial object as well.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb127"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a>test_data_sp <span class="ot">&lt;-</span> test_data <span class="sc">%&gt;%</span></span>
@@ -2725,7 +2737,7 @@ R squared (OOB):                  0.9029382 </code></pre>
 </section>
 <section id="visualizing-the-predicted-values" class="level3">
 <h3 class="anchored" data-anchor-id="visualizing-the-predicted-values">3.5.1.4 Visualizing the predicted values</h3>
-<p>Alternatively, we can use a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.</p>
+<p>We create a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb156"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> test_data_p,</span>
 <span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> GRF_pred,</span>
@@ -2820,7 +2832,7 @@ R squared (OOB):                  0.9029382 </code></pre>
 </section>
 <section id="visualizing-the-predicted-values-1" class="level3">
 <h3 class="anchored" data-anchor-id="visualizing-the-predicted-values-1">3.5.2.4 Visualizing the predicted values</h3>
-<p>Alternatively, we can use a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.</p>
+<p>We create a scatterplot to visualise the actual resale price and the predicted resale price by using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb167"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb167-1"><a href="#cb167-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> resale_2024_p,</span>
 <span id="cb167-2"><a href="#cb167-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> GRF_pred_2024,</span>
@@ -30840,17 +30852,47 @@ R squared (OOB):                  0.9029382 </code></pre>
  [ reached 'max' / getOption("max.print") -- omitted 3125 rows ]</code></pre>
 </div>
 </div>
+<p>As mentioned earlier, a better model would have points scattered around the diagonal from the origin. That being said, we infer that our model performs well.</p>
 </section>
 </section>
 </section>
 <section id="model-comparison" class="level1">
 <h1>3.6 Model Comparison</h1>
-<p>From the above models and predictions created, we infer that the model performs better on the test data from 2023 compared to predicting prices for July to September 2024, however the model is viable in both cases, as shown by the plot in 3.5.1.4 and 3.5.2.4.</p>
+<p>Over this exercise, we created a few models in order to predict flat-resale prices. Each of them come with their own pros and cons.</p>
+<p>We first compare the Hedonic Pricing Model and the Random Forest Model.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 53%">
+<col style="width: 46%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Hedonic Pricing Model</th>
+<th>Random Forest</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Higher (Adjusted) R-Squared Value</td>
+<td>Lower (Adjusted) R-Squared Value</td>
+</tr>
+<tr class="even">
+<td>More observations used to calibrate model</td>
+<td>Fewer observations used to calibrate model</td>
+</tr>
+<tr class="odd">
+<td>Does not handle non-linear relationships effectively</td>
+<td>Handles non-linear relationships effectively.</td>
+</tr>
+</tbody>
+</table>
+<p>When it comes down to choice of model, it is up to personal preference however when dealing with Spatial Data, it is recommended to incorporate Random Forest Modelling as it is better suited to deal with high-dimensional data and has the ability to not get impacted as much by outliers.</p>
+<p>With regards to the Random Forest Model, we infer that the model performs better on the test data from 2023 compared to predicting prices for July to September 2024, however the model is viable in both cases, as shown by the plot in 3.5.1.4 and 3.5.2.4.</p>
 <p>Flat prices lately have been trending differently to how they were over 2023 for several reasons.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 34%">
-<col style="width: 65%">
+<col style="width: 35%">
+<col style="width: 64%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -30873,7 +30915,7 @@ R squared (OOB):                  0.9029382 </code></pre>
 </tr>
 </tbody>
 </table>
-<p>There has been increasing demand due to a wide variety of reasons:</p>
+<p>There has been increasing demand for flats on the resale market due to a wide variety of reasons:</p>
 <ul>
 <li><p>The pandemic resulted in significant delays in Build-To-Order (BTO) projects, which has now caused a backlog of demand for new flats. Many buyers who were initially planning to purchase BTO flats changed their minds and have started to look to the resale market, driving up resale prices as a result due to increased demand.</p></li>
 <li><p>Global supply chain disruptions and inflation have only gotten worse over the past year causing construction costs to rise. Key factors of production such as raw materials, labor, and shipping are all more expensive, which has affected both new developments and resale prices, as buyers account for the higher replacement cost of newer units.</p></li>
